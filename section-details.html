@@ -388,8 +388,9 @@
 
                     const isFreeCheck = (p) => {
                         if (!p) return false;
-                        const priceStr = String(p.price || "").trim();
-                        return p.isFree === true || p.isFree === "true" || p.isFree === "on" || priceStr === "0" || priceStr === "" || priceStr === "0.00";
+                        const price = String(p.price || "").trim();
+                        const isFreeFlag = p.isFree === true || p.isFree === "true" || p.isFree === "on";
+                        return isFreeFlag || price === "0" || price === "0.00" || price === "" || price.toLowerCase() === "free";
                     };
 
                     const createCard = (product, idx) => {
@@ -433,7 +434,10 @@
                     // Fetch from Firebase
                     db.ref('products').on('value', (snapshot) => {
                         const data = snapshot.val();
-                        renderBots(data ? Object.values(data) : GLOBAL_DEFAULTS);
+                        let products = [];
+                        if (!data) products = GLOBAL_DEFAULTS;
+                        else products = (Array.isArray(data) ? data : Object.values(data)).filter(p => p !== null);
+                        renderBots(products);
                     }, () => {
                         const cfg = JSON.parse(localStorage.getItem('tme_config_v2'));
                         renderBots((cfg && cfg.products) ? cfg.products : GLOBAL_DEFAULTS);

@@ -85,10 +85,12 @@
             const container = document.getElementById('bots-grid-container');
             if (!container) return;
 
+            // MASTER DETECTION: Use this everywhere
             const isProductFree = (p) => {
                 if (!p) return false;
-                const priceStr = String(p.price || "").trim();
-                return p.isFree === true || p.isFree === "true" || p.isFree === "on" || priceStr === "0" || priceStr === "" || priceStr === "0.00";
+                const price = String(p.price || "").trim();
+                const isFreeFlag = p.isFree === true || p.isFree === "true" || p.isFree === "on";
+                return isFreeFlag || price === "0" || price === "0.00" || price === "" || price.toLowerCase() === "free";
             };
 
             const GLOBAL_DEFAULTS = [
@@ -159,18 +161,26 @@
             // Sync from Firebase
             db.ref('products').on('value', (snapshot) => {
                 const data = snapshot.val();
-                // Ensure loadedProducts is always an array
+                console.log("Firebase Products Received:", data);
                 if (!data) {
                     loadedProducts = GLOBAL_DEFAULTS;
-                } else if (Array.isArray(data)) {
-                    loadedProducts = data;
                 } else {
-                    loadedProducts = Object.values(data);
+                    loadedProducts = Array.isArray(data) ? data : Object.values(data);
                 }
+                // Cleanup nulls from array
+                loadedProducts = loadedProducts.filter(p => p !== null);
                 render();
+
+                // Also update Admin Panel memory if it's open
+                if (typeof currentProducts !== 'undefined') {
+                    currentProducts = loadedProducts;
+                    if (document.getElementById('admin-overlay').style.display === 'block') {
+                        renderProductList();
+                    }
+                }
             }, (error) => {
                 console.warn("Firebase failed. Fallback to storage/defaults.", error);
-                const cfg = JSON.parse(localStorage.getItem('tme_config_v2'));
+                const cfg = JSON.parse(localStorage.getItem(CONFIG_KEY));
                 loadedProducts = (cfg && cfg.products && cfg.products.length > 0) ? cfg.products : GLOBAL_DEFAULTS;
                 render();
             });
@@ -940,9 +950,7 @@
                     profPreview.style.display = 'block';
                 }
 
-                // Products - THE CRITICAL PART
-                currentProducts = Array.isArray(config.products) ? config.products : [];
-                console.log('loadSettings: Products to render:', currentProducts.length);
+                // Products - Read from latest memory (synced from Firebase)
                 renderProductList();
             } catch (err) {
                 console.error('CRITICAL: loadSettings failed:', err);
