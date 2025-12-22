@@ -154,7 +154,14 @@
             // Sync from Firebase
             db.ref('products').on('value', (snapshot) => {
                 const data = snapshot.val();
-                loadedProducts = data ? Object.values(data) : GLOBAL_DEFAULTS;
+                // Ensure loadedProducts is always an array
+                if (!data) {
+                    loadedProducts = GLOBAL_DEFAULTS;
+                } else if (Array.isArray(data)) {
+                    loadedProducts = data;
+                } else {
+                    loadedProducts = Object.values(data);
+                }
                 render();
             }, (error) => {
                 console.warn("Firebase failed. Fallback to storage/defaults.", error);
@@ -727,13 +734,13 @@
                             <input type="text" id="new-prod-title" placeholder="Product Title"
                                 data-i18n-placeholder="adm_prod_title_placeholder"
                                 style="width:100%; margin-bottom:0.5rem; padding:0.5rem; background:var(--card-bg); color:var(--text-color); border:1px solid var(--border-color);">
-                            <div id="price-field-wrapper"
-                                style="display:flex; gap:0.5rem; margin-bottom:0.5rem; align-items:center;">
-                                <input type="text" id="new-prod-price" placeholder="Price ($)"
-                                    data-i18n-placeholder="adm_prod_price_placeholder"
-                                    style="width:30%; padding:0.5rem; background:var(--card-bg); color:var(--text-color); border:1px solid var(--border-color);">
-
-                                <div style="width:70%; display:flex; gap:0.5rem;">
+                            <div style="display:flex; gap:0.5rem; margin-bottom:0.5rem; align-items:center;">
+                                <div id="price-field-wrapper" style="width:30%;">
+                                    <input type="text" id="new-prod-price" placeholder="Price ($)"
+                                        data-i18n-placeholder="adm_prod_price_placeholder"
+                                        style="width:100%; padding:0.5rem; background:var(--card-bg); color:var(--text-color); border:1px solid var(--border-color);">
+                                </div>
+                                <div style="width:70%; display:flex; gap:0.5rem; align-items:center;">
                                     <input type="file" id="new-prod-img-file" accept="image/*" style="display:none;"
                                         onchange="previewImage(this)">
                                     <button onclick="document.getElementById('new-prod-img-file').click()" class="btn"
@@ -1235,11 +1242,12 @@
         }
 
         function togglePriceField(isFree) {
-            const priceField = document.getElementById('price-field-wrapper');
-            if (priceField) {
-                priceField.style.opacity = isFree ? '0.3' : '1';
-                priceField.style.pointerEvents = isFree ? 'none' : 'auto';
-                if (isFree) document.getElementById('new-prod-price').value = '0';
+            const priceWrapper = document.getElementById('price-field-wrapper');
+            const priceInput = document.getElementById('new-prod-price');
+            if (priceWrapper && priceInput) {
+                priceWrapper.style.opacity = isFree ? '0.3' : '1';
+                priceWrapper.style.pointerEvents = isFree ? 'none' : 'auto';
+                if (isFree) priceInput.value = '0';
             }
         }
 
