@@ -87,7 +87,8 @@
 
             const isProductFree = (p) => {
                 if (!p) return false;
-                return p.isFree === true || p.isFree === "true" || p.isFree === "on" || String(p.price) === "0";
+                const priceStr = String(p.price || "").trim();
+                return p.isFree === true || p.isFree === "true" || p.isFree === "on" || priceStr === "0" || priceStr === "" || priceStr === "0.00";
             };
 
             const GLOBAL_DEFAULTS = [
@@ -140,13 +141,17 @@
 
                 let html = '';
                 if (freeBots.length > 0) {
-                    const lastFree = freeBots[freeBots.length - 1];
-                    html += `<div style="grid-column: 1/-1; margin-top:1rem;"><h3 style="color:#00D09C; border-bottom:1px solid #00D09C; padding-bottom:0.5rem; margin-bottom:1rem;"><i class="fas fa-gift"></i> ${t.free}</h3></div>${createCard(lastFree.data, lastFree.actualIdx)}`;
+                    html += `<div style="grid-column: 1/-1; margin-top:1rem;"><h3 style="color:#00D09C; border-bottom:1px solid #00D09C; padding-bottom:0.5rem; margin-bottom:1rem;"><i class="fas fa-gift"></i> ${t.free}</h3></div>`;
+                    freeBots.forEach(fb => {
+                        html += createCard(fb.data, fb.actualIdx);
+                    });
                     if (paidBots.length > 0) html += `<div style="grid-column: 1/-1;"><hr style="margin:2rem 0; border:none; border-top:1px dashed var(--border-color); opacity:0.3;"></div>`;
                 }
                 if (paidBots.length > 0) {
-                    const lastPaid = paidBots[paidBots.length - 1];
-                    html += `<div style="grid-column: 1/-1;"><h3 style="color:var(--primary-color); border-bottom:1px solid var(--primary-color); padding-bottom:0.5rem; margin-bottom:1rem;"><i class="fas fa-gem"></i> ${t.prem}</h3></div>${createCard(lastPaid.data, lastPaid.actualIdx)}`;
+                    html += `<div style="grid-column: 1/-1;"><h3 style="color:var(--primary-color); border-bottom:1px solid var(--primary-color); padding-bottom:0.5rem; margin-bottom:1rem;"><i class="fas fa-gem"></i> ${t.prem}</h3></div>`;
+                    paidBots.forEach(pb => {
+                        html += createCard(pb.data, pb.actualIdx);
+                    });
                 }
                 container.innerHTML = html || '<p style="grid-column:1/-1; text-align:center; opacity:0.5; padding:2rem;">No bots available.</p>';
             }
