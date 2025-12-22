@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel | Trading Made Easy</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            padding: 2rem;
+        }
+
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 1rem;
+        }
+
+        .admin-section {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            padding: 1.5rem;
+            border-radius: 10px;
+            margin-bottom: 2rem;
+        }
+
+        .admin-section h2 {
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+            margin-bottom: 1.5rem;
+            font-size: 1.5rem;
+            color: var(--primary-color);
+        }
+
+        .control-group {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+            padding: 0.5rem;
+            background: var(--bg-color);
+            border-radius: 5px;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 24px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked+.slider {
+            background-color: var(--primary-color);
+        }
+
+        input:checked+.slider:before {
+            transform: translateX(26px);
+        }
+
+        .editor-group {
+            margin-bottom: 1rem;
+        }
+
+        .editor-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+
+        .editor-group textarea,
+        .editor-group input {
+            width: 100%;
+            padding: 0.8rem;
+            background: var(--bg-color);
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+            border-radius: 5px;
+        }
+
+        .btn-danger {
+            background-color: #e53e3e;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .btn-success {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="login-overlay"
+        style="position:fixed; top:0; left:0; width:100%; height:100%; background:var(--bg-color); z-index:9999; display:flex; justify-content:center; align-items:center; flex-direction:column;">
+        <h2><i class="fas fa-lock"></i> Restricted Access</h2>
+        <p>Developer Area Only</p>
+        <input type="password" id="admin-pass" placeholder="Enter Admin Password"
+            style="padding:0.5rem; margin:1rem 0; width:200px;">
+        <button class="btn-primary" onclick="checkAuth()">Login</button>
+        <p id="error-msg" style="color:red; margin-top:0.5rem; display:none;">Invalid Password</p>
+    </div>
+
+    <div class="admin-container" id="admin-content" style="display:none;">
+        <div class="admin-header">
+            <h1><i class="fas fa-cogs"></i> Site Control Panel</h1>
+            <div>
+                <a href="index.html" class="btn" style="border:1px solid var(--border-color); margin-right: 1rem;">View
+                    Site</a>
+                <button class="btn-danger" onclick="logout()">Logout</button>
+            </div>
+        </div>
+
+        <!-- Visibility Settings -->
+        <div class="admin-section">
+            <h2><i class="fas fa-eye"></i> Section Visibility</h2>
+            <div class="control-group">
+                <span>Show 'MT5 Bots' Section</span>
+                <label class="switch"><input type="checkbox" id="toggle-bots" checked><span
+                        class="slider"></span></label>
+            </div>
+            <div class="control-group">
+                <span>Show 'Signals' Section</span>
+                <label class="switch"><input type="checkbox" id="toggle-signals" checked><span
+                        class="slider"></span></label>
+            </div>
+            <div class="control-group">
+                <span>Show 'Services' Section</span>
+                <label class="switch"><input type="checkbox" id="toggle-services" checked><span
+                        class="slider"></span></label>
+            </div>
+            <div class="control-group">
+                <span>Show 'About' Section</span>
+                <label class="switch"><input type="checkbox" id="toggle-about" checked><span
+                        class="slider"></span></label>
+            </div>
+        </div>
+
+        <!-- Content Editor -->
+        <div class="admin-section">
+            <h2><i class="fas fa-edit"></i> Edit Texts (English Default)</h2>
+            <div class="editor-group">
+                <label>Hero Title</label>
+                <input type="text" id="edit-hero-title" placeholder="Loading...">
+            </div>
+            <div class="editor-group">
+                <label>Hero Description</label>
+                <textarea id="edit-hero-desc" rows="3"></textarea>
+            </div>
+            <div class="editor-group">
+                <label>About Me Bio</label>
+                <textarea id="edit-about-bio" rows="4"></textarea>
+            </div>
+            <button class="btn-success" onclick="saveTexts()">Save Text Changes</button>
+        </div>
+
+        <!-- Add Custom Section -->
+        <div class="admin-section">
+            <h2><i class="fas fa-plus-circle"></i> Add New Section</h2>
+            <p style="color:var(--secondary-color); margin-bottom:1rem;">Add a custom HTML section to the bottom of the
+                home page.</p>
+            <div class="editor-group">
+                <label>Section ID (unique)</label>
+                <input type="text" id="new-section-id" placeholder="e.g. faq-section">
+            </div>
+            <div class="editor-group">
+                <label>Section HTML Content</label>
+                <textarea id="new-section-html" rows="6"
+                    placeholder="<div class='container'><h2>New Section</h2>...</div>"></textarea>
+            </div>
+            <button class="btn-success" onclick="addSection()">Add Section</button>
+
+            <div id="custom-sections-list" style="margin-top:2rem;">
+                <h3>Active Custom Sections:</h3>
+                <ul id="active-sections" style="list-style:none; padding:0;">
+                    <!-- List populated by JS -->
+                </ul>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // --- Auth Logic ---
+        function checkAuth() {
+            const pass = document.getElementById('admin-pass').value;
+            if (pass === 'admin123') { // Simple hardcoded pass for demo
+                document.getElementById('login-overlay').style.display = 'none';
+                document.getElementById('admin-content').style.display = 'block';
+                loadConfig();
+            } else {
+                document.getElementById('error-msg').style.display = 'block';
+            }
+        }
+        function logout() {
+            location.reload();
+        }
+
+        // --- Config Management ---
+        const defaultConfig = {
+            visibility: { bots: true, signals: true, services: true, about: true },
+            textOverrides: {},
+            customSections: []
+        };
+
+        let currentConfig = JSON.parse(localStorage.getItem('site_config')) || defaultConfig;
+
+        function loadConfig() {
+            // Visibility
+            document.getElementById('toggle-bots').checked = currentConfig.visibility.bots !== false;
+            document.getElementById('toggle-signals').checked = currentConfig.visibility.signals !== false;
+            document.getElementById('toggle-services').checked = currentConfig.visibility.services !== false;
+            document.getElementById('toggle-about').checked = currentConfig.visibility.about !== false;
+
+            // Texts (Load existing translations or overrides)
+            // Ideally we read from script.js translations object, but we can't easily. 
+            // We will just allow setting overrides.
+            const savedTexts = currentConfig.textOverrides;
+            document.getElementById('edit-hero-title').value = savedTexts['hero_title'] || "Algo Trading Systems";
+            document.getElementById('edit-hero-desc').value = savedTexts['hero_desc'] || "Professional automated trading solutions...";
+            document.getElementById('edit-about-bio').value = savedTexts['about_bio'] || "";
+
+            // Custom Sections
+            renderCustomSectionsList();
+
+            // Listeners for switches
+            ['bots', 'signals', 'services', 'about'].forEach(key => {
+                document.getElementById('toggle-' + key).addEventListener('change', (e) => {
+                    currentConfig.visibility[key] = e.target.checked;
+                    saveConfig();
+                });
+            });
+        }
+
+        function saveConfig() {
+            localStorage.setItem('site_config', JSON.stringify(currentConfig));
+        }
+
+        function saveTexts() {
+            if (!currentConfig.textOverrides) currentConfig.textOverrides = {};
+            currentConfig.textOverrides['hero_title'] = document.getElementById('edit-hero-title').value;
+            currentConfig.textOverrides['hero_desc'] = document.getElementById('edit-hero-desc').value;
+            currentConfig.textOverrides['about_bio'] = document.getElementById('edit-about-bio').value;
+            saveConfig();
+            alert("Texts Saved! Refresh the main site to see changes.");
+        }
+
+        function addSection() {
+            const id = document.getElementById('new-section-id').value;
+            const html = document.getElementById('new-section-html').value;
+
+            if (!id || !html) return alert("Please fill ID and Content");
+
+            currentConfig.customSections.push({ id, html });
+            saveConfig();
+            renderCustomSectionsList();
+            document.getElementById('new-section-id').value = '';
+            document.getElementById('new-section-html').value = '';
+            alert("Section Added!");
+        }
+
+        function deleteSection(index) {
+            currentConfig.customSections.splice(index, 1);
+            saveConfig();
+            renderCustomSectionsList();
+        }
+
+        function renderCustomSectionsList() {
+            const list = document.getElementById('active-sections');
+            list.innerHTML = '';
+            if (currentConfig.customSections.length === 0) {
+                list.innerHTML = '<li>No custom sections added.</li>';
+                return;
+            }
+            currentConfig.customSections.forEach((sec, idx) => {
+                const li = document.createElement('li');
+                li.style.background = 'var(--bg-color)';
+                li.style.padding = '1rem';
+                li.style.marginBottom = '0.5rem';
+                li.style.border = '1px solid var(--border-color)';
+                li.style.display = 'flex';
+                li.style.justifyContent = 'space-between';
+                li.innerHTML = `<span><strong>${sec.id}</strong></span> <button class="btn-danger" style="font-size:0.8rem;" onclick="deleteSection(${idx})">Delete</button>`;
+                list.appendChild(li);
+            });
+        }
+    </script>
+</body>
+
+</html>

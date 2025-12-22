@@ -1,0 +1,1256 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trading Made Easy | Advanced MT5 Trading Bots & Signals</title>
+    <meta name="description"
+        content="Professional algorithmic trading solutions, MT5 bots, and high-precision signals. Transform your trading with automated systems.">
+    <link rel="canonical" href="https://kraa1981t.github.io/Trading-Made-Easy/">
+
+    <!-- SEO & Social Media Meta Tags -->
+    <meta property="og:title" content="Trading Made Easy | Automated Systems">
+    <meta property="og:description"
+        content="Get the latest MT5 bots and daily trading signals. Professional algorithmic solutions for modern traders.">
+    <meta property="og:url" content="https://kraa1981t.github.io/Trading-Made-Easy/">
+    <meta property="og:type" content="website">
+    <!-- CSS -->
+    <link rel="stylesheet" href="style.css">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- CRITICAL: Apply Admin Settings Immediately -->
+    <script>
+        (function () {
+            try {
+                console.log('=== LOADING ADMIN CONFIG ===');
+                const cfg = JSON.parse(localStorage.getItem('tme_config_v2'));
+                console.log('Config loaded:', cfg);
+                if (cfg) {
+                    const style = document.createElement('style');
+                    let css = '';
+
+                    // Visibility
+                    if (cfg.visibility) {
+                        console.log('Applying visibility:', cfg.visibility);
+                        if (cfg.visibility.bots === false) css += '#bots { display: none !important; } .nav-link[href*="bots"] { display: none !important; }';
+                        if (cfg.visibility.signals === false) css += '#signals { display: none !important; } .nav-link[href*="signals"] { display: none !important; }';
+                        if (cfg.visibility.services === false) css += '#services { display: none !important; } .nav-link[href*="services"] { display: none !important; }';
+                        if (cfg.visibility.about === false) css += '#about { display: none !important; } .nav-link[href*="about"] { display: none !important; }';
+                    }
+
+                    // Appearance
+                    if (cfg.appearance) {
+                        console.log('Applying appearance:', cfg.appearance);
+                        if (cfg.appearance.primaryColor) {
+                            css += `:root { --primary-color: ${cfg.appearance.primaryColor} !important; --accent-color: ${cfg.appearance.primaryColor} !important; }`;
+                        }
+                        if (cfg.appearance.borderRadius) {
+                            css += `.btn, .btn-primary, .card, .bot-card, .service-card, input, textarea, select { border-radius: ${cfg.appearance.borderRadius} !important; }`;
+                        }
+                    }
+
+                    if (css) {
+                        style.textContent = css;
+                        document.head.appendChild(style);
+                        console.log('CSS applied:', css);
+                    } else {
+                        console.log('No CSS generated');
+                    }
+                } else {
+                    console.log('No config found');
+                }
+            } catch (e) { console.error('Admin Config Error:', e); }
+        })();
+
+        // Render Products Dynamically
+        document.addEventListener('DOMContentLoaded', function () {
+            const container = document.getElementById('bots-grid-container');
+            if (!container) return;
+
+            // GLOBAL HELPER: Robust check if product is free
+            const isProductFree = (p) => {
+                if (!p) return false;
+                return p.isFree === true || p.isFree === "true" || p.isFree === "on" || String(p.price) === "0";
+            };
+
+            let currentLang = localStorage.getItem('language') || 'en';
+            let loadedProducts = [];
+
+            function render() {
+                const cfg = JSON.parse(localStorage.getItem('tme_config_v2'));
+                loadedProducts = (cfg && Array.isArray(cfg.products)) ? cfg.products : [];
+
+                if (loadedProducts.length === 0) {
+                    container.innerHTML = '<p style="grid-column:1/-1; text-align:center; opacity:0.5; padding: 2rem;">No products found.</p>';
+                    return;
+                }
+
+                const homeTrans = {
+                    en: { free: "Latest Free Resource", prem: "Latest Premium System", for_free: "For Free", dl: "Download Now", buy: "Buy Now" },
+                    ar: { free: "أحدث مورد مجاني", prem: "أحدث نظام احترافي", for_free: "مجاناً", dl: "تحميل الآن", buy: "شراء الآن" },
+                    es: { free: "Último Recurso Gratis", prem: "Último Sistema Premium", for_free: "Gratis", dl: "Descargar", buy: "Comprar" },
+                    fr: { free: "Dernière Ressource Gratuite", prem: "Dernier Système Premium", for_free: "Gratuit", dl: "Télécharger", buy: "Acheter" },
+                    zh: { free: "最新免费资源", prem: "最新高级系统", for_free: "免费", dl: "立即下载", buy: "购买" }
+                };
+                const t = homeTrans[currentLang] || homeTrans['en'];
+
+                const createCard = (p, idx) => {
+                    const isFree = isProductFree(p);
+                    let btnHTML = '';
+                    if (isFree) {
+                        btnHTML = `
+                            <div style="color:#00D09C; font-weight:bold; font-size:0.9rem; margin-bottom:0.5rem; text-align:center;">${t.for_free}</div>
+                            <button onclick="downloadHomeFree(${idx})" class="btn-primary" style="width:100%; border:none; background:#00D09C; color:white; cursor:pointer;">
+                                <i class="fas fa-download"></i> ${t.dl}
+                            </button>
+                        `;
+                    } else {
+                        btnHTML = `
+                            <a href="checkout.html?product=bot_${idx}&name=${encodeURIComponent(p.title)}&price=${p.price}" class="btn-primary" style="width:100%; display:block; text-align:center;">
+                                ${t.buy} - $${p.price}
+                            </a>
+                        `;
+                    }
+                    return `
+                        <div class="bot-card">
+                            <img src="${p.image}" alt="${p.title}" class="bot-image" onerror="this.src='images/bot1.png'">
+                            <div class="bot-content">
+                                <h3 class="bot-title" style="margin-bottom:0.5rem;">${p.title}</h3>
+                                <p class="bot-desc" style="min-height:3em; font-size:0.9rem; margin-bottom:1rem;">${p.desc || ''}</p>
+                                ${btnHTML}
+                            </div>
+                        </div>
+                    `;
+                };
+
+                // Filter into categories
+                const freeBots = [];
+                const paidBots = [];
+                loadedProducts.forEach((p, i) => {
+                    if (isProductFree(p)) freeBots.push({ data: p, actualIdx: i });
+                    else paidBots.push({ data: p, actualIdx: i });
+                });
+
+                let html = '';
+
+                // Show ONLY the last free bot
+                if (freeBots.length > 0) {
+                    const latestFree = freeBots[freeBots.length - 1];
+                    html += `<div style="grid-column: 1/-1; margin-top:1rem;"><h3 style="color:#00D09C; border-bottom:1px solid #00D09C; padding-bottom:0.5rem; margin-bottom:1rem;"><i class="fas fa-gift"></i> ${t.free}</h3></div>`;
+                    html += createCard(latestFree.data, latestFree.actualIdx);
+                    if (paidBots.length > 0) {
+                        html += `<div style="grid-column: 1/-1;"><hr style="margin:2rem 0; border:none; border-top:1px dashed var(--border-color); opacity:0.3;"></div>`;
+                    }
+                }
+
+                // Show ONLY the last paid bot
+                if (paidBots.length > 0) {
+                    const latestPaid = paidBots[paidBots.length - 1];
+                    html += `<div style="grid-column: 1/-1;"><h3 style="color:var(--primary-color); border-bottom:1px solid var(--primary-color); padding-bottom:0.5rem; margin-bottom:1rem;"><i class="fas fa-gem"></i> ${t.prem}</h3></div>`;
+                    html += createCard(latestPaid.data, latestPaid.actualIdx);
+                }
+
+                container.innerHTML = html || '<p style="grid-column:1/-1; text-align:center; opacity:0.5; padding:2rem;">No bots available.</p>';
+            }
+
+            window.downloadHomeFree = function (idx) {
+                const cfg = JSON.parse(localStorage.getItem('tme_config_v2'));
+                const p = (cfg && cfg.products) ? cfg.products[idx] : null;
+                if (!p || !p.fileData) return alert("No file attached to this product.");
+                const a = document.createElement('a');
+                a.href = p.fileData; a.download = p.fileName || 'product.zip';
+                document.body.appendChild(a); a.click(); document.body.removeChild(a);
+            };
+
+            render();
+            window.addEventListener('languageChanged', (e) => {
+                currentLang = e.detail.lang;
+                render();
+            });
+        });
+    </script>
+</head>
+
+<body>
+
+    <!-- Notifications Section -->
+    <div id="notifications-bar"
+        style="background: var(--secondary-color); color: #fff; padding: 0.5rem; text-align: center; font-size: 0.9rem;">
+        <i class="fas fa-bell"></i> <span id="notification-ticker">Welcome to Trading Made Easy - Transforming market
+            analysis into profit.</span>
+    </div>
+
+    <!-- Header -->
+    <header>
+        <div class="nav-container">
+            <!-- Nav Links -->
+            <div class="nav-left">
+                <nav class="nav-menu">
+                    <a href="index.html" class="nav-link" data-i18n="nav_home">Home</a>
+                    <a href="section-details.html?section=bots" class="nav-link" data-i18n="nav_bots">MT5 Bots</a>
+                    <a href="section-details.html?section=signals" class="nav-link" data-i18n="nav_signals">Signals</a>
+                    <a href="section-details.html?section=services" class="nav-link"
+                        data-i18n="nav_services">Services</a>
+                    <a href="section-details.html?section=about" class="nav-link" data-i18n="nav_about">About</a>
+                    <a href="section-details.html?section=contact" class="nav-link" data-i18n="nav_contact">Contact</a>
+                </nav>
+            </div>
+
+            <!-- Site Name & Controls -->
+            <div class="nav-controls" style="margin-left: auto; display: flex; align-items: center; gap: 1.5rem;">
+                <div class="site-title" style="order: 2;" data-i18n="site_title">Trading Made Easy</div>
+
+                <div class="controls-wrapper" style="order: 1; display: flex; gap: 0.5rem; align-items: center;">
+                    <select class="lang-select">
+                        <option value="en">English</option>
+                        <option value="ar">العربية</option>
+                        <option value="es">Español</option>
+                        <option value="zh">中文</option>
+                        <option value="fr">Français</option>
+                    </select>
+                    <button class="theme-toggle" aria-label="Toggle Dark Mode">
+                        <i class="fas fa-moon"></i>
+                    </button>
+                    <button class="mobile-menu-btn" aria-label="Open Menu">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section id="hero" class="hero">
+        <div class="container">
+            <h1 data-aos="fade-up" data-i18n="hero_title">Precision Trading. <span
+                    style="color: var(--primary-color);">Automated.</span></h1>
+            <p data-i18n="hero_subtitle">"A platform dedicated to automated trading solutions that transform complex
+                market analysis into precise and profitable algorithms."</p>
+            <div class="hero-cta">
+                <a href="#bots" class="btn btn-primary" data-i18n="hero_btn_view">View Bots</a>
+                <a href="#contact" class="btn" style="border: 1px solid var(--text-color); margin-left: 1rem;"
+                    data-i18n="hero_btn_consult">Get Consultation</a>
+            </div>
+
+            <div class="hero-stats">
+                <div class="stat-item">
+                    <h3>78%</h3>
+                    <p data-i18n="stat_success">Success Rate</p>
+                </div>
+                <div class="stat-item">
+                    <h3>500+</h3>
+                    <p data-i18n="stat_traders">Active Traders</p>
+                </div>
+                <div class="stat-item">
+                    <h3>15+</h3>
+                    <p data-i18n="stat_algos">Proprietary Algos</p>
+                </div>
+            </div>
+
+            <div style="margin-top: 3rem; font-size: 0.9rem; color: var(--accent-color);">
+                <strong data-i18n="latest_offer_title">Latest Offer:</strong> <span data-i18n="latest_offer_text">Get
+                    20% off on the Momentum Hunter 2.0 this week!</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- MT5 Bots Section -->
+    <section id="bots" class="bots-section">
+        <div class="container">
+            <h2 class="section-title" data-i18n="bots_section_title">Premium MT5 Bots</h2>
+            <div class="bots-grid" id="bots-grid-container">
+                <!-- Bots will be dynamically loaded here by JavaScript -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Daily Trading Signals -->
+    <section id="signals" class="section" style="background: var(--card-bg);">
+        <div class="container">
+            <h2 class="section-title" data-i18n="signals_title">Daily Trading Signals</h2>
+            <div style="display: flex; gap: 2rem; align-items: center; justify-content: center; flex-wrap: wrap;">
+                <div style="flex: 1; min-width: 300px;">
+                    <h3><i class="fas fa-bullseye" style="color: var(--primary-color);"></i> <span
+                            data-i18n="sig_prec">High Precision Entries</span></h3>
+                    <p style="margin-bottom: 1rem;" data-i18n="sig_prec_desc">Get real-time entry and exit points
+                        directly to your device.</p>
+                    <ul style="list-style: none; padding: 0;">
+                        <li style="margin-bottom: 0.5rem;"><i class="fas fa-check-circle"
+                                style="color: var(--primary-color);"></i> <span data-i18n="sig_feat1">Major Forex
+                                Pairs</span></li>
+                        <li style="margin-bottom: 0.5rem;"><i class="fas fa-check-circle"
+                                style="color: var(--primary-color);"></i> <span data-i18n="sig_feat2">Gold &
+                                Indices</span></li>
+                        <li style="margin-bottom: 0.5rem;"><i class="fas fa-check-circle"
+                                style="color: var(--primary-color);"></i> <span data-i18n="sig_feat3">Risk:Reward 1:3
+                                Min</span></li>
+                    </ul>
+                </div>
+                <div
+                    style="flex: 1; min-width: 300px; background: var(--bg-color); padding: 2rem; border-radius: 10px; border: 1px solid var(--border-color);">
+                    <h4 data-i18n="sig_brief">Today's Audio Briefing</h4>
+                    <div
+                        style="margin-top: 1rem; background: #e2e8f0; padding: 1rem; border-radius: 50px; display: flex; align-items: center; gap: 1rem;">
+                        <button
+                            style="width: 40px; height: 40px; border-radius: 50%; background: var(--primary-color); border: none; color: white;"><i
+                                class="fas fa-play"></i></button>
+                        <div style="height: 4px; flex: 1; background: #cbd5e0; border-radius: 2px;"></div>
+                        <span style="font-size: 0.8rem; color: #2d3748;">00:00 / 02:45</span>
+                    </div>
+                    <p style="margin-top: 1rem; font-size: 0.9rem; color: var(--secondary-color);"
+                        data-i18n="sig_brief_desc">Daily market outlook and key levels for EURUSD and XAUUSD.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Statistics Section -->
+    <section id="stats" class="stat-section">
+        <div class="container">
+            <h2 class="section-title" style="color: #fff; border-bottom-color: #fff;" data-i18n="stats_section_title">
+                Platform Activity</h2>
+            <div class="stat-grid">
+                <div class="stat-box">
+                    <h2>12k+</h2>
+                    <p data-i18n="stat_visits">Monthly Visits</p>
+                </div>
+                <div class="stat-box">
+                    <h2>850+</h2>
+                    <p data-i18n="stat_views">Product Views</p>
+                </div>
+                <div class="stat-box">
+                    <h2>300+</h2>
+                    <p data-i18n="stat_purchases">Bot Purchases</p>
+                </div>
+                <div class="stat-box">
+                    <h2>$1M+</h2>
+                    <p data-i18n="stat_profit">Client Profit Generated</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Services & Other Services -->
+    <section id="services" class="services-section">
+        <div class="container">
+            <h2 class="section-title" data-i18n="services_section_title">Services Offered</h2>
+
+            <div class="services-list" style="margin-bottom: 3rem;">
+                <div class="service-badge" data-i18n="serv_custom">Custom Trading Bot Development</div>
+                <div class="service-badge" data-i18n="serv_algo">Algorithmic Strategy Design</div>
+                <div class="service-badge" data-i18n="serv_opt">System Optimization</div>
+                <div class="service-badge" data-i18n="serv_ment">Technical Mentorship</div>
+            </div>
+
+            <!-- Other Services Dropdown Placeholder -->
+            <div style="max-width: 400px; margin: 0 auto; text-align: center;">
+                <label for="other-services" style="display: block; margin-bottom: 0.5rem; font-weight: 600;"
+                    data-i18n="serv_other_label">Other Specialized Services</label>
+                <select id="other-services"
+                    style="width: 100%; padding: 1rem; border-radius: 5px; border: 1px solid var(--border-color);">
+                    <option value="" data-i18n="serv_select">Select a Service...</option>
+                    <option value="cloud">VPS Hosting Setup</option>
+                    <option value="data">Historical Data Cleaning</option>
+                    <option value="api">Exchange API Integration</option>
+                    <option value="consult">Risk Management Audit</option>
+                    <option value="custom">Custom Indicator Creation</option>
+                </select>
+            </div>
+        </div>
+    </section>
+
+    <!-- Payment Gateways -->
+    <section id="payments" class="section">
+        <div class="container">
+            <h2 class="section-title" data-i18n="pay_title">Secure Payments</h2>
+            <div style="display: flex; justify-content: center; gap: 3rem; flex-wrap: wrap; opacity: 0.7;">
+                <!-- Using FontAwesome icons as placeholders for logos -->
+                <i class="fab fa-cc-visa fa-3x"></i>
+                <i class="fab fa-cc-mastercard fa-3x"></i>
+                <i class="fab fa-paypal fa-3x"></i>
+                <i class="fab fa-bitcoin fa-3x"></i>
+                <i class="fab fa-ethereum fa-3x"></i>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Me -->
+    <section id="about" class="about-section">
+        <div class="container">
+            <h2 class="section-title" data-i18n="about_title">About the Developer</h2>
+            <div class="about-container">
+                <div style="text-align: center;">
+                    <img src="images/profile.png" alt="KRAA MOHAMED" class="profile-img">
+                    <h3 style="margin-top: 1rem;">KRAA MOHAMED</h3>
+                    <p style="color: var(--primary-color); font-weight: 600;" data-i18n="about_role">Senior Algorithmic
+                        Trading Developer</p>
+                </div>
+                <div>
+                    <h3 data-i18n="about_bio_title">Bio</h3>
+                    <p style="margin-bottom: 2rem;" data-i18n="about_bio_text">"To pioneer next-generation algorithmic
+                        trading systems that democratize institutional-grade trading tools, making advanced market
+                        analysis accessible and actionable for traders worldwide."</p>
+
+                    <h3 data-i18n="about_arsenal_title">Technical Arsenal</h3>
+                    <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 2rem;">
+                        <span class="service-badge" style="padding: 0.5rem 1rem; font-size: 0.8rem;">Python</span>
+                        <span class="service-badge" style="padding: 0.5rem 1rem; font-size: 0.8rem;">MQL4/5</span>
+                        <span class="service-badge" style="padding: 0.5rem 1rem; font-size: 0.8rem;">C++</span>
+                        <span class="service-badge" style="padding: 0.5rem 1rem; font-size: 0.8rem;">AWS</span>
+                        <span class="service-badge" style="padding: 0.5rem 1rem; font-size: 0.8rem;">Docker</span>
+                        <span class="service-badge" style="padding: 0.5rem 1rem; font-size: 0.8rem;">Pandas</span>
+                    </div>
+
+                    <h3 data-i18n="about_exp_title">Professional Experience</h3>
+                    <div class="timeline">
+                        <div class="timeline-item">
+                            <div class="timeline-date">2020 - Present</div>
+                            <h4 data-i18n="exp_role1">Algorithmic Trading Consultant</h4>
+                            <p>FinTech Solutions Ltd.</p>
+                            <ul style="font-size: 0.9rem; margin-top: 0.5rem; list-style: disc; padding-left: 1rem;">
+                                <li data-i18n="exp_desc1a">Deployed 15+ proprietary algorithms (78% success rate).</li>
+                                <li data-i18n="exp_desc1b">Reduced latency by 40% via architecture optimization.</li>
+                            </ul>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="timeline-date">2017 - 2020</div>
+                            <h4 data-i18n="exp_role2">Senior MQL5 Developer</h4>
+                            <p>Quantitative Edge</p>
+                            <ul style="font-size: 0.9rem; margin-top: 0.5rem; list-style: disc; padding-left: 1rem;">
+                                <li data-i18n="exp_desc2a">Led migration from MQL4 to MQL5 for 200+ clients.</li>
+                                <li data-i18n="exp_desc2b">Implemented efficient backtesting frameworks.</li>
+                            </ul>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="timeline-date">2014 - 2017</div>
+                            <h4 data-i18n="exp_role3">Trading Systems Analyst</h4>
+                            <p>Capital Markets Group</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Us -->
+    <section id="contact" class="contact-section">
+        <div class="container">
+            <h2 class="section-title" data-i18n="contact_title">Get In Touch</h2>
+            <form class="contact-form">
+                <div class="form-group">
+                    <input type="text" placeholder="Your Name" required data-i18n-placeholder="form_name">
+                </div>
+                <div class="form-group">
+                    <input type="email" placeholder="Your Email" required data-i18n-placeholder="form_email">
+                </div>
+                <div class="form-group">
+                    <textarea rows="5" placeholder="Your Message" required data-i18n-placeholder="form_msg"></textarea>
+                </div>
+                <button type="submit" class="btn-primary" data-i18n="form_send">Send Message</button>
+            </form>
+
+            <div style="text-align: center; margin-top: 3rem;">
+                <p style="margin-bottom: 1rem;" data-i18n="follow_us">Follow us on social media:</p>
+                <div style="display: flex; justify-content: center; gap: 1.5rem;">
+                    <a href="https://www.facebook.com/jamal.duer.5" target="_blank" style="font-size: 1.5rem;"><i
+                            class="fab fa-facebook"></i></a>
+                    <a href="mailto:bachasalman69@gmail.com" style="font-size: 1.5rem;"><i
+                            class="fas fa-envelope"></i></a>
+                    <a href="https://www.pinterest.com/taybegames1981/" target="_blank" style="font-size: 1.5rem;"><i
+                            class="fab fa-pinterest"></i></a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer
+        style="background: var(--bg-color); border-top: 1px solid var(--border-color); padding: 2rem 0; text-align: center; font-size: 0.9rem;">
+        <div class="container"
+            style="display:flex; justify-content:center; align-items:center; gap:1rem; flex-wrap:wrap;">
+            <p onclick="triggerAdmin()" style="cursor:text; user-select:none;">&copy; 2025 Trading Made Easy. <span
+                    data-i18n="rights_reserved">All rights reserved.</span></p>
+        </div>
+    </footer>
+
+    <!-- Admin Panel Overlay (Internal Page) -->
+    <div id="admin-overlay"
+        style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:var(--bg-color); z-index:9999; overflow-y:auto; padding:2rem;">
+        <div class="container" style="max-width:800px; margin:0 auto;">
+            <div
+                style="display:flex; justify-content:space-between; align-items:center; margin-bottom:3rem; border-bottom:1px solid var(--border-color); padding-bottom:1rem;">
+                <div>
+                    <h1 style="margin:0; font-size:2rem; color:var(--primary-color);" data-i18n="adm_dashboard_title">
+                        Admin Dashboard</h1>
+                    <p style="margin:0; opacity:0.7;" data-i18n="adm_dashboard_desc">Manage your website content and
+                        settings</p>
+                </div>
+                <button onclick="closeAdmin()" class="btn"
+                    style="border:1px solid var(--text-color); padding:0.5rem 1.5rem;" data-i18n="adm_exit_btn">Exit
+                    Dashboard</button>
+            </div>
+
+            <!-- Auth Screen -->
+            <div id="admin-auth" style="text-align:center; padding-top:2rem;">
+                <h3 data-i18n="adm_enter_pass">Enter Developer Password</h3>
+                <input type="password" id="admin-pass-input" placeholder="Password"
+                    data-i18n-placeholder="adm_pass_placeholder"
+                    style="padding:1rem; width:100%; max-width:300px; margin:1rem 0; background:var(--card-bg); border:1px solid var(--border-color); color:var(--text-color); border-radius:5px;">
+                <br>
+                <button onclick="verifyAdmin()" class="btn-primary" style="width:100%; max-width:300px;"
+                    data-i18n="adm_login_btn">Login</button>
+                <p id="auth-error" style="color:#e53e3e; margin-top:1rem; display:none;" data-i18n="adm_error_pass">
+                    Incorrect Password</p>
+            </div>
+
+            <!-- Controls (Hidden until Auth) -->
+            <div id="admin-controls" style="display:none;">
+
+                <!-- Tabs Navigation -->
+                <div
+                    style="display:flex; gap:1rem; margin-bottom:2rem; border-bottom:1px solid var(--border-color); padding-bottom:1rem;">
+                    <button onclick="switchTab('general')" class="btn" id="tab-btn-general" style="opacity:1;"
+                        data-i18n="adm_tab_general">General</button>
+                    <button onclick="switchTab('appearance')" class="btn" id="tab-btn-appearance" style="opacity:0.6;"
+                        data-i18n="adm_tab_appearance">Appearance</button>
+                    <button onclick="switchTab('content')" class="btn" id="tab-btn-content" style="opacity:0.6;"
+                        data-i18n="adm_tab_content">Content
+                        & Products</button>
+                </div>
+
+                <!-- Tab: General -->
+                <div id="tab-general">
+                    <div class="admin-card"
+                        style="background:var(--card-bg); padding:2rem; border-radius:10px; margin-bottom:2rem; border:1px solid var(--border-color);">
+                        <h3 style="margin-bottom:1.5rem;" data-i18n="adm_vis_title"><i class="fas fa-eye"></i> Section
+                            Visibility</h3>
+                        <div style="display:grid; gap:0.5rem;">
+                            <label
+                                style="display:flex; justify-content:space-between; padding:0.8rem; background:var(--bg-color); border-radius:5px;">
+                                <span data-i18n="adm_vis_bots">MT5 Bots</span> <input type="checkbox" id="adm-vis-bots">
+                            </label>
+                            <label
+                                style="display:flex; justify-content:space-between; padding:0.8rem; background:var(--bg-color); border-radius:5px;">
+                                <span data-i18n="adm_vis_signals">Signals</span> <input type="checkbox"
+                                    id="adm-vis-signals">
+                            </label>
+                            <label
+                                style="display:flex; justify-content:space-between; padding:0.8rem; background:var(--bg-color); border-radius:5px;">
+                                <span data-i18n="adm_vis_services">Services</span> <input type="checkbox"
+                                    id="adm-vis-services">
+                            </label>
+                            <label
+                                style="display:flex; justify-content:space-between; padding:0.8rem; background:var(--bg-color); border-radius:5px;">
+                                <span data-i18n="adm_vis_about">About Me</span> <input type="checkbox"
+                                    id="adm-vis-about">
+                            </label>
+                        </div>
+
+                        <h3 style="margin: 1.5rem 0 1rem;" data-i18n="adm_social_title"><i class="fas fa-share-alt"></i>
+                            Social & Contact Links</h3>
+                        <div style="display:grid; gap:1rem;">
+                            <div>
+                                <label style="display:block; font-size:0.8rem; opacity:0.7;">Facebook URL</label>
+                                <input type="text" id="adm-link-fb"
+                                    style="width:100%; padding:0.5rem; background:var(--bg-color); border:1px solid var(--border-color); color:var(--text-color); border-radius:5px;">
+                            </div>
+                            <div>
+                                <label style="display:block; font-size:0.8rem; opacity:0.7;">Pinterest URL</label>
+                                <input type="text" id="adm-link-pin"
+                                    style="width:100%; padding:0.5rem; background:var(--bg-color); border:1px solid var(--border-color); color:var(--text-color); border-radius:5px;">
+                            </div>
+                            <div>
+                                <label style="display:block; font-size:0.8rem; opacity:0.7;">Contact Email</label>
+                                <input type="text" id="adm-link-email"
+                                    style="width:100%; padding:0.5rem; background:var(--bg-color); border:1px solid var(--border-color); color:var(--text-color); border-radius:5px;">
+                            </div>
+                        </div>
+
+                        <h3 style="margin: 1.5rem 0 1rem;" data-i18n="adm_wallet_title"><i class="fas fa-wallet"></i>
+                            Payment Wallets (Checkout)</h3>
+                        <div style="display:grid; gap:1rem;">
+                            <div>
+                                <label style="display:block; font-size:0.8rem; opacity:0.7;">USDT (TRC20)
+                                    Address</label>
+                                <input type="text" id="adm-wallet-usdt" placeholder="TR7NHqj..."
+                                    style="width:100%; padding:0.5rem; background:var(--bg-color); border:1px solid var(--border-color); color:var(--text-color); border-radius:5px;">
+                            </div>
+                            <div>
+                                <label style="display:block; font-size:0.8rem; opacity:0.7;">Litecoin (LTC)
+                                    Address</label>
+                                <input type="text" id="adm-wallet-ltc" placeholder="LM2nyQ..."
+                                    style="width:100%; padding:0.5rem; background:var(--bg-color); border:1px solid var(--border-color); color:var(--text-color); border-radius:5px;">
+                            </div>
+                            <div>
+                                <label style="display:block; font-size:0.8rem; opacity:0.7;">Payeer Account ID</label>
+                                <input type="text" id="adm-wallet-payeer" placeholder="P1000..."
+                                    style="width:100%; padding:0.5rem; background:var(--bg-color); border:1px solid var(--border-color); color:var(--text-color); border-radius:5px;">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab: Appearance -->
+                <div id="tab-appearance" style="display:none;">
+                    <div class="admin-card"
+                        style="background:var(--card-bg); padding:2rem; border-radius:10px; margin-bottom:2rem; border:1px solid var(--border-color);">
+                        <h3 style="margin-bottom:1.5rem;"><i class="fas fa-palette"></i> Look & Feel</h3>
+
+                        <div style="margin-bottom:1.5rem;">
+                            <label style="display:block; margin-bottom:0.5rem; font-weight:600;"
+                                data-i18n="adm_app_title_label">Site Title</label>
+                            <input type="text" id="adm-app-title"
+                                style="width:100%; padding:0.8rem; background:var(--bg-color); border:1px solid var(--border-color); color:var(--text-color); border-radius:5px;">
+                        </div>
+
+                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1.5rem; margin-bottom:1.5rem;">
+                            <div>
+                                <label style="display:block; margin-bottom:0.5rem; font-weight:600;"
+                                    data-i18n="adm_app_color_label">Primary
+                                    Color</label>
+                                <input type="color" id="adm-app-color" style="width:100%; height:50px; cursor:pointer;"
+                                    value="#00ff88">
+                            </div>
+                            <div>
+                                <label style="display:block; margin-bottom:0.5rem; font-weight:600;"
+                                    data-i18n="adm_app_radius_label">Corner
+                                    Style</label>
+                                <select id="adm-app-radius"
+                                    style="width:100%; padding:0.8rem; background:var(--bg-color); border:1px solid var(--border-color); color:var(--text-color); border-radius:5px;">
+                                    <option value="10px">Rounded (Default)</option>
+                                    <option value="0px">Sharp</option>
+                                    <option value="20px">Extra Rounded</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div style="margin-bottom:1.5rem;">
+                            <label style="display:block; margin-bottom:0.5rem; font-weight:600;"
+                                data-i18n="adm_app_meta_label">SEO Meta
+                                Description</label>
+                            <textarea id="adm-app-meta" rows="2"
+                                style="width:100%; padding:0.8rem; background:var(--bg-color); border:1px solid var(--border-color); color:var(--text-color); border-radius:5px;"
+                                placeholder="Short description for Google search results..."></textarea>
+                        </div>
+
+                        <div>
+                            <label style="display:block; margin-bottom:0.5rem; font-weight:600;"
+                                data-i18n="adm_app_profile_label">Profile Picture (About
+                                Me)</label>
+                            <div style="display:flex; gap:1rem; align-items:center;">
+                                <input type="file" id="adm-app-profile-file" accept="image/*" style="display:none;"
+                                    onchange="previewProfileImg(this)">
+                                <button onclick="document.getElementById('adm-app-profile-file').click()" class="btn"
+                                    style="padding:0.5rem 1rem; border:1px solid var(--border-color);"
+                                    data-i18n="adm_app_upload_btn">
+                                    <i class="fas fa-upload"></i> Upload New Photo
+                                </button>
+                                <div id="profile-img-preview"
+                                    style="width:50px; height:50px; border-radius:50%; border:1px solid var(--border-color); background:center/cover no-repeat; display:none;">
+                                </div>
+                                <input type="hidden" id="adm-app-profile-base64">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab: Content -->
+                <div id="tab-content" style="display:none;">
+
+                    <!-- Text Edits -->
+                    <div class="admin-card"
+                        style="background:var(--card-bg); padding:2rem; border-radius:10px; margin-bottom:2rem; border:1px solid var(--border-color);">
+                        <h3 style="margin-bottom:1.5rem;" data-i18n="adm_tab_content">Text Customization</h3>
+                        <div style="margin-bottom:1rem;">
+                            <label style="display:block; margin-bottom:0.5rem;" data-i18n="adm_txt_hero_label">Hero
+                                Title</label>
+                            <input type="text" id="adm-txt-hero"
+                                style="width:100%; padding:0.8rem; background:var(--bg-color); border:1px solid var(--border-color); color:var(--text-color); border-radius:5px;">
+                        </div>
+                        <div style="margin-bottom:1rem;">
+                            <label style="display:block; margin-bottom:0.5rem;" data-i18n="adm_txt_hero_desc_label">Hero
+                                Description</label>
+                            <textarea id="adm-txt-hero-desc" rows="2"
+                                style="width:100%; padding:0.8rem; background:var(--bg-color); border:1px solid var(--border-color); color:var(--text-color); border-radius:5px;"></textarea>
+                        </div>
+                        <div style="margin-bottom:1rem;">
+                            <label style="display:block; margin-bottom:0.5rem;" data-i18n="adm_txt_about_label">About
+                                Bio (Professional Summary)</label>
+                            <textarea id="adm-txt-about" rows="3"
+                                style="width:100%; padding:0.8rem; background:var(--bg-color); border:1px solid var(--border-color); color:var(--text-color); border-radius:5px;"></textarea>
+                        </div>
+
+                        <div style="margin-top:2rem;">
+                            <h4 style="margin-bottom:0.5rem;" data-i18n="adm_txt_ticker_label"><i
+                                    class="fas fa-broadcast-tower"></i> News Ticker
+                                Messages</h4>
+                            <p style="font-size:0.75rem; opacity:0.7; margin-bottom:0.5rem;"
+                                data-i18n="adm_txt_ticker_desc">Enter one message per line.
+                                These rotate at the top of the site.</p>
+                            <textarea id="adm-txt-ticker" rows="4"
+                                style="width:100%; padding:0.8rem; background:var(--bg-color); border:1px solid var(--border-color); color:var(--text-color); border-radius:5px;"
+                                placeholder="Welcome to our platform...&#10;New bot release coming soon..."></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Products Manager -->
+                    <div class="admin-card"
+                        style="background:var(--card-bg); padding:2rem; border-radius:10px; margin-bottom:2rem; border:1px solid var(--border-color);">
+                        <div
+                            style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+                            <h3 style="margin:0;" data-i18n="adm_prod_manage_title">Manage Products (Bots)</h3>
+                            <button onclick="loadSettings()" class="btn"
+                                style="font-size:0.7rem; padding:0.3rem 0.6rem; opacity:0.7;"
+                                data-i18n="adm_prod_refresh"><i class="fas fa-sync"></i> Refresh List</button>
+                        </div>
+
+                        <div id="adm-prod-list" style="margin-bottom:1.5rem; display:grid; gap:0.5rem;">
+                            <!-- Filled via JS -->
+                        </div>
+
+                        <div style="background:var(--bg-color); padding:1rem; border-radius:5px;">
+                            <h4 style="margin-top:0;" data-i18n="adm_prod_add_title">Add New Product</h4>
+                            <div
+                                style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.8rem; background:rgba(0,208,156,0.1); padding:0.5rem; border-radius:5px; border:1px solid var(--primary-color);">
+                                <label style="font-size:0.85rem; font-weight:600; cursor:pointer;"
+                                    data-i18n="adm_prod_type_free">Free Product?</label>
+                                <input type="checkbox" id="new-prod-is-free" onchange="togglePriceField(this.checked)">
+                            </div>
+                            <input type="text" id="new-prod-title" placeholder="Product Title"
+                                data-i18n-placeholder="adm_prod_title_placeholder"
+                                style="width:100%; margin-bottom:0.5rem; padding:0.5rem; background:var(--card-bg); color:var(--text-color); border:1px solid var(--border-color);">
+                            <div id="price-field-wrapper"
+                                style="display:flex; gap:0.5rem; margin-bottom:0.5rem; align-items:center;">
+                                <input type="text" id="new-prod-price" placeholder="Price ($)"
+                                    data-i18n-placeholder="adm_prod_price_placeholder"
+                                    style="width:30%; padding:0.5rem; background:var(--card-bg); color:var(--text-color); border:1px solid var(--border-color);">
+
+                                <div style="width:70%; display:flex; gap:0.5rem;">
+                                    <input type="file" id="new-prod-img-file" accept="image/*" style="display:none;"
+                                        onchange="previewImage(this)">
+                                    <button onclick="document.getElementById('new-prod-img-file').click()" class="btn"
+                                        style="flex:1; padding:0.5rem; font-size:0.8rem; background:var(--bg-color); border:1px solid var(--border-color); color:var(--text-color);"
+                                        data-i18n="adm_prod_img_btn">
+                                        <i class="fas fa-image"></i> Choose Image
+                                    </button>
+                                    <div id="img-preview-box"
+                                        style="width:40px; height:40px; border:1px solid var(--border-color); border-radius:5px; background:center/cover no-repeat; display:none;">
+                                    </div>
+                                </div>
+                                <input type="hidden" id="new-prod-img-base64">
+                            </div>
+                            <textarea id="new-prod-desc" placeholder="Short Description"
+                                data-i18n-placeholder="adm_prod_desc_placeholder"
+                                style="width:100%; margin-bottom:0.5rem; padding:0.5rem; background:var(--card-bg); color:var(--text-color); border:1px solid var(--border-color);"
+                                rows="2"></textarea>
+
+                            <!-- Downloadable File Field -->
+                            <div
+                                style="background:rgba(0,0,0,0.1); padding:0.8rem; border-radius:5px; margin-bottom:1rem; border:1px dashed var(--border-color);">
+                                <label style="display:block; font-size:0.8rem; margin-bottom:0.5rem; font-weight:600;"
+                                    data-i18n="adm_file_label"><i class="fas fa-file-archive"></i> Product Download File
+                                    (.zip, .rar,
+                                    etc.)</label>
+                                <div style="display:flex; gap:0.5rem; align-items:center;">
+                                    <input type="file" id="new-prod-file-input" style="display:none;"
+                                        onchange="handleProductFile(this)">
+                                    <button onclick="document.getElementById('new-prod-file-input').click()" class="btn"
+                                        style="padding:0.5rem; font-size:0.8rem; border:1px solid var(--border-color); background:var(--bg-color); color:var(--text-color);"
+                                        data-i18n="adm_file_btn">
+                                        <i class="fas fa-upload"></i> Choose/Update File
+                                    </button>
+                                    <button id="remove-file-btn" onclick="removeProductFile()" class="btn"
+                                        style="padding:0.5rem; font-size:0.8rem; border:1px solid #ff4d4d; background:rgba(255,77,77,0.1); color:#ff4d4d; display:none;"
+                                        data-i18n="adm_file_remove">
+                                        <i class="fas fa-trash"></i> Remove File
+                                    </button>
+                                    <span id="file-name-display" style="font-size:0.8rem; opacity:0.7;"
+                                        data-i18n="adm_file_none">No file
+                                        selected</span>
+                                    <input type="hidden" id="new-prod-file-data">
+                                    <input type="hidden" id="new-prod-file-name">
+                                </div>
+                            </div>
+
+                            <button onclick="addNewProduct()" class="btn-primary"
+                                style="padding:0.5rem 1rem; font-size:0.8rem;" data-i18n="adm_prod_add_btn">+ Add
+                                Product</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Global Save -->
+                <div
+                    style="position:sticky; bottom:1rem; background:var(--card-bg); padding:1rem; border-top:1px solid var(--border-color); border-radius:10px; box-shadow:0 -5px 20px rgba(0,0,0,0.2); display:flex; justify-content:flex-end;">
+                    <button onclick="console.log('Button clicked!'); saveSettings(true);" class="btn-primary"
+                        style="width:200px;" data-i18n="adm_save_all">Save All
+                        Changes</button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="script.js"></script>
+    <script>
+        // --- Admin Logic ---
+        let clickCount = 0;
+        let clickTimer;
+
+        // Trigger
+        function triggerAdmin() {
+            clearTimeout(clickTimer);
+            clickCount++;
+            if (clickCount === 5) {
+                openAdmin();
+                clickCount = 0;
+            }
+            clickTimer = setTimeout(() => { clickCount = 0; }, 500);
+        }
+
+        // Open/Close
+        function openAdmin() {
+            document.getElementById('admin-overlay').style.display = 'block';
+            document.body.style.overflow = 'hidden';
+
+            // Re-load settings to ensure products are ready
+            loadSettings();
+
+            // Check if already logged in this session
+            if (sessionStorage.getItem('adminLoggedIn') === 'true') {
+                document.getElementById('admin-auth').style.display = 'none';
+                document.getElementById('admin-controls').style.display = 'block';
+                // DEFAULT TO CONTENT TAB as requested to show products immediately
+                switchTab('content');
+            }
+        }
+
+        function closeAdmin() {
+            document.getElementById('admin-overlay').style.display = 'none';
+            document.body.style.overflow = 'auto';
+            location.reload(); // Reload to apply changes
+        }
+
+        // Auth
+        function verifyAdmin() {
+            const pass = document.getElementById('admin-pass-input').value;
+            if (pass === 'admin123') {
+                sessionStorage.setItem('adminLoggedIn', 'true'); // Persist for this session
+                document.getElementById('admin-auth').style.display = 'none';
+                document.getElementById('admin-controls').style.display = 'block';
+                loadSettings();
+            } else {
+                document.getElementById('auth-error').style.display = 'block';
+            }
+        }
+
+        // Settings Logic - V2
+        const CONFIG_KEY = 'tme_config_v2';
+        let currentProducts = [];
+        let editingIndex = -1; // -1 means we are adding new, >=0 means we are editing existing
+        console.log('Global currentProducts initialized as empty array');
+
+        function switchTab(tab) {
+            ['general', 'appearance', 'content'].forEach(t => {
+                document.getElementById('tab-' + t).style.display = 'none';
+                document.getElementById('tab-btn-' + t).style.opacity = '0.6';
+            });
+            document.getElementById('tab-' + tab).style.display = 'block';
+            document.getElementById('tab-btn-' + tab).style.opacity = '1';
+
+            // AUTOMATIC REFRESH: If entering content tab, ensure list is up-to-date
+            if (tab === 'content') {
+                console.log('Entering Content Tab: Refreshing product list automatically...');
+                renderProductList();
+            }
+        }
+
+        function loadSettings() {
+            try {
+                const config = JSON.parse(localStorage.getItem(CONFIG_KEY)) || { visibility: {}, textOverrides: {}, appearance: {}, products: [] };
+                console.log('--- loadSettings Started ---', config);
+
+                const setVal = (id, val) => {
+                    const el = document.getElementById(id);
+                    if (el) el.value = val || '';
+                };
+                const setCheck = (id, val) => {
+                    const el = document.getElementById(id);
+                    if (el) el.checked = val !== false;
+                };
+
+                // Visibility
+                setCheck('adm-vis-bots', config.visibility.bots);
+                setCheck('adm-vis-signals', config.visibility.signals);
+                setCheck('adm-vis-services', config.visibility.services);
+                setCheck('adm-vis-about', config.visibility.about);
+
+                // Appearance
+                const app = config.appearance || {};
+                setVal('adm-app-title', app.siteTitle || "Trading Made Easy");
+                setVal('adm-app-color', app.primaryColor || "#00ff88");
+                setVal('adm-app-radius', app.borderRadius || "10px");
+
+                // Texts
+                const txt = config.textOverrides || {};
+                setVal('adm-txt-hero', txt.hero_title || "Precision Trading. Automated.");
+                setVal('adm-txt-hero-desc', txt.hero_desc || "A platform dedicated to...");
+                setVal('adm-txt-about', txt.about_bio || "");
+                setVal('adm-txt-ticker', txt.ticker_msgs || "");
+
+                // Links
+                const lnks = config.links || {};
+                setVal('adm-link-fb', lnks.facebook || "");
+                setVal('adm-link-pin', lnks.pinterest || "");
+                setVal('adm-link-email', lnks.email || "");
+
+                // Wallets
+                const wall = config.wallets || {};
+                setVal('adm-wallet-usdt', wall.usdt || "TR7NHqjeKQxGTCi8q8zy4pL8otSzgjLj6t");
+                setVal('adm-wallet-ltc', wall.ltc || "LM2nyQpYFp1e8oM7i8E4qN1D4vK5sR1zT9");
+                setVal('adm-wallet-payeer', wall.payeer || "P1000200030");
+
+                // SEO & Profile
+                setVal('adm-app-meta', app.metaDesc || "");
+                setVal('adm-app-profile-base64', app.profileBase64 || "");
+                const profPreview = document.getElementById('profile-img-preview');
+                if (profPreview && app.profileBase64) {
+                    profPreview.style.backgroundImage = `url(${app.profileBase64})`;
+                    profPreview.style.display = 'block';
+                }
+
+                // Products - THE CRITICAL PART
+                currentProducts = Array.isArray(config.products) ? config.products : [];
+                console.log('loadSettings: Products to render:', currentProducts.length);
+                renderProductList();
+            } catch (err) {
+                console.error('CRITICAL: loadSettings failed:', err);
+            }
+        }
+
+        function renderProductList() {
+            const list = document.getElementById('adm-prod-list');
+            list.innerHTML = '';
+
+            // Re-sync with memory to ensure we have latest
+            console.log('Rendering list with', currentProducts.length, 'products');
+
+            if (currentProducts.length === 0) {
+                list.innerHTML = '<p style="text-align:center; opacity:0.5; padding:1rem; border:1px dashed var(--border-color);">No custom products. Using defaults.</p>';
+            }
+
+            currentProducts.forEach((p, idx) => {
+                const div = document.createElement('div');
+                div.className = 'admin-product-item';
+                div.style.cssText = 'background:var(--bg-color); padding:0.8rem; border-radius:8px; display:flex; justify-content:space-between; align-items:center; border:1px solid var(--border-color); margin-bottom:0.5rem;';
+                div.innerHTML = `
+                    <div style="display:flex; align-items:center; gap:1rem;">
+                        <div style="width:40px; height:40px; background:url(${p.image}) center/cover; border-radius:5px; border:1px solid var(--border-color);"></div>
+                        <div>
+                            <div style="font-weight:bold; font-size:0.9rem;">${p.title}</div>
+                            <div style="font-size:0.8rem; color:var(--primary-color);">${p.isFree ? '<span style="color:#00D09C; font-weight:bold;" data-i18n="adm_prod_free_label">FREE</span>' : '$' + p.price}</div>
+                        </div>
+                    </div>
+                    <div style="display:flex; gap:0.3rem;">
+                        <button onclick="editProduct(${idx})" style="color:var(--primary-color); background:none; border:none; cursor:pointer; padding:0.5rem;"><i class="fas fa-edit"></i></button>
+                        <button onclick="removeProduct(${idx})" style="color:#ff4d4d; background:none; border:none; cursor:pointer; padding:0.5rem;"><i class="fas fa-trash"></i></button>
+                    </div>
+                `;
+                list.appendChild(div);
+            });
+
+            // Update a counter if it exists (good for UX)
+            const saveBtn = document.querySelector('button[onclick*="saveSettings"]');
+            if (saveBtn) saveBtn.innerHTML = `Save All Changes (${currentProducts.length} Products)`;
+        }
+
+        function previewImage(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    const base64 = e.target.result;
+                    document.getElementById('new-prod-img-base64').value = base64;
+                    const preview = document.getElementById('img-preview-box');
+                    preview.style.backgroundImage = `url(${base64})`;
+                    preview.style.display = 'block';
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function previewProfileImg(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    const base64 = e.target.result;
+                    document.getElementById('adm-app-profile-base64').value = base64;
+                    const preview = document.getElementById('profile-img-preview');
+                    preview.style.backgroundImage = `url(${base64})`;
+                    preview.style.display = 'block';
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function handleProductFile(input) {
+            if (input.files && input.files[0]) {
+                const file = input.files[0];
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    document.getElementById('new-prod-file-data').value = e.target.result;
+                    document.getElementById('new-prod-file-name').value = file.name;
+                    document.getElementById('file-name-display').textContent = file.name;
+                    document.getElementById('file-name-display').style.color = 'var(--primary-color)';
+                    document.getElementById('remove-file-btn').style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function removeProductFile() {
+            if (confirm("Are you sure you want to remove this file?")) {
+                document.getElementById('new-prod-file-data').value = '';
+                document.getElementById('new-prod-file-name').value = '';
+                document.getElementById('file-name-display').textContent = 'No file selected';
+                document.getElementById('file-name-display').style.color = 'inherit';
+                document.getElementById('remove-file-btn').style.display = 'none';
+                document.getElementById('new-prod-file-input').value = ''; // Reset file input
+            }
+        }
+
+        function editProduct(idx) {
+            editingIndex = idx;
+            const p = currentProducts[idx];
+
+            const isFree = p.isFree || false;
+            document.getElementById('new-prod-is-free').checked = isFree;
+            togglePriceField(isFree);
+
+            // Populate fields
+            document.getElementById('new-prod-title').value = p.title;
+            document.getElementById('new-prod-price').value = p.price || '';
+            document.getElementById('new-prod-desc').value = p.desc || '';
+
+            // File handling
+            if (p.fileData && p.fileName) {
+                document.getElementById('new-prod-file-data').value = p.fileData;
+                document.getElementById('new-prod-file-name').value = p.fileName;
+                document.getElementById('file-name-display').textContent = p.fileName;
+                document.getElementById('file-name-display').style.color = 'var(--primary-color)';
+                document.getElementById('remove-file-btn').style.display = 'block';
+            } else {
+                document.getElementById('new-prod-file-data').value = '';
+                document.getElementById('new-prod-file-name').value = '';
+                document.getElementById('file-name-display').textContent = 'No file selected';
+                document.getElementById('file-name-display').style.color = 'inherit';
+                document.getElementById('remove-file-btn').style.display = 'none';
+            }
+
+            // Image handling (if it's a base64 string, show preview)
+            if (p.image && p.image.startsWith('data:image')) {
+                document.getElementById('new-prod-img-base64').value = p.image;
+                const preview = document.getElementById('img-preview-box');
+                preview.style.backgroundImage = `url(${p.image})`;
+                preview.style.display = 'block';
+            } else {
+                document.getElementById('new-prod-img-base64').value = '';
+                document.getElementById('img-preview-box').style.display = 'none';
+            }
+
+            // Change button text
+            const addBtn = document.querySelector('button[onclick="addNewProduct()"]');
+            if (addBtn) {
+                addBtn.textContent = 'Update Product';
+                addBtn.style.background = '#ffaa00'; // Orange for Edit mode
+            }
+
+            // Alert user
+            alert("Editing " + p.title + ". Modify fields and click 'Update Product'.");
+        }
+
+        function addNewProduct() {
+            const titleInput = document.getElementById('new-prod-title');
+            const priceInput = document.getElementById('new-prod-price');
+            const imgBase64 = document.getElementById('new-prod-img-base64').value;
+            const descInput = document.getElementById('new-prod-desc');
+            const fileData = document.getElementById('new-prod-file-data').value;
+            const fileName = document.getElementById('new-prod-file-name').value;
+            const isFree = document.getElementById('new-prod-is-free').checked;
+
+            const title = titleInput.value.trim();
+            let price = priceInput.value.trim();
+
+            if (isFree) {
+                price = '0'; // Set price to 0 if it's a free product
+            }
+
+            if (title) { // Only title is strictly required now, price can be 0
+                const config = JSON.parse(localStorage.getItem(CONFIG_KEY)) || {};
+                let list = Array.isArray(config.products) ? config.products : [];
+
+                if (editingIndex > -1) {
+                    // UPDATE EXISTING
+                    list[editingIndex] = {
+                        ...list[editingIndex],
+                        title: title,
+                        price: price,
+                        image: imgBase64 || list[editingIndex].image,
+                        desc: descInput.value || '',
+                        fileData: fileData || list[editingIndex].fileData,
+                        fileName: fileName || list[editingIndex].fileName,
+                        isFree: isFree // Save the free status (bool)
+                    };
+                    editingIndex = -1; // Reset
+                    currentProducts = list; // Update global memory
+                    config.products = list;
+                    localStorage.setItem(CONFIG_KEY, JSON.stringify(config));
+
+                    // Reset button appearance
+                    const addBtn = document.querySelector('button[onclick="addNewProduct()"]');
+                    if (addBtn) {
+                        addBtn.textContent = '+ Add Product';
+                        addBtn.style.background = 'var(--primary-color)';
+                    }
+                } else {
+                    // ADD NEW
+                    const newBot = {
+                        id: Date.now(),
+                        title: title,
+                        price: price,
+                        image: imgBase64 || 'images/bot1.png',
+                        desc: descInput.value || '',
+                        fileData: fileData || null,
+                        fileName: fileName || null,
+                        isFree: isFree
+                    };
+                    list.push(newBot);
+                    currentProducts = list; // Update global memory
+                    config.products = list;
+                    localStorage.setItem(CONFIG_KEY, JSON.stringify(config));
+                }
+
+                currentProducts = list;
+                config.products = list;
+                localStorage.setItem(CONFIG_KEY, JSON.stringify(config));
+
+                renderProductList();
+
+                // Clear inputs
+                titleInput.value = '';
+                priceInput.value = '';
+                document.getElementById('new-prod-is-free').checked = false;
+                togglePriceField(false);
+                document.getElementById('new-prod-img-base64').value = '';
+                document.getElementById('new-prod-img-file').value = '';
+                document.getElementById('img-preview-box').style.display = 'none';
+                descInput.value = '';
+                document.getElementById('new-prod-file-data').value = '';
+                document.getElementById('new-prod-file-name').value = '';
+                document.getElementById('file-name-display').textContent = 'No file selected';
+                document.getElementById('file-name-display').style.color = 'inherit';
+                document.getElementById('remove-file-btn').style.display = 'none';
+                document.getElementById('new-prod-file-input').value = '';
+
+                alert('Success: Product Updated & Saved!');
+            } else {
+                alert("Please enter title and price.");
+            }
+        }
+
+        function removeProduct(idx) {
+            // FORCED SYNC before remove
+            const config = JSON.parse(localStorage.getItem(CONFIG_KEY)) || {};
+            let list = Array.isArray(config.products) ? config.products : [];
+
+            list.splice(idx, 1);
+            currentProducts = list;
+
+            config.products = list;
+            localStorage.setItem(CONFIG_KEY, JSON.stringify(config));
+
+            renderProductList();
+        }
+
+        function saveSettings(alertUser = false) {
+            try {
+                // 1. Read latest state from storage to prevent data loss
+                const storageData = JSON.parse(localStorage.getItem(CONFIG_KEY)) || {};
+
+                const getValue = (id, defaultVal = '') => {
+                    const el = document.getElementById(id);
+                    return el ? el.value : defaultVal;
+                };
+                const getChecked = (id, defaultVal = true) => {
+                    const el = document.getElementById(id);
+                    return el ? el.checked : defaultVal;
+                };
+
+                // 2. Build new config, merging with existing where applicable
+                const config = {
+                    ...storageData,
+                    visibility: {
+                        bots: getChecked('adm-vis-bots'),
+                        signals: getChecked('adm-vis-signals'),
+                        services: getChecked('adm-vis-services'),
+                        about: getChecked('adm-vis-about')
+                    },
+                    appearance: {
+                        siteTitle: getValue('adm-app-title', 'Trading Made Easy'),
+                        primaryColor: getValue('adm-app-color', '#00ff88'),
+                        borderRadius: getValue('adm-app-radius', '10px'),
+                        metaDesc: getValue('adm-app-meta'),
+                        profileBase64: getValue('adm-app-profile-base64')
+                    },
+                    textOverrides: {
+                        hero_title: getValue('adm-txt-hero'),
+                        hero_desc: getValue('adm-txt-hero-desc'),
+                        about_bio: getValue('adm-txt-about'),
+                        ticker_msgs: getValue('adm-txt-ticker')
+                    },
+                    links: {
+                        facebook: getValue('adm-link-fb'),
+                        pinterest: getValue('adm-link-pin'),
+                        email: getValue('adm-link-email')
+                    },
+                    wallets: {
+                        usdt: getValue('adm-wallet-usdt'),
+                        ltc: getValue('adm-wallet-ltc'),
+                        payeer: getValue('adm-wallet-payeer')
+                    }
+                };
+
+                // 3. Critically: Ensure products array is retained from current memory if valid
+                if (Array.isArray(currentProducts)) {
+                    config.products = currentProducts;
+                }
+
+                console.log('FINAL SAVE: Saving following config:', config);
+                localStorage.setItem(CONFIG_KEY, JSON.stringify(config));
+
+                if (alertUser) {
+                    window.location.href = window.location.pathname + '?v=' + Date.now();
+                }
+            } catch (err) {
+                console.error('Final Save Error:', err);
+                alert('Save failed. See console.');
+            }
+        }
+
+        function togglePriceField(isFree) {
+            const priceField = document.getElementById('price-field-wrapper');
+            if (priceField) {
+                priceField.style.opacity = isFree ? '0.3' : '1';
+                priceField.style.pointerEvents = isFree ? 'none' : 'auto';
+                if (isFree) document.getElementById('new-prod-price').value = '0';
+            }
+        }
+
+        // INITIALIZE ON LOAD
+        loadSettings();
+    </script>
+</body>
+
+```

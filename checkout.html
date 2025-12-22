@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout | Trading Made Easy</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .checkout-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .order-summary {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow);
+        }
+
+        .order-row {
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--border-color);
+            padding: 1rem 0;
+            font-size: 1.1rem;
+        }
+
+        .order-row:last-child {
+            border-bottom: none;
+            font-weight: 700;
+            color: var(--primary-color);
+            font-size: 1.5rem;
+        }
+
+        .payment-methods {
+            display: grid;
+            gap: 1.5rem;
+        }
+
+        .payment-option {
+            background: var(--bg-color);
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            padding: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .payment-option:hover,
+        .payment-option.selected {
+            border-color: var(--primary-color);
+            background: var(--card-bg);
+        }
+
+        .payment-option input {
+            position: absolute;
+            opacity: 0;
+        }
+
+        .payment-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+
+        .payment-details {
+            display: none;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border-color);
+            font-size: 0.9rem;
+            color: var(--secondary-color);
+        }
+
+        .payment-option.selected .payment-details {
+            display: block;
+        }
+
+        [dir="rtl"] .back-btn i {
+            transform: rotate(180deg);
+        }
+
+        .copy-btn {
+            background: var(--secondary-color);
+            color: #fff;
+            border: none;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            margin-left: 0.5rem;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <div class="nav-container">
+            <!-- Nav Links (mapped to index.html sections) -->
+            <div class="nav-left">
+                <nav class="nav-menu">
+                    <a href="index.html#hero" class="nav-link" data-i18n="nav_home">Home</a>
+                    <a href="index.html#bots" class="nav-link" data-i18n="nav_bots">MT5 Bots</a>
+                    <a href="index.html#signals" class="nav-link" data-i18n="nav_signals">Signals</a>
+                    <a href="index.html#services" class="nav-link" data-i18n="nav_services">Services</a>
+                    <a href="index.html#about" class="nav-link" data-i18n="nav_about">About</a>
+                    <a href="index.html#contact" class="nav-link" data-i18n="nav_contact">Contact</a>
+                </nav>
+            </div>
+
+            <!-- Site Name & Controls -->
+            <div class="nav-controls" style="margin-left: auto; display: flex; align-items: center; gap: 1.5rem;">
+                <div class="site-title" style="order: 2;"><a href="index.html"
+                        style="color: var(--primary-color);">Trading Made Easy</a></div>
+
+                <div class="controls-wrapper" style="order: 1; display: flex; gap: 0.5rem; align-items: center;">
+                    <button class="back-btn" onclick="goBack()" aria-label="Go Back"
+                        style="background:none; border:none; color:var(--text-color); cursor:pointer; font-size:1.2rem; display: flex; align-items: center; justify-content: center; padding: 0.5rem; gap: 0.5rem;">
+                        <i class="fas fa-arrow-left"></i> <span data-i18n="text_back"
+                            style="font-size: 1rem; font-weight: 500;">Back</span>
+                    </button>
+                    <select class="lang-select">
+                        <option value="en">English</option>
+                        <option value="ar">العربية</option>
+                        <option value="es">Español</option>
+                        <option value="zh">中文</option>
+                        <option value="fr">Français</option>
+                    </select>
+                    <button class="theme-toggle" aria-label="Toggle Dark Mode">
+                        <i class="fas fa-moon"></i>
+                    </button>
+                    <!-- Mobile Menu Button -->
+                    <button class="mobile-menu-btn" aria-label="Open Menu">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <section class="section">
+        <div class="checkout-container">
+            <h1 class="section-title" data-i18n="checkout_title">Complete Your Purchase</h1>
+
+            <!-- Order Summary -->
+            <div class="order-summary">
+                <h3 data-i18n="order_summary">Order Summary</h3>
+                <div class="order-row">
+                    <span id="product-name">Loading...</span>
+                    <span id="product-price">...</span>
+                </div>
+                <div class="order-row">
+                    <span data-i18n="total">Total</span>
+                    <span id="total-price">...</span>
+                </div>
+            </div>
+
+            <!-- Product Package / Files Box -->
+            <div id="product-files-box"
+                style="background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 10px; padding: 1.5rem; margin-bottom: 2rem; border-left: 5px solid #e53e3e;">
+                <h3 style="margin-bottom: 1rem;"><i class="fas fa-box-open" style="color: var(--primary-color);"></i>
+                    <span data-i18n="product_package">Product Package</span>
+                </h3>
+                <div
+                    style="display: flex; align-items: center; justify-content: space-between; background: var(--bg-color); padding: 1rem; border-radius: 8px;">
+                    <div style="display: flex; align-items: center; gap: 0.8rem;">
+                        <i class="fas fa-file-archive" style="font-size: 1.5rem; opacity: 0.7;"></i>
+                        <div>
+                            <div id="display-file-name" style="font-weight: 600; font-size: 0.9rem;">File.zip</div>
+                            <div style="font-size: 0.75rem; opacity: 0.5;" data-i18n="status_locked">Status: Locked
+                                (Waiting for payment)</div>
+                        </div>
+                    </div>
+                    <button id="main-download-btn" disabled
+                        style="background: #e53e3e; color: #fff; border: none; padding: 0.6rem 1.2rem; border-radius: 5px; cursor: not-allowed; font-weight: 600; opacity: 0.8; display: flex; align-items: center; gap: 0.5rem;">
+                        <i class="fas fa-lock"></i> <span data-i18n="download">Download</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Payment Methods -->
+            <h3 style="margin-bottom: 1.5rem;" data-i18n="select_payment">Select Payment Method</h3>
+            <div class="payment-methods">
+
+                <!-- USDT (Crypto) -->
+                <label class="payment-option">
+                    <input type="radio" name="payment" value="usdt">
+                    <div class="payment-header">
+                        <span><i class="fas fa-coins" style="color: #26a17b; margin-right: 10px;"></i> USDT
+                            (TRC20)</span>
+                        <i class="fas fa-check-circle" style="color: var(--primary-color); opacity: 0;"></i>
+                    </div>
+                    <div class="payment-details">
+                        <p data-i18n="pay_usdt_inst">Send the exact amount to the address below:</p>
+                        <div
+                            style="background: var(--border-color); padding: 0.5rem; border-radius: 5px; margin-top: 0.5rem; font-family: monospace; overflow-wrap: break-word;">
+                            <span id="wallet-usdt-addr">TR7NHqjeKQxGTCi8q8zy4pL8otSzgjLj6t</span>
+                            <button class="copy-btn" onclick="copyTextFromId('wallet-usdt-addr')">Copy</button>
+                        </div>
+                        <div style="margin-top: 1rem;">
+                            <label style="display:block; font-size:0.8rem; opacity:0.7; margin-bottom:0.2rem;"
+                                data-i18n="deposit_amount">Deposit Amount</label>
+                            <div
+                                style="display:flex; align-items:center; gap:0.5rem; background: var(--bg-color); padding: 0.8rem; border-radius: 5px; border:1px solid var(--border-color);">
+                                <span id="usdt-amount-val"
+                                    style="font-weight:bold; color:var(--primary-color);">...</span>
+                                <button class="copy-btn" onclick="copyTextFromId('usdt-amount-val')"
+                                    style="margin-left:auto;">Copy</button>
+                            </div>
+                        </div>
+                    </div>
+                </label>
+
+                <!-- LTC (Crypto) -->
+                <label class="payment-option">
+                    <input type="radio" name="payment" value="ltc">
+                    <div class="payment-header">
+                        <span><i class="fas fa-coins" style="color: #345d9d; margin-right: 10px;"></i> Litecoin
+                            (LTC)</span>
+                        <i class="fas fa-check-circle" style="color: var(--primary-color); opacity: 0;"></i>
+                    </div>
+                    <div class="payment-details">
+                        <p data-i18n="pay_ltc_inst">Send the exact LTC amount to the address below:</p>
+                        <div
+                            style="background: var(--border-color); padding: 0.5rem; border-radius: 5px; margin-top: 0.5rem; font-family: monospace; overflow-wrap: break-word;">
+                            <span id="wallet-ltc-addr">LM2nyQpYFp1e8oM7i8E4qN1D4vK5sR1zT9</span>
+                            <button class="copy-btn" onclick="copyTextFromId('wallet-ltc-addr')">Copy</button>
+                        </div>
+                        <div style="margin-top: 1rem;">
+                            <label style="display:block; font-size:0.8rem; opacity:0.7; margin-bottom:0.2rem;"
+                                data-i18n="deposit_amount">Deposit Amount</label>
+                            <div
+                                style="display:flex; align-items:center; gap:0.5rem; background: var(--bg-color); padding: 0.8rem; border-radius: 5px; border:1px solid var(--border-color);">
+                                <span id="ltc-amount-val"
+                                    style="font-weight:bold; color:var(--primary-color);">...</span>
+                                <button class="copy-btn" onclick="copyTextFromId('ltc-amount-val')"
+                                    style="margin-left:auto;">Copy</button>
+                            </div>
+                        </div>
+                    </div>
+                </label>
+
+
+            </div>
+
+            <!-- Confirmation Info -->
+            <div
+                style="margin-top: 3rem; background: var(--bg-color); border: 1px solid var(--primary-color); padding: 1.5rem; border-radius: 10px;">
+                <h4 style="color: var(--primary-color); margin-bottom: 0.5rem;" data-i18n="next_steps">Next Steps</h4>
+                <p id="next-steps-instruction" data-i18n="next_steps_desc">After payment, please send a screenshot of
+                    the transaction ID to our
+                    support email to receive your bot files.</p>
+                <div id="checkout-actions" style="margin-top: 1rem; display: flex; flex-direction: column; gap: 1rem;">
+                    <button class="btn-primary" onclick="verifyPaymentOnBlockchain()"
+                        style="width: 100%; display: none;" id="btn-complete-payment">
+                        <i class="fas fa-search-dollar"></i> <span data-i18n="btn_verify">Verify Payment on
+                            Blockchain</span>
+                    </button>
+                    <!-- Verification Progress -->
+                    <div id="verification-status"
+                        style="display:none; text-align:center; padding: 1rem; background: rgba(0,208,156,0.05); border-radius: 8px;">
+                        <div class="loader-spinner"
+                            style="margin: 0 auto 0.5rem; width: 25px; height: 25px; border: 3px solid var(--border-color); border-top-color: var(--primary-color); border-radius: 50%; animation: spin 1s linear infinite;">
+                        </div>
+                        <p id="status-text" style="font-size: 0.85rem; font-weight: 500;">Searching for transaction...
+                        </p>
+                        <div
+                            style="width: 100%; background: var(--border-color); height: 4px; border-radius: 2px; margin-top: 0.5rem; overflow: hidden;">
+                            <div id="status-progress"
+                                style="width: 0%; height: 100%; background: var(--primary-color); transition: width 30s linear;">
+                            </div>
+                        </div>
+                    </div>
+                    <a href="mailto:bachasalman69@gmail.com" class="btn" id="btn-email-support"
+                        style="border: 1px solid var(--border-color); font-size: 0.9rem; text-align: center;"><i
+                            class="fas fa-envelope"></i> Email Support</a>
+                </div>
+            </div>
+
+            <style>
+                @keyframes spin {
+                    to {
+                        transform: rotate(360deg);
+                    }
+                }
+            </style>
+
+        </div>
+    </section>
+
+    <script>
+        function goBack() {
+            if (window.history.length > 1) {
+                window.history.back();
+            } else {
+                window.location.href = 'index.html';
+            }
+        }
+
+        function copyText(text) {
+            navigator.clipboard.writeText(text);
+            alert("Address copied!");
+        }
+
+        function copyTextFromId(id) {
+            const text = document.getElementById(id).textContent;
+            copyText(text);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // Theme Logic
+            const themeToggle = document.querySelector('.theme-toggle');
+            const html = document.documentElement;
+            const icon = themeToggle.querySelector('i');
+
+            if (localStorage.getItem('theme') === 'dark') {
+                html.setAttribute('data-theme', 'dark');
+                icon.className = 'fas fa-sun';
+            }
+            if (themeToggle) {
+                themeToggle.addEventListener('click', () => {
+                    if (html.getAttribute('data-theme') === 'dark') {
+                        html.removeAttribute('data-theme');
+                        localStorage.setItem('theme', 'light');
+                        icon.className = 'fas fa-moon';
+                    } else {
+                        html.setAttribute('data-theme', 'dark');
+                        localStorage.setItem('theme', 'dark');
+                        icon.className = 'fas fa-sun';
+                    }
+                });
+            }
+
+            // Mobile Menu
+            const menuBtn = document.querySelector('.mobile-menu-btn');
+            const navLeft = document.querySelector('.nav-left');
+            if (menuBtn) {
+                menuBtn.addEventListener('click', () => {
+                    navLeft.classList.toggle('active');
+                });
+            }
+
+            // Handle Selection UI
+            const options = document.querySelectorAll('.payment-option');
+            options.forEach(opt => {
+                opt.addEventListener('click', () => {
+                    options.forEach(o => {
+                        o.classList.remove('selected');
+                        o.querySelector('.fa-check-circle').style.opacity = '0';
+                    });
+                    opt.classList.add('selected');
+                    opt.querySelector('.fa-check-circle').style.opacity = '1';
+
+                    // Show completion button when a method is selected
+                    document.getElementById('btn-complete-payment').style.display = 'block';
+                });
+            });
+
+            // Parse URL Params
+            const params = new URLSearchParams(window.location.search);
+            const product = params.get('product');
+            const price = params.get('price');
+            const name = params.get('name');
+
+            if (name && price) {
+                document.getElementById('product-name').textContent = decodeURIComponent(name);
+                document.getElementById('product-price').textContent = '$' + price;
+                document.getElementById('total-price').textContent = '$' + price;
+
+                // Set file name preview if available
+                const cfg = JSON.parse(localStorage.getItem('tme_config_v2'));
+                const pKey = params.get('product'); // e.g., bot_0
+                if (cfg && cfg.products && pKey && pKey.startsWith('bot_')) {
+                    const idx = parseInt(pKey.split('_')[1]);
+                    const prod = cfg.products[idx];
+                    if (prod && prod.fileName) {
+                        document.getElementById('display-file-name').textContent = prod.fileName;
+                    }
+                }
+
+                // Load Wallets & Links from Config
+                if (cfg) {
+                    if (cfg.wallets) {
+                        const w = cfg.wallets;
+                        if (w.usdt) document.getElementById('wallet-usdt-addr').textContent = w.usdt;
+                        if (w.ltc) document.getElementById('wallet-ltc-addr').textContent = w.ltc;
+                    }
+                    if (cfg.links && cfg.links.email) {
+                        const emailBtn = document.getElementById('btn-email-support');
+                        if (emailBtn) {
+                            emailBtn.href = "mailto:" + cfg.links.email;
+                            emailBtn.innerHTML = `<i class="fas fa-envelope"></i> ${cfg.links.email}`;
+                        }
+                    }
+                }
+            } else {
+                document.getElementById('product-name').textContent = "Unknown Product";
+                document.getElementById('product-price').textContent = "-";
+            }
+
+            // Calculate Crypto Amounts
+            if (price) {
+                const usdValue = parseFloat(price);
+                // USDT is 1:1
+                document.getElementById('usdt-amount-val').textContent = usdValue.toFixed(2) + ' USDT';
+
+                // Fetch LTC price
+                fetch('https://api.coinbase.com/v2/prices/LTC-USD/spot')
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data && data.data && data.data.amount) {
+                            const ltcPrice = parseFloat(data.data.amount);
+                            const ltcAmount = usdValue / ltcPrice;
+                            document.getElementById('ltc-amount-val').textContent = ltcAmount.toFixed(6) + ' LTC';
+                        }
+                    })
+                    .catch(() => {
+                        document.getElementById('ltc-amount-val').textContent = 'Error fetching rate';
+                    });
+            }
+
+            // Translations
+            const translations = {
+                en: {
+                    nav_home: "Home", nav_bots: "MT5 Bots", nav_signals: "Signals", nav_services: "Services", nav_about: "About", nav_contact: "Contact", text_back: "Back",
+                    checkout_title: "Complete Your Purchase",
+                    order_summary: "Order Summary",
+                    total: "Total",
+                    select_payment: "Select Payment Method",
+                    pay_usdt_inst: "Send the exact amount to the address below (TRC20):",
+                    pay_ltc_inst: "Send the exact LTC amount to the address below:",
+                    next_steps: "Next Steps",
+                    next_steps_desc: "Send the exact amount to the address shown. After sending, click verify and wait for blockchain confirmation.",
+                    btn_verify: "Verify Payment on Blockchain",
+                    pay_complete_msg: "Payment confirmed! Your product package is now unlocked. Click the green 'Download' button above.",
+                    product_package: "Product Package",
+                    status_locked: "Status: Locked (Waiting for payment)",
+                    status_unlocked: "Status: Unlocked (Download available)",
+                    download: "Download",
+                    verifying: "Searching the blockchain for your transaction...",
+                    not_found: "Transaction not found yet. Please wait a few minutes for the blockchain to update and try again.",
+                    deposit_amount: "Deposit Amount"
+                },
+                ar: {
+                    nav_home: "الرئيسية", nav_bots: "روبوتات MT5", nav_signals: "الإشارات", nav_services: "الخدمات", nav_about: "من نحن", nav_contact: "اتصل بنا", text_back: "رجوع",
+                    checkout_title: "إتمام عملية الشراء",
+                    order_summary: "ملخص الطلب",
+                    total: "الإجمالي",
+                    select_payment: "اختر طريقة الدفع",
+                    pay_usdt_inst: "أرسل المبلغ المحدد إلى العنوان أدناه (TRC20):",
+                    pay_ltc_inst: "أرسل مبلغ LTC المحدد إلى العنوان أدناه:",
+                    next_steps: "الخطوات التالية",
+                    next_steps_desc: "أرسل المبلغ المحدد للعنوان أعلاه، ثم اضغط على زر التحقق وانتظر تأكيد البلوكشين.",
+                    btn_verify: "التحقق من الدفع عبر البلوكشين",
+                    pay_complete_msg: "تم تأكيد الدفع! تم فتح حزمة المنتج الخاصة بك. انقر فوق زر 'تحميل' الأخضر أعلاه.",
+                    product_package: "حزمة المنتج",
+                    status_locked: "الحالة: مقفول (في انتظار الدفع)",
+                    status_unlocked: "الحالة: متاح (يمكنك التحميل الآن)",
+                    download: "تحميل",
+                    verifying: "نبحث الآن داخل البلوكشين عن عمليتك...",
+                    not_found: "لم نجد العملية بعد. من فضلك انتظر دقائق حتى يتحدث البلوكشين وحاول مجدداً.",
+                    deposit_amount: "قيمة الإيداع"
+                },
+                fr: {
+                    nav_home: "Accueil", nav_bots: "Bots MT5", nav_signals: "Signaux", nav_services: "Services", nav_about: "À Propos", nav_contact: "Contact", text_back: "Retour",
+                    checkout_title: "Finaliser l'achat",
+                    order_summary: "Résumé de la commande",
+                    total: "Total",
+                    select_payment: "Moyen de paiement",
+                    pay_usdt_inst: "Envoyez le montant exact à l'adresse ci-dessous (TRC20):",
+                    pay_ltc_inst: "Envoyez le montant exact de LTC à l'adresse ci-dessous:",
+                    next_steps: "Prochaines étapes",
+                    next_steps_desc: "Envoyez le montant exact à l'adresse indiquée. Après l'envoi, cliquez sur vérifier et attendez la confirmation de la blockchain.",
+                    btn_verify: "Vérifier le paiement sur la blockchain",
+                    pay_complete_msg: "Paiement confirmé ! Votre pack produit est maintenant déverrouillé. Cliquez sur le bouton vert 'Télécharger' ci-dessus.",
+                    product_package: "Pack Produit",
+                    status_locked: "Statut: Verrouillé (en attente de paiement)",
+                    status_unlocked: "Statut: Déverrouillé (téléchargement disponible)",
+                    download: "Télécharger",
+                    verifying: "Recherche de votre transaction sur la blockchain...",
+                    not_found: "Transaction non trouvée. Veuillez attendre quelques minutes et réessayer."
+                },
+                es: {
+                    nav_home: "Inicio", nav_bots: "Bots MT5", nav_signals: "Señales", nav_services: "Servicios", nav_about: "Sobre Mí", nav_contact: "Contacto", text_back: "Volver",
+                    checkout_title: "Completar Compra",
+                    order_summary: "Resumen del Pedido",
+                    total: "Total",
+                    select_payment: "Método de Pago",
+                    pay_usdt_inst: "Envíe la cantidad exacta a la dirección abajo (TRC20):",
+                    pay_ltc_inst: "Envíe la cantidad exacta de LTC a la dirección abajo:",
+                    next_steps: "Siguientes Pasos",
+                    next_steps_desc: "Envíe la cantidad exacta a la dirección mostrada. Después de enviar, haga clic en verificar y espere la confirmación de la cadena de bloques.",
+                    btn_verify: "Verificar pago en la cadena de bloques",
+                    pay_complete_msg: "¡Pago confirmado! El paquete de su producto ahora está desbloqueado. Haga clic en el botón verde 'Descargar' de arriba.",
+                    product_package: "Paquete del Producto",
+                    status_locked: "Estado: Bloqueado (esperando el pago)",
+                    status_unlocked: "Estado: Desbloqueado (descarga disponible)",
+                    download: "Descargar",
+                    verifying: "Buscando su transacción en la cadena de bloques...",
+                    not_found: "Transacción no encontrada. Espere unos minutos y vuelva a intentarlo."
+                },
+                zh: {
+                    nav_home: "首页", nav_bots: "MT5 机器人", nav_signals: "信号", nav_services: "服务", nav_about: "关于", nav_contact: "联系", text_back: "返回",
+                    checkout_title: "完成购买",
+                    order_summary: "订单摘要",
+                    total: "总计",
+                    select_payment: "选择付款方式",
+                    pay_usdt_inst: "请将准确金额发送至以下地址 (TRC20):",
+                    pay_ltc_inst: "请将准确的 LTC 金额发送至以下地址：",
+                    next_steps: "后续步骤",
+                    next_steps_desc: "付款后，请将交易ID的屏幕截图发送至支持邮箱以接收您的文件.",
+                    btn_verify: "在区块链上验证支付",
+                    pay_complete_msg: "付款已确认！您的产品包现已解锁。点击上方的绿色“下载”按钮。",
+                    product_package: "产品包",
+                    status_locked: "状态：已锁定（等待付款）",
+                    status_unlocked: "状态：已解锁（可下载）",
+                    download: "下载",
+                    verifying: "正在区块链中搜索您的交易...",
+                    not_found: "尚未找到交易。请等几分钟让区块链更新，然后重试。"
+                }
+            };
+
+            const langSelect = document.querySelector('.lang-select');
+
+            function updateLanguage(lang) {
+                if (!translations[lang]) return;
+
+                if (lang === 'ar') {
+                    document.documentElement.setAttribute('dir', 'rtl');
+                    document.documentElement.lang = 'ar';
+                } else {
+                    document.documentElement.setAttribute('dir', 'ltr');
+                    document.documentElement.lang = lang;
+                }
+
+                const elements = document.querySelectorAll('[data-i18n]');
+                elements.forEach(el => {
+                    const key = el.getAttribute('data-i18n');
+                    if (translations[lang][key]) {
+                        el.textContent = translations[lang][key];
+                    }
+                });
+
+                // Update button text specifically
+                const completeBtn = document.getElementById('btn-complete-payment');
+                if (completeBtn && translations[lang].btn_verify) {
+                    completeBtn.innerHTML = `<i class="fas fa-search-dollar"></i> ${translations[lang].btn_verify}`;
+                }
+
+                localStorage.setItem('language', lang);
+                if (langSelect) langSelect.value = lang;
+            }
+
+            if (langSelect) {
+                langSelect.addEventListener('change', (e) => {
+                    updateLanguage(e.target.value);
+                });
+            }
+            const savedLang = localStorage.getItem('language') || 'en';
+            updateLanguage(savedLang);
+        });
+
+        async function verifyPaymentOnBlockchain() {
+            const params = new URLSearchParams(window.location.search);
+            const productKey = params.get('product');
+            const price = parseFloat(params.get('price'));
+            const method = document.querySelector('input[name="payment"]:checked')?.value;
+
+            if (!method) {
+                alert("Please select a payment method first.");
+                return;
+            }
+
+            const lang = localStorage.getItem('language') || 'en';
+            const t = {
+                en: { verifying: "Searching the blockchain...", not_found: "Transaction not found. Try again in 2 mins.", success: "Payment Confirmed!" },
+                ar: { verifying: "جارٍ البحث في البلوكشين...", not_found: "لم نجد العملية. حاول بعد دقيقتين.", success: "تم تأكيد الدفع!" }
+            };
+            const msg = t[lang] || t['en'];
+
+            // UI Feedback
+            const btn = document.getElementById('btn-complete-payment');
+            const statusBox = document.getElementById('verification-status');
+            const statusText = document.getElementById('status-text');
+            const progressBar = document.getElementById('status-progress');
+
+            btn.style.display = 'none';
+            statusBox.style.display = 'block';
+            statusText.textContent = msg.verifying;
+            progressBar.style.width = '100%';
+
+            // Get the wallet address from config
+            const config = JSON.parse(localStorage.getItem('tme_config_v2'));
+            const walletAddr = (config && config.wallets) ? config.wallets[method] : null;
+
+            if (!walletAddr) {
+                alert("Error: Admin wallet address not set.");
+                statusBox.style.display = 'none';
+                btn.style.display = 'block';
+                return;
+            }
+
+            try {
+                let found = false;
+
+                if (method === 'usdt') {
+                    // USDT TRC20 (Strongly advised to use TronGrid or similar)
+                    const response = await fetch(`https://api.trongrid.io/v1/accounts/${walletAddr}/transactions/trc20?limit=10`);
+                    const data = await response.json();
+
+                    if (data && data.data) {
+                        // Check if any recent transaction matches the price (USDT has 6 decimals)
+                        const targetAmount = (price * 1000000).toString();
+                        // Look for a transaction in the last 15 minutes
+                        const now = Date.now();
+                        found = data.data.some(tx => {
+                            const timeDiff = now - tx.block_timestamp;
+                            return tx.value === targetAmount && timeDiff < 15 * 60 * 1000;
+                        });
+                    }
+                } else if (method === 'ltc') {
+                    // LTC (Using BlockCypher)
+                    const response = await fetch(`https://api.blockcypher.com/v1/ltc/main/addrs/${walletAddr}/full?limit=10`);
+                    const data = await response.json();
+
+                    if (data && data.txs) {
+                        const targetAmount = Math.round(price * 100000000); // Satoshis
+                        found = data.txs.some(tx => {
+                            // Find an output that matches our wallet address and the price
+                            return tx.outputs.some(out =>
+                                (out.addresses && out.addresses.includes(walletAddr)) &&
+                                Math.abs(out.value - targetAmount) < 1000 // Small tolerance
+                            );
+                        });
+                    }
+
+                }
+
+                if (found) {
+                    unlockProduct();
+                } else {
+                    statusText.textContent = msg.not_found;
+                    statusText.style.color = '#e53e3e';
+                    progressBar.style.width = '0%';
+                    progressBar.style.background = '#e53e3e';
+                    setTimeout(() => {
+                        statusBox.style.display = 'none';
+                        btn.style.display = 'block';
+                        progressBar.style.background = 'var(--primary-color)';
+                    }, 4000);
+                }
+
+            } catch (err) {
+                console.error("Verification error:", err);
+                alert("Network error or API limit reached. If you paid, please contact support with your TXID.");
+                statusBox.style.display = 'none';
+                btn.style.display = 'block';
+            }
+        }
+
+        function unlockProduct() {
+            const params = new URLSearchParams(window.location.search);
+            const productKey = params.get('product');
+            const config = JSON.parse(localStorage.getItem('tme_config_v2'));
+            const lang = localStorage.getItem('language') || 'en';
+            const index = parseInt(productKey.split('_')[1]);
+            const product = config.products[index];
+
+            // 1. Update the Download Button
+            const downloadBtn = document.getElementById('main-download-btn');
+            downloadBtn.style.background = '#00D09C';
+            downloadBtn.style.cursor = 'pointer';
+            downloadBtn.style.opacity = '1';
+            downloadBtn.disabled = false;
+            downloadBtn.innerHTML = `<i class="fas fa-download"></i> Download`;
+            downloadBtn.onclick = () => {
+                const link = document.createElement('a');
+                link.href = product.fileData;
+                link.download = product.fileName;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            };
+
+            // 2. UI Updates
+            const packageBox = document.getElementById('product-files-box');
+            packageBox.style.borderLeftColor = '#00D09C';
+
+            const statusTextEl = packageBox.querySelector('[data-i18n="status_locked"]');
+            if (statusTextEl) {
+                statusTextEl.textContent = "Status: Unlocked (Payment Verified)";
+                statusTextEl.style.color = '#00D09C';
+            }
+
+            document.getElementById('verification-status').style.display = 'none';
+            document.getElementById('next-steps-instruction').textContent = "Payment Verified! Your file is ready.";
+            document.getElementById('next-steps-instruction').style.color = '#00D09C';
+            document.getElementById('btn-complete-payment').style.display = 'none';
+            document.getElementById('btn-email-support').style.display = 'none';
+
+            alert("Payment Confirmed! Your download is now active.");
+        }
+    </script>
+</body>
+
+</html>
