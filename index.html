@@ -19,6 +19,9 @@
     <link rel="stylesheet" href="style.css">
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Firebase SDK (Compat) -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
 
     <!-- CRITICAL: Apply Admin Settings Immediately -->
     <script>
@@ -64,29 +67,38 @@
             } catch (e) { console.error('Admin Config Error:', e); }
         })();
 
+        // Initialize Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyCvMayEuNTlQ5CWbjrrqw3aft_H044-uQM",
+            authDomain: "trading-made-easy-e8450.firebaseapp.com",
+            projectId: "trading-made-easy-e8450",
+            databaseURL: "https://trading-made-easy-e8450-default-rtdb.firebaseio.com/",
+            storageBucket: "trading-made-easy-e8450.firebasestorage.app",
+            messagingSenderId: "693217251684",
+            appId: "1:693217251684:web:f27779dc51e21fabceaa71"
+        };
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
         // Render Products Dynamically
         document.addEventListener('DOMContentLoaded', function () {
             const container = document.getElementById('bots-grid-container');
             if (!container) return;
 
-            // GLOBAL HELPER: Robust check if product is free
             const isProductFree = (p) => {
                 if (!p) return false;
                 return p.isFree === true || p.isFree === "true" || p.isFree === "on" || String(p.price) === "0";
             };
 
+            const GLOBAL_DEFAULTS = [
+                { id: 101, title: "Momentum Hunter 2.0", price: "149", image: "images/bot1.png", desc: "High-precision trend following algorithm for MT5.", isFree: false },
+                { id: 102, title: "Risk Calculator Pro", price: "0", image: "images/bot2.png", desc: "Professional position sizing tool.", isFree: true, fileData: "#", fileName: "Risk.zip" }
+            ];
+
             let currentLang = localStorage.getItem('language') || 'en';
             let loadedProducts = [];
 
             function render() {
-                const cfg = JSON.parse(localStorage.getItem('tme_config_v2'));
-                loadedProducts = (cfg && Array.isArray(cfg.products)) ? cfg.products : [];
-
-                if (loadedProducts.length === 0) {
-                    container.innerHTML = '<p style="grid-column:1/-1; text-align:center; opacity:0.5; padding: 2rem;">No products found.</p>';
-                    return;
-                }
-
                 const homeTrans = {
                     en: { free: "Latest Free Resource", prem: "Latest Premium System", for_free: "For Free", dl: "Download Now", buy: "Buy Now" },
                     ar: { free: "أحدث مورد مجاني", prem: "أحدث نظام احترافي", for_free: "مجاناً", dl: "تحميل الآن", buy: "شراء الآن" },
@@ -98,21 +110,16 @@
 
                 const createCard = (p, idx) => {
                     const isFree = isProductFree(p);
-                    let btnHTML = '';
-                    if (isFree) {
-                        btnHTML = `
-                            <div style="color:#00D09C; font-weight:bold; font-size:0.9rem; margin-bottom:0.5rem; text-align:center;">${t.for_free}</div>
-                            <button onclick="downloadHomeFree(${idx})" class="btn-primary" style="width:100%; border:none; background:#00D09C; color:white; cursor:pointer;">
-                                <i class="fas fa-download"></i> ${t.dl}
-                            </button>
-                        `;
-                    } else {
-                        btnHTML = `
-                            <a href="checkout.html?product=bot_${idx}&name=${encodeURIComponent(p.title)}&price=${p.price}" class="btn-primary" style="width:100%; display:block; text-align:center;">
-                                ${t.buy} - $${p.price}
-                            </a>
-                        `;
-                    }
+                    let btnHTML = isFree ? `
+                        <div style="color:#00D09C; font-weight:bold; font-size:0.9rem; margin-bottom:0.5rem; text-align:center;">${t.for_free}</div>
+                        <button onclick="downloadHomeFree(${idx})" class="btn-primary" style="width:100%; border:none; background:#00D09C; color:white; cursor:pointer;">
+                            <i class="fas fa-download"></i> ${t.dl}
+                        </button>
+                    ` : `
+                        <a href="checkout.html?product=bot_${idx}&name=${encodeURIComponent(p.title)}&price=${p.price}" class="btn-primary" style="width:100%; display:block; text-align:center;">
+                            ${t.buy} - $${p.price}
+                        </a>
+                    `;
                     return `
                         <div class="bot-card">
                             <img src="${p.image}" alt="${p.title}" class="bot-image" onerror="this.src='images/bot1.png'">
@@ -125,46 +132,45 @@
                     `;
                 };
 
-                // Filter into categories
-                const freeBots = [];
-                const paidBots = [];
+                const freeBots = []; const paidBots = [];
                 loadedProducts.forEach((p, i) => {
                     if (isProductFree(p)) freeBots.push({ data: p, actualIdx: i });
                     else paidBots.push({ data: p, actualIdx: i });
                 });
 
                 let html = '';
-
-                // Show ONLY the last free bot
                 if (freeBots.length > 0) {
-                    const latestFree = freeBots[freeBots.length - 1];
-                    html += `<div style="grid-column: 1/-1; margin-top:1rem;"><h3 style="color:#00D09C; border-bottom:1px solid #00D09C; padding-bottom:0.5rem; margin-bottom:1rem;"><i class="fas fa-gift"></i> ${t.free}</h3></div>`;
-                    html += createCard(latestFree.data, latestFree.actualIdx);
-                    if (paidBots.length > 0) {
-                        html += `<div style="grid-column: 1/-1;"><hr style="margin:2rem 0; border:none; border-top:1px dashed var(--border-color); opacity:0.3;"></div>`;
-                    }
+                    const lastFree = freeBots[freeBots.length - 1];
+                    html += `<div style="grid-column: 1/-1; margin-top:1rem;"><h3 style="color:#00D09C; border-bottom:1px solid #00D09C; padding-bottom:0.5rem; margin-bottom:1rem;"><i class="fas fa-gift"></i> ${t.free}</h3></div>${createCard(lastFree.data, lastFree.actualIdx)}`;
+                    if (paidBots.length > 0) html += `<div style="grid-column: 1/-1;"><hr style="margin:2rem 0; border:none; border-top:1px dashed var(--border-color); opacity:0.3;"></div>`;
                 }
-
-                // Show ONLY the last paid bot
                 if (paidBots.length > 0) {
-                    const latestPaid = paidBots[paidBots.length - 1];
-                    html += `<div style="grid-column: 1/-1;"><h3 style="color:var(--primary-color); border-bottom:1px solid var(--primary-color); padding-bottom:0.5rem; margin-bottom:1rem;"><i class="fas fa-gem"></i> ${t.prem}</h3></div>`;
-                    html += createCard(latestPaid.data, latestPaid.actualIdx);
+                    const lastPaid = paidBots[paidBots.length - 1];
+                    html += `<div style="grid-column: 1/-1;"><h3 style="color:var(--primary-color); border-bottom:1px solid var(--primary-color); padding-bottom:0.5rem; margin-bottom:1rem;"><i class="fas fa-gem"></i> ${t.prem}</h3></div>${createCard(lastPaid.data, lastPaid.actualIdx)}`;
                 }
-
                 container.innerHTML = html || '<p style="grid-column:1/-1; text-align:center; opacity:0.5; padding:2rem;">No bots available.</p>';
             }
 
-            window.downloadHomeFree = function (idx) {
+            // Sync from Firebase
+            db.ref('products').on('value', (snapshot) => {
+                const data = snapshot.val();
+                loadedProducts = data ? Object.values(data) : GLOBAL_DEFAULTS;
+                render();
+            }, (error) => {
+                console.warn("Firebase failed. Fallback to storage/defaults.", error);
                 const cfg = JSON.parse(localStorage.getItem('tme_config_v2'));
-                const p = (cfg && cfg.products) ? cfg.products[idx] : null;
-                if (!p || !p.fileData) return alert("No file attached to this product.");
+                loadedProducts = (cfg && cfg.products && cfg.products.length > 0) ? cfg.products : GLOBAL_DEFAULTS;
+                render();
+            });
+
+            window.downloadHomeFree = function (idx) {
+                const p = loadedProducts[idx];
+                if (!p || !p.fileData) return alert("No file attached.");
                 const a = document.createElement('a');
                 a.href = p.fileData; a.download = p.fileName || 'product.zip';
                 document.body.appendChild(a); a.click(); document.body.removeChild(a);
             };
 
-            render();
             window.addEventListener('languageChanged', (e) => {
                 currentLang = e.detail.lang;
                 render();
@@ -1092,34 +1098,21 @@
                 let list = Array.isArray(config.products) ? config.products : [];
 
                 if (editingIndex > -1) {
-                    // UPDATE EXISTING
                     list[editingIndex] = {
                         ...list[editingIndex],
-                        title: title,
-                        price: price,
+                        title: title, price: price,
                         image: imgBase64 || list[editingIndex].image,
                         desc: descInput.value || '',
                         fileData: fileData || list[editingIndex].fileData,
                         fileName: fileName || list[editingIndex].fileName,
-                        isFree: isFree // Save the free status (bool)
+                        isFree: isFree
                     };
-                    editingIndex = -1; // Reset
-                    currentProducts = list; // Update global memory
-                    config.products = list;
-                    localStorage.setItem(CONFIG_KEY, JSON.stringify(config));
-
-                    // Reset button appearance
+                    editingIndex = -1;
                     const addBtn = document.querySelector('button[onclick="addNewProduct()"]');
-                    if (addBtn) {
-                        addBtn.textContent = '+ Add Product';
-                        addBtn.style.background = 'var(--primary-color)';
-                    }
+                    if (addBtn) { addBtn.textContent = '+ Add Product'; addBtn.style.background = 'var(--primary-color)'; }
                 } else {
-                    // ADD NEW
                     const newBot = {
-                        id: Date.now(),
-                        title: title,
-                        price: price,
+                        id: Date.now(), title: title, price: price,
                         image: imgBase64 || 'images/bot1.png',
                         desc: descInput.value || '',
                         fileData: fileData || null,
@@ -1127,14 +1120,16 @@
                         isFree: isFree
                     };
                     list.push(newBot);
-                    currentProducts = list; // Update global memory
-                    config.products = list;
-                    localStorage.setItem(CONFIG_KEY, JSON.stringify(config));
                 }
 
                 currentProducts = list;
                 config.products = list;
                 localStorage.setItem(CONFIG_KEY, JSON.stringify(config));
+
+                // SYNC TO FIREBASE
+                db.ref('products').set(list).then(() => {
+                    console.log("Synced to Firebase successfully.");
+                }).catch(err => console.error("Firebase sync error:", err));
 
                 renderProductList();
 
@@ -1161,15 +1156,15 @@
         }
 
         function removeProduct(idx) {
-            // FORCED SYNC before remove
             const config = JSON.parse(localStorage.getItem(CONFIG_KEY)) || {};
             let list = Array.isArray(config.products) ? config.products : [];
-
             list.splice(idx, 1);
             currentProducts = list;
-
             config.products = list;
             localStorage.setItem(CONFIG_KEY, JSON.stringify(config));
+
+            // SYNC TO FIREBASE
+            db.ref('products').set(list);
 
             renderProductList();
         }

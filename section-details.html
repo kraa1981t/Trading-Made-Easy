@@ -8,6 +8,9 @@
     <title>Section Details | Trading Made Easy</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Firebase SDK (Compat) -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
     <style>
         .details-hero {
             padding: 6rem 0 3rem;
@@ -354,7 +357,20 @@
                 document.body.removeChild(link);
             }
 
-            let loadedProducts = []; // Store products globally in this scope for ID reference
+            // Initialize Firebase
+            const firebaseConfig = {
+                apiKey: "AIzaSyCvMayEuNTlQ5CWbjrrqw3aft_H044-uQM",
+                authDomain: "trading-made-easy-e8450.firebaseapp.com",
+                projectId: "trading-made-easy-e8450",
+                databaseURL: "https://trading-made-easy-e8450-default-rtdb.firebaseio.com/",
+                storageBucket: "trading-made-easy-e8450.firebasestorage.app",
+                messagingSenderId: "693217251684",
+                appId: "1:693217251684:web:f27779dc51e21fabceaa71"
+            };
+            if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+            const db = firebase.database();
+
+            let loadedProducts = [];
 
             function renderContent(lang) {
                 const container = document.getElementById('dynamic-content');
@@ -362,13 +378,13 @@
                 let htmlContent = '';
                 let title = '', desc = '';
 
-                // DETERMINE SECTION
                 if (section === 'bots') {
                     title = t.bots_title; desc = t.bots_desc;
 
-                    const cfg = JSON.parse(localStorage.getItem('tme_config_v2'));
-                    const customProducts = (cfg && cfg.products && cfg.products.length > 0) ? cfg.products : [];
-                    loadedProducts = customProducts;
+                    const GLOBAL_DEFAULTS = [
+                        { id: 101, title: "Momentum Hunter 2.0", price: "149", image: "images/bot1.png", desc: "High-precision trend following algorithm for MT5.", isFree: false },
+                        { id: 102, title: "Risk Calculator Pro", price: "0", image: "images/bot2.png", desc: "Professional position sizing tool.", isFree: true, fileData: "#", fileName: "Risk.zip" }
+                    ];
 
                     const isFreeCheck = (p) => {
                         if (!p) return false;
@@ -377,26 +393,16 @@
 
                     const createCard = (product, idx) => {
                         const isFree = isFreeCheck(product);
-                        let actionBtn = '';
-
-                        if (isFree) {
-                            actionBtn = `
-                                <div style="color:#00D09C; font-weight:bold; font-size:0.9rem; margin-bottom:0.5rem; text-align:center;">${t.for_free || 'For Free'}</div>
-                                <button onclick='downloadFreeProductByIndex(${idx})' 
-                                        class="btn-primary" 
-                                        style="width: 100%; display: block; background: #00D09C; color: white; border:none; cursor:pointer;">
-                                   <i class="fas fa-download"></i> ${t.download_free_btn}
-                                </button>
-                            `;
-                        } else {
-                            actionBtn = `
-                                <a href="checkout.html?product=bot_${idx}&name=${encodeURIComponent(product.title)}&price=${product.price}" 
-                                   class="btn-primary" style="width: 100%; display: block; text-align:center;">
-                                   ${t.buy_btn} - $${product.price}
-                                </a>
-                            `;
-                        }
-
+                        let actionBtn = isFree ? `
+                            <div style="color:#00D09C; font-weight:bold; font-size:0.9rem; margin-bottom:0.5rem; text-align:center;">${t.for_free || 'For Free'}</div>
+                            <button onclick='downloadFreeProductByIndex(${idx})' class="btn-primary" style="width: 100%; display: block; background: #00D09C; color: white; border:none; cursor:pointer;">
+                                <i class="fas fa-download"></i> ${t.download_free_btn}
+                            </button>
+                        ` : `
+                            <a href="checkout.html?product=bot_${idx}&name=${encodeURIComponent(product.title)}&price=${product.price}" class="btn-primary" style="width: 100%; display: block; text-align:center;">
+                                ${t.buy_btn} - $${product.price}
+                            </a>
+                        `;
                         return `
                             <div class="bot-card">
                                 <img src="${product.image}" class="bot-image" alt="${product.title}" onerror="this.src='images/bot1.png'">
@@ -409,32 +415,28 @@
                         `;
                     };
 
-                    const freeHTML = loadedProducts.map((p, i) => isFreeCheck(p) ? createCard(p, i) : '').join('');
-                    const paidHTML = loadedProducts.map((p, i) => !isFreeCheck(p) ? createCard(p, i) : '').join('');
+                    const renderBots = (products) => {
+                        loadedProducts = products;
+                        const freeHTML = products.map((p, i) => isFreeCheck(p) ? createCard(p, i) : '').join('');
+                        const paidHTML = products.map((p, i) => !isFreeCheck(p) ? createCard(p, i) : '').join('');
 
-                    let finalHTML = '';
-                    if (freeHTML) {
-                        finalHTML += `
-                            <div style="margin-bottom:3rem;">
-                                <h2 style="display:flex; align-items:center; gap:0.5rem; color:#00D09C; margin-bottom:1.5rem; border-bottom:1px solid #00D09C; padding-bottom:0.5rem;">
-                                    <i class="fas fa-gift"></i> ${t.free_section || 'Free Resources'}
-                                </h2>
-                                <div class="bots-grid">${freeHTML}</div>
-                            </div>
-                        `;
-                    }
-                    if (paidHTML) {
-                        finalHTML += `
-                            <div style="margin-bottom:2rem;">
-                                <h2 style="display:flex; align-items:center; gap:0.5rem; color:var(--primary-color); margin-bottom:1.5rem; border-bottom:1px solid var(--primary-color); padding-bottom:0.5rem;">
-                                    <i class="fas fa-gem"></i> ${t.premium_section || 'Premium Systems'}
-                                </h2>
-                                <div class="bots-grid">${paidHTML}</div>
-                            </div>
-                        `;
-                    }
+                        let finalHTML = '';
+                        if (freeHTML) finalHTML += `<div style="margin-bottom:3rem;"><h2 style="display:flex; align-items:center; gap:0.5rem; color:#00D09C; margin-bottom:1.5rem; border-bottom:1px solid #00D09C; padding-bottom:0.5rem;"><i class="fas fa-gift"></i> ${t.free_section || 'Free Resources'}</h2><div class="bots-grid">${freeHTML}</div></div>`;
+                        if (paidHTML) finalHTML += `<div style="margin-bottom:2rem;"><h2 style="display:flex; align-items:center; gap:0.5rem; color:var(--primary-color); margin-bottom:1.5rem; border-bottom:1px solid var(--primary-color); padding-bottom:0.5rem;"><i class="fas fa-gem"></i> ${t.premium_section || 'Premium Systems'}</h2><div class="bots-grid">${paidHTML}</div></div>`;
 
-                    htmlContent = finalHTML || '<p style="text-align:center; opacity:0.5; padding:3rem;">No products available yet.</p>';
+                        document.getElementById('bot-render-area').innerHTML = finalHTML || '<p style="text-align:center; opacity:0.5; padding:3rem;">No products available yet.</p>';
+                    };
+
+                    htmlContent = `<div id="bot-render-area"><p style="text-align:center; padding:2rem;">Loading products...</p></div>`;
+
+                    // Fetch from Firebase
+                    db.ref('products').on('value', (snapshot) => {
+                        const data = snapshot.val();
+                        renderBots(data ? Object.values(data) : GLOBAL_DEFAULTS);
+                    }, () => {
+                        const cfg = JSON.parse(localStorage.getItem('tme_config_v2'));
+                        renderBots((cfg && cfg.products) ? cfg.products : GLOBAL_DEFAULTS);
+                    });
                 } else if (section === 'signals') {
                     title = t.signals_title; desc = t.signals_desc;
                     htmlContent = `
