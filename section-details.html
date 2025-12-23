@@ -385,10 +385,9 @@
 
                     const isFreeCheck = (p) => {
                         if (!p) return false;
-                        const priceVal = String(p.price || "").replace(/[^0-9.]/g, "");
-                        const isFreeFlag = p.isFree === true || p.isFree === "true" || p.isFree === "on";
-                        const priceIsZero = priceVal === "0" || priceVal === "0.00" || priceVal === "";
-                        return isFreeFlag || priceIsZero;
+                        if (p.isFree === true || p.isFree === "true" || p.isFree === "on") return true;
+                        const priceNum = parseFloat(String(p.price || "0").replace(/[^0-9.]/g, ""));
+                        return isNaN(priceNum) || priceNum <= 0;
                     };
 
                     const createCard = (product, idx) => {
