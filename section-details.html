@@ -387,7 +387,8 @@
                         if (!p) return false;
                         const priceVal = String(p.price || "").replace(/[^0-9.]/g, "");
                         const isFreeFlag = p.isFree === true || p.isFree === "true" || p.isFree === "on";
-                        return isFreeFlag || priceVal === "0" || priceVal === "0.00" || priceVal === "";
+                        const priceIsZero = priceVal === "0" || priceVal === "0.00" || priceVal === "";
+                        return isFreeFlag || priceIsZero;
                     };
 
                     const createCard = (product, idx) => {
@@ -431,13 +432,18 @@
                     // Fetch from Firebase
                     db.ref('products').on('value', (snapshot) => {
                         const data = snapshot.val();
+                        console.log("Firebase Data in Details:", data); // DEBUG
                         let products = [];
-                        if (!data) products = GLOBAL_DEFAULTS;
-                        else products = (Array.isArray(data) ? data : Object.values(data)).filter(p => p !== null);
+                        if (data) {
+                            products = (Array.isArray(data) ? data : Object.values(data)).filter(p => p !== null);
+                        } else {
+                            products = [];
+                        }
                         renderBots(products);
-                    }, () => {
+                    }, (error) => {
+                        console.error("Firebase Error in Details:", error);
                         const cfg = JSON.parse(localStorage.getItem('tme_config_v2'));
-                        renderBots((cfg && cfg.products) ? cfg.products : GLOBAL_DEFAULTS);
+                        renderBots((cfg && cfg.products) ? cfg.products : []);
                     });
                 } else if (section === 'signals') {
                     title = t.signals_title; desc = t.signals_desc;
