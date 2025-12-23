@@ -67,8 +67,16 @@
             } catch (e) { console.error('Admin Config Error:', e); }
         })();
 
-        // Global Products State
+        // Global Products State & Utils
         let currentProducts = [];
+        const isProductFree = (p) => {
+            if (!p) return false;
+            // Clean price: remove non-numeric chars except dot
+            const priceVal = String(p.price || "").replace(/[^0-9.]/g, "");
+            const isFreeFlag = p.isFree === true || p.isFree === "true" || p.isFree === "on";
+            const priceIsZero = priceVal === "0" || priceVal === "0.00" || priceVal === "";
+            return isFreeFlag || priceIsZero;
+        };
 
         // Initialize Firebase
         const firebaseConfig = {
@@ -88,13 +96,7 @@
             const container = document.getElementById('bots-grid-container');
             if (!container) return;
 
-            const isProductFree = (p) => {
-                if (!p) return false;
-                const priceValue = String(p.price || "").replace("$", "").trim();
-                const isFreeFlag = p.isFree === true || p.isFree === "true" || p.isFree === "on";
-                return isFreeFlag || priceValue === "0" || priceValue === "0.00" || priceValue === "" || priceValue.toLowerCase() === "free";
-            };
-
+            // Utils moved to global scope
             const GLOBAL_DEFAULTS = []; // Cleared to prevent ghost items
             let currentLang = localStorage.getItem('language') || 'en';
             // Removed local loadedProducts definition to use global currentProducts instead
@@ -139,7 +141,8 @@
                     else paidBots.push({ data: p, actualIdx: i });
                 });
 
-                console.log("Rendering Total Products:", currentProducts.length, "Free:", freeBots.length, "Paid:", paidBots.length);
+                console.log("DEBUG RENDER - Total:", currentProducts.length, "Free:", freeBots.length, "Paid:", paidBots.length);
+                console.log("PAID BOTS LIST:", paidBots);
                 let html = '';
                 if (freeBots.length > 0) {
                     html += `<div style="grid-column: 1/-1; margin-top:1rem;"><h3 style="color:#00D09C; border-bottom:1px solid #00D09C; padding-bottom:0.5rem; margin-bottom:1rem;"><i class="fas fa-gift"></i> ${t.free}</h3></div>`;
@@ -1109,8 +1112,9 @@
             const title = titleInput.value.trim();
             let price = priceInput.value.trim();
 
-            if (isFree) {
-                price = '0'; // Set price to 0 if it's a free product
+            if (!isFree && !price) {
+                alert("Please enter a price for the premium product.");
+                return;
             }
 
             if (title) { // Only title is strictly required now, price can be 0

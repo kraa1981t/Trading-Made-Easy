@@ -385,9 +385,9 @@
 
                     const isFreeCheck = (p) => {
                         if (!p) return false;
-                        const priceValue = String(p.price || "").replace("$", "").trim();
+                        const priceVal = String(p.price || "").replace(/[^0-9.]/g, "");
                         const isFreeFlag = p.isFree === true || p.isFree === "true" || p.isFree === "on";
-                        return isFreeFlag || priceValue === "0" || priceValue === "0.00" || priceValue === "" || priceValue.toLowerCase() === "free";
+                        return isFreeFlag || priceVal === "0" || priceVal === "0.00" || priceVal === "";
                     };
 
                     const createCard = (product, idx) => {
