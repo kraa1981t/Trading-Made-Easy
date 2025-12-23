@@ -169,7 +169,8 @@
                         html += createCard(pb.data, pb.actualIdx);
                     });
                 }
-                container.innerHTML = html || `<p style="grid-column:1/-1; text-align:center; opacity:0.5; padding:2rem;">No bots available. (Found ${currentProducts.length} items in DB)</p>`;
+                const statusBadge = `<div style="text-align:center; margin-bottom:1rem; font-size:0.7rem; opacity:0.6;">(DB: ${currentProducts.length} | Free: ${freeBots.length} | Paid: ${paidBots.length})</div>`;
+                container.innerHTML = statusBadge + (html || `<p style="grid-column:1/-1; text-align:center; opacity:0.5; padding:2rem;">No bots available.</p>`);
             }
 
             // Sync from Firebase - STRICT CLOUD MODE
@@ -776,8 +777,16 @@
                             </button>
                         </div>
 
-                        <div style="background:var(--bg-color); padding:1rem; border-radius:5px;">
-                            <h4 style="margin-top:0;" data-i18n="adm_prod_add_title">Add New Product</h4>
+                        <div
+                            style="background:var(--bg-color); padding:1rem; border-radius:5px; border:1px solid var(--border-color);">
+                            <div
+                                style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+                                <h4 style="margin:0;" id="adm-prod-form-title" data-i18n="adm_prod_add_title">Add New
+                                    Product</h4>
+                                <button id="cancel-edit-btn" onclick="cancelProductEdit()" class="btn"
+                                    style="display:none; background:#666; font-size:0.7rem; padding:0.2rem 0.5rem;">Cancel
+                                    Edit</button>
+                            </div>
                             <div
                                 style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.8rem; background:rgba(0,208,156,0.1); padding:0.5rem; border-radius:5px; border:1px solid var(--primary-color);">
                                 <label style="font-size:0.85rem; font-weight:600; cursor:pointer;"
@@ -840,9 +849,11 @@
                                 </div>
                             </div>
 
-                            <button onclick="addNewProduct()" class="btn-primary"
-                                style="padding:0.5rem 1rem; font-size:0.8rem;" data-i18n="adm_prod_add_btn">+ Add
-                                Product</button>
+                            <button id="add-prod-btn" onclick="addNewProduct()" class="btn-primary"
+                                style="width:100%; padding:0.8rem; font-size:0.9rem; font-weight:bold; margin-top:0.5rem;"
+                                data-i18n="adm_prod_add_btn">
+                                <i class="fas fa-plus-circle"></i> Add Product to Website
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -1088,35 +1099,69 @@
             }
         }
 
+        function cancelProductEdit() {
+            editingIndex = -1;
+            const titleEl = document.getElementById('adm-prod-form-title');
+            if (titleEl) titleEl.textContent = 'Add New Product';
+
+            const btn = document.getElementById('add-prod-btn');
+            if (btn) {
+                btn.innerHTML = '<i class="fas fa-plus-circle"></i> Add Product to Website';
+                btn.style.background = 'var(--primary-color)';
+            }
+
+            document.getElementById('cancel-edit-btn').style.display = 'none';
+
+            // Clear fields
+            document.getElementById('new-prod-title').value = '';
+            document.getElementById('new-prod-price').value = '';
+            document.getElementById('new-prod-desc').value = '';
+            document.getElementById('new-prod-is-free').checked = false;
+            togglePriceField(false);
+            document.getElementById('new-prod-img-base64').value = '';
+            document.getElementById('img-preview-box').style.display = 'none';
+            document.getElementById('new-prod-file-data').value = '';
+            document.getElementById('new-prod-file-name').value = '';
+            document.getElementById('file-name-display').textContent = 'No file selected';
+            document.getElementById('remove-file-btn').style.display = 'none';
+        }
+
         function editProduct(idx) {
             editingIndex = idx;
             const p = currentProducts[idx];
+            if (!p) return;
+
+            const titleEl = document.getElementById('adm-prod-form-title');
+            if (titleEl) titleEl.textContent = 'Editing: ' + p.title;
+
+            const btn = document.getElementById('add-prod-btn');
+            if (btn) {
+                btn.innerHTML = '<i class="fas fa-save"></i> Update Product Details';
+                btn.style.background = '#ffaa00';
+            }
+
+            document.getElementById('cancel-edit-btn').style.display = 'inline-block';
 
             const isFree = p.isFree || false;
             document.getElementById('new-prod-is-free').checked = isFree;
             togglePriceField(isFree);
 
-            // Populate fields
             document.getElementById('new-prod-title').value = p.title;
             document.getElementById('new-prod-price').value = p.price || '';
             document.getElementById('new-prod-desc').value = p.desc || '';
 
-            // File handling
             if (p.fileData && p.fileName) {
                 document.getElementById('new-prod-file-data').value = p.fileData;
                 document.getElementById('new-prod-file-name').value = p.fileName;
                 document.getElementById('file-name-display').textContent = p.fileName;
-                document.getElementById('file-name-display').style.color = 'var(--primary-color)';
                 document.getElementById('remove-file-btn').style.display = 'block';
             } else {
                 document.getElementById('new-prod-file-data').value = '';
                 document.getElementById('new-prod-file-name').value = '';
                 document.getElementById('file-name-display').textContent = 'No file selected';
-                document.getElementById('file-name-display').style.color = 'inherit';
                 document.getElementById('remove-file-btn').style.display = 'none';
             }
 
-            // Image handling (if it's a base64 string, show preview)
             if (p.image && p.image.startsWith('data:image')) {
                 document.getElementById('new-prod-img-base64').value = p.image;
                 const preview = document.getElementById('img-preview-box');
@@ -1126,16 +1171,6 @@
                 document.getElementById('new-prod-img-base64').value = '';
                 document.getElementById('img-preview-box').style.display = 'none';
             }
-
-            // Change button text
-            const addBtn = document.querySelector('button[onclick="addNewProduct()"]');
-            if (addBtn) {
-                addBtn.textContent = 'Update Product';
-                addBtn.style.background = '#ffaa00'; // Orange for Edit mode
-            }
-
-            // Alert user
-            alert("Editing " + p.title + ". Modify fields and click 'Update Product'.");
         }
 
         function addNewProduct() {
@@ -1150,75 +1185,67 @@
             const title = titleInput.value.trim();
             let price = priceInput.value.trim();
 
-            if (!isFree && (!price || price === '0')) {
-                alert("Please enter a price greater than 0 for the premium product.");
+            if (!isFree && (!price || parseFloat(price) <= 0)) {
+                alert("Please enter a valid price (greater than 0) for the premium product.");
                 return;
             }
 
-            if (title) {
-                let list = [...currentProducts];
-
-                if (editingIndex > -1) {
-                    // Update existing
-                    list[editingIndex] = {
-                        ...list[editingIndex],
-                        title: title,
-                        price: isFree ? "0" : price,
-                        image: imgBase64 || list[editingIndex].image,
-                        desc: descInput.value || '',
-                        fileData: fileData || list[editingIndex].fileData,
-                        fileName: fileName || list[editingIndex].fileName,
-                        isFree: isFree
-                    };
-                    editingIndex = -1;
-                    const addBtn = document.querySelector('button[onclick="addNewProduct()"]');
-                    if (addBtn) { addBtn.textContent = '+ Add Product'; addBtn.style.background = 'var(--primary-color)'; }
-                } else {
-                    // Add new
-                    const newBot = {
-                        id: Date.now(),
-                        title: title,
-                        price: isFree ? "0" : price,
-                        image: imgBase64 || 'images/bot1.png',
-                        desc: descInput.value || '',
-                        fileData: fileData || null,
-                        fileName: fileName || null,
-                        isFree: isFree
-                    };
-                    list.push(newBot);
-                }
-
-                currentProducts = list;
-
-                // SYNC TO FIREBASE
-                db.ref('products').set(list).then(() => {
-                    console.log("✅ Synced to Firebase! Count:", list.length);
-                    // Force refresh memory to ensure data integrity
-                    currentProducts = list;
-                    alert("Success: Product saved/updated on the cloud!");
-                    renderProductList();
-
-                    // Clear inputs ONLY after success
-                    titleInput.value = '';
-                    priceInput.value = '';
-                    document.getElementById('new-prod-is-free').checked = false;
-                    togglePriceField(false);
-                    document.getElementById('new-prod-img-base64').value = '';
-                    document.getElementById('img-preview-box').style.display = 'none';
-                    descInput.value = '';
-                    document.getElementById('new-prod-file-data').value = '';
-                    document.getElementById('new-prod-file-name').value = '';
-                    document.getElementById('file-name-display').textContent = 'No file selected';
-                    document.getElementById('file-name-display').style.color = 'inherit';
-                    document.getElementById('remove-file-btn').style.display = 'none';
-                    document.getElementById('new-prod-file-input').value = '';
-                }).catch(err => {
-                    console.error("❌ Firebase sync error:", err);
-                    alert("Error: Database sync failed!");
-                });
-            } else {
-                alert("Please enter a title.");
+            if (!title) {
+                alert("Please enter a product title.");
+                return;
             }
+
+            const btn = document.getElementById('add-prod-btn');
+            const originalBtnHTML = btn ? btn.innerHTML : '+ Add Product';
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Syncing...';
+            }
+
+            let list = [...currentProducts];
+
+            if (editingIndex > -1) {
+                // Update existing
+                list[editingIndex] = {
+                    ...list[editingIndex],
+                    title: title,
+                    price: isFree ? "0" : price,
+                    image: imgBase64 || list[editingIndex].image,
+                    desc: descInput.value || '',
+                    fileData: fileData || list[editingIndex].fileData,
+                    fileName: fileName || list[editingIndex].fileName,
+                    isFree: isFree
+                };
+            } else {
+                // Add new
+                const newBot = {
+                    id: Date.now(),
+                    title: title,
+                    price: isFree ? "0" : price,
+                    image: imgBase64 || 'images/bot1.png',
+                    desc: descInput.value || '',
+                    fileData: fileData || null,
+                    fileName: fileName || null,
+                    isFree: isFree
+                };
+                list.push(newBot);
+            }
+
+            // Sync to Firebase
+            db.ref('products').set(list).then(() => {
+                console.log("✅ Cloud Sync Success! Total:", list.length);
+                alert(editingIndex > -1 ? "Product Updated!" : "New Product Added!");
+                cancelProductEdit(); // This resets editingIndex, button, and fields
+                renderProductList();
+            }).catch(err => {
+                console.error("❌ Cloud Sync Error:", err);
+                alert("Database sync failed. Please try again.");
+            }).finally(() => {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = originalBtnHTML;
+                }
+            });
         }
 
         async function clearCloudDatabase() {
