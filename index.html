@@ -1349,7 +1349,8 @@
                     // Final sync to Firebase to be 100% sure
                     db.ref('products').set(currentProducts).then(() => {
                         setTimeout(() => {
-                            window.location.href = window.location.pathname + '?v=' + Date.now();
+                            // Redirect to MT5 Bots section details page
+                            window.location.href = 'section-details.html?section=bots&v=' + Date.now();
                         }, 500);
                     });
                 }
