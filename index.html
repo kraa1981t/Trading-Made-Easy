@@ -861,9 +861,8 @@
                 <!-- Global Save -->
                 <div
                     style="position:sticky; bottom:1rem; background:var(--card-bg); padding:1rem; border-top:1px solid var(--border-color); border-radius:10px; box-shadow:0 -5px 20px rgba(0,0,0,0.2); display:flex; justify-content:flex-end;">
-                    <button onclick="console.log('Button clicked!'); saveSettings(true);" class="btn-primary"
-                        style="width:200px;" data-i18n="adm_save_all">Save All
-                        Changes</button>
+                    <button id="final-save-btn" onclick="saveSettings(true);" class="btn-primary" style="width:200px;"
+                        data-i18n="adm_save_all">Save All Changes</button>
                 </div>
 
             </div>
@@ -1341,17 +1340,21 @@
                 localStorage.setItem(CONFIG_KEY, JSON.stringify(config));
 
                 if (alertUser) {
-                    const btn = document.querySelector('button[onclick="saveSettings(true)"]');
-                    const originalHTML = btn.innerHTML;
-                    btn.disabled = true;
-                    btn.innerHTML = '<i class="fas fa-sync fa-spin"></i> Saving & Refreshing...';
+                    const btn = document.getElementById('final-save-btn');
+                    if (btn) {
+                        btn.disabled = true;
+                        btn.innerHTML = '<i class="fas fa-sync fa-spin"></i> Saving & Redirecting...';
+                    }
 
                     // Final sync to Firebase to be 100% sure
                     db.ref('products').set(currentProducts).then(() => {
-                        setTimeout(() => {
-                            // Redirect to MT5 Bots section details page
-                            window.location.href = 'section-details.html?section=bots&v=' + Date.now();
-                        }, 500);
+                        console.log("Final Cloud Sync Success, Redirecting...");
+                        // Direct redirection to the bots section
+                        window.location.href = 'section-details.html?section=bots&v=' + Date.now();
+                    }).catch(err => {
+                        console.error("Final Sync Error:", err);
+                        // Redirect anyway so the user sees the output, even if cloud sync was slow
+                        window.location.href = 'section-details.html?section=bots&v=' + Date.now();
                     });
                 }
             } catch (err) {
