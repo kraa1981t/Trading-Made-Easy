@@ -161,15 +161,23 @@
             // Sync from Firebase
             db.ref('products').on('value', (snapshot) => {
                 const data = snapshot.val();
-                console.log("Cloud Update Received:", data);
-                if (data) {
+                console.log("Cloud Update:", data);
+
+                // If data is null, it means the database is EXPLICITLY empty.
+                // We only use DEFAULTS if there's no data AND no record of previous setup.
+                if (data === null) {
+                    if (localStorage.getItem('has_interacted')) {
+                        loadedProducts = []; // Keep it empty if the user deleted everything
+                    } else {
+                        loadedProducts = GLOBAL_DEFAULTS;
+                    }
+                } else {
                     loadedProducts = Array.isArray(data) ? data : Object.values(data);
                     loadedProducts = loadedProducts.filter(p => p !== null);
-                } else {
-                    loadedProducts = GLOBAL_DEFAULTS;
+                    localStorage.setItem('has_interacted', 'true'); // Mark that we have real data now
                 }
+
                 render();
-                // Ensure Admin panel currentProducts stay in sync
                 if (typeof currentProducts !== 'undefined') currentProducts = loadedProducts;
             });
 
@@ -957,15 +965,16 @@
             }
 
             currentProducts.forEach((p, idx) => {
+                const imgUrl = (p.image && p.image.length > 50) ? p.image : (p.image || 'images/bot1.png');
                 const div = document.createElement('div');
                 div.className = 'admin-product-item';
                 div.style.cssText = 'background:var(--bg-color); padding:0.8rem; border-radius:8px; display:flex; justify-content:space-between; align-items:center; border:1px solid var(--border-color); margin-bottom:0.5rem;';
                 div.innerHTML = `
                     <div style="display:flex; align-items:center; gap:1rem;">
-                        <div style="width:40px; height:40px; background:url(${p.image}) center/cover; border-radius:5px; border:1px solid var(--border-color);"></div>
+                        <img src="${imgUrl}" style="width:40px; height:40px; object-fit:cover; border-radius:5px; border:1px solid var(--border-color);">
                         <div>
                             <div style="font-weight:bold; font-size:0.9rem;">${p.title}</div>
-                            <div style="font-size:0.8rem; color:var(--primary-color);">${p.isFree ? '<span style="color:#00D09C; font-weight:bold;" data-i18n="adm_prod_free_label">FREE</span>' : '$' + p.price}</div>
+                            <div style="font-size:0.8rem; color:var(--primary-color);">${isProductFree(p) ? '<span style="color:#00D09C; font-weight:bold;">FREE</span>' : '$' + p.price}</div>
                         </div>
                     </div>
                     <div style="display:flex; gap:0.3rem;">
