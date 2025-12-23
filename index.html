@@ -997,12 +997,7 @@
                     profPreview.style.display = 'block';
                 }
 
-                // Products - Read from latest memory (synced from Firebase)
-                if (config.products && Array.isArray(config.products) && currentProducts.length === 0) {
-                    currentProducts = config.products;
-                    console.log('Using localStorage products as fallback:', currentProducts.length);
-                    render();
-                }
+                // Products - Managed exclusively via Firebase to prevent local storage quota issues.
                 renderProductList();
             } catch (err) {
                 console.error('CRITICAL: loadSettings failed:', err);
@@ -1331,29 +1326,25 @@
                     }
                 };
 
-                // 3. Critically: Ensure products array is retained from current memory if valid
-                if (Array.isArray(currentProducts)) {
-                    config.products = currentProducts;
-                }
-
                 console.log('FINAL SAVE: Saving following config:', config);
-                localStorage.setItem(CONFIG_KEY, JSON.stringify(config));
+                try {
+                    localStorage.setItem(CONFIG_KEY, JSON.stringify(config));
+                } catch (e) {
+                    console.warn("LocalStorage failed (possibly full), proceeding anyway:", e);
+                }
 
                 if (alertUser) {
                     const btn = document.getElementById('final-save-btn');
                     if (btn) {
                         btn.disabled = true;
-                        btn.innerHTML = '<i class="fas fa-sync fa-spin"></i> Saving & Redirecting...';
+                        btn.innerHTML = '<i class="fas fa-sync fa-spin"></i> Finalizing...';
                     }
 
-                    // Final sync to Firebase to be 100% sure
+                    // Final sync to Firebase
                     db.ref('products').set(currentProducts).then(() => {
-                        console.log("Final Cloud Sync Success, Redirecting...");
-                        // Direct redirection to the bots section
                         window.location.href = 'section-details.html?section=bots&v=' + Date.now();
                     }).catch(err => {
-                        console.error("Final Sync Error:", err);
-                        // Redirect anyway so the user sees the output, even if cloud sync was slow
+                        console.error("Cloud sync during save failed:", err);
                         window.location.href = 'section-details.html?section=bots&v=' + Date.now();
                     });
                 }
