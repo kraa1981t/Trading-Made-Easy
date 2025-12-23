@@ -544,7 +544,7 @@
                     <button onclick="openAdmin()" class="btn-primary" style="padding: 1rem;">
                         <i class="fas fa-tasks"></i> Open Dashboard
                     </button>
-                    <button onclick="sessionStorage.removeItem('adminLoggedIn'); location.reload();" class="btn"
+                    <button onclick="logoutAdmin()" class="btn"
                         style="border: 1px solid #ff4d4d; color: #ff4d4d; padding: 1rem;">
                         <i class="fas fa-sign-out-alt"></i> Logout Admin
                     </button>
@@ -919,7 +919,7 @@
         function updateAdminUI() {
             const adminSection = document.getElementById('admin-quick-access');
             if (adminSection) {
-                const isLoggedIn = sessionStorage.getItem('adminLoggedIn') === 'true';
+                const isLoggedIn = localStorage.getItem('adminLoggedIn') === 'true'; // Persistent login
                 adminSection.style.display = isLoggedIn ? 'block' : 'none';
             }
         }
@@ -937,8 +937,8 @@
             // Re-load settings to ensure products are ready
             loadSettings();
 
-            // Check if already logged in this session
-            if (sessionStorage.getItem('adminLoggedIn') === 'true') {
+            // Check if already logged in
+            if (localStorage.getItem('adminLoggedIn') === 'true') {
                 updateAdminUI();
                 document.getElementById('admin-auth').style.display = 'none';
                 document.getElementById('admin-controls').style.display = 'block';
@@ -957,7 +957,7 @@
         function verifyAdmin() {
             const pass = document.getElementById('admin-pass-input').value;
             if (pass === 'admin123') {
-                sessionStorage.setItem('adminLoggedIn', 'true'); // Persist for this session
+                localStorage.setItem('adminLoggedIn', 'true'); // Persist globally
                 updateAdminUI();
                 document.getElementById('admin-auth').style.display = 'none';
                 document.getElementById('admin-controls').style.display = 'block';
@@ -965,6 +965,11 @@
             } else {
                 document.getElementById('auth-error').style.display = 'block';
             }
+        }
+
+        function logoutAdmin() {
+            localStorage.removeItem('adminLoggedIn');
+            location.reload();
         }
 
         // Run UI check on load
