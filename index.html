@@ -190,10 +190,24 @@
 
             window.downloadHomeFree = function (idx) {
                 const p = currentProducts[idx];
-                if (!p || !p.fileData) return alert("No file attached.");
-                const a = document.createElement('a');
-                a.href = p.fileData; a.download = p.fileName || 'product.zip';
-                document.body.appendChild(a); a.click(); document.body.removeChild(a);
+                console.log("Download Attempt:", p ? p.title : "Unknown Index", "File Attached:", !!(p && p.fileData));
+
+                if (!p || !p.fileData) {
+                    return alert("Error: No file data found for this product. Please re-upload the file in the Admin panel and click 'Update Product'.");
+                }
+
+                try {
+                    const a = document.createElement('a');
+                    a.href = p.fileData;
+                    a.download = p.fileName || 'product.zip';
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    console.log("Download initiated successfully.");
+                } catch (err) {
+                    console.error("Download Error:", err);
+                    alert("Download failed: " + err.message);
+                }
             };
 
             window.addEventListener('languageChanged', (e) => {
@@ -1001,7 +1015,10 @@
                         <img src="${imgUrl}" style="width:40px; height:40px; object-fit:cover; border-radius:5px; border:1px solid var(--border-color);">
                         <div>
                             <div style="font-weight:bold; font-size:0.9rem;">${p.title}</div>
-                            <div style="font-size:0.8rem; color:var(--primary-color);">${isProductFree(p) ? '<span style="color:#00D09C; font-weight:bold;">FREE</span>' : '$' + p.price}</div>
+                            <div style="font-size:0.8rem; display:flex; gap:0.5rem; align-items:center;">
+                                <span style="color:var(--primary-color);">${isProductFree(p) ? '<span style="color:#00D09C; font-weight:bold;">FREE</span>' : '$' + p.price}</span>
+                                ${p.fileData ? '<span style="background:#00D09C; color:white; font-size:0.6rem; padding:1px 4px; border-radius:3px;"><i class="fas fa-file-archive"></i> FILE OK</span>' : '<span style="background:#ff4d4d; color:white; font-size:0.6rem; padding:1px 4px; border-radius:3px;">NO FILE</span>'}
+                            </div>
                         </div>
                     </div>
                     <div style="display:flex; gap:0.3rem;">
@@ -1176,7 +1193,9 @@
                 // SYNC TO FIREBASE
                 db.ref('products').set(list).then(() => {
                     console.log("✅ Synced to Firebase! Count:", list.length);
-                    alert("Success: Product saved to cloud!");
+                    // Force refresh memory to ensure data integrity
+                    currentProducts = list;
+                    alert("Success: Product saved/updated on the cloud!");
                     renderProductList();
 
                     // Clear inputs ONLY after success
