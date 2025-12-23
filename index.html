@@ -413,7 +413,8 @@
             <h2 class="section-title" data-i18n="about_title">About the Developer</h2>
             <div class="about-container">
                 <div style="text-align: center;">
-                    <img src="images/profile.png" alt="KRAA MOHAMED" class="profile-img">
+                    <img src="images/profile.png" alt="KRAA MOHAMED" class="profile-img"
+                        onerror="this.src='https://ui-avatars.com/api/?name=K+M&background=00ff88&color=fff'">
                     <h3 style="margin-top: 1rem;">KRAA MOHAMED</h3>
                     <p style="color: var(--primary-color); font-weight: 600;" data-i18n="about_role">Senior Algorithmic
                         Trading Developer</p>
@@ -1132,19 +1133,20 @@
             const title = titleInput.value.trim();
             let price = priceInput.value.trim();
 
-            if (!isFree && !price) {
-                alert("Please enter a price for the premium product.");
+            if (!isFree && (!price || price === '0')) {
+                alert("Please enter a price greater than 0 for the premium product.");
                 return;
             }
 
-            if (title) { // Only title is strictly required now, price can be 0
-                // USE THE GLOBAL SYNCED LIST INSTEAD OF LOCALSTORAGE
+            if (title) {
                 let list = [...currentProducts];
 
                 if (editingIndex > -1) {
+                    // Update existing
                     list[editingIndex] = {
                         ...list[editingIndex],
-                        title: title, price: price,
+                        title: title,
+                        price: isFree ? "0" : price,
                         image: imgBase64 || list[editingIndex].image,
                         desc: descInput.value || '',
                         fileData: fileData || list[editingIndex].fileData,
@@ -1155,8 +1157,11 @@
                     const addBtn = document.querySelector('button[onclick="addNewProduct()"]');
                     if (addBtn) { addBtn.textContent = '+ Add Product'; addBtn.style.background = 'var(--primary-color)'; }
                 } else {
+                    // Add new
                     const newBot = {
-                        id: Date.now(), title: title, price: price,
+                        id: Date.now(),
+                        title: title,
+                        price: isFree ? "0" : price,
                         image: imgBase64 || 'images/bot1.png',
                         desc: descInput.value || '',
                         fileData: fileData || null,
@@ -1166,43 +1171,34 @@
                     list.push(newBot);
                 }
 
-                console.log("Saving list to Cloud, item count:", list.length);
                 currentProducts = list;
-
-                // Save a local backup just in case
-                const config = JSON.parse(localStorage.getItem(CONFIG_KEY)) || {};
-                config.products = list;
-                localStorage.setItem(CONFIG_KEY, JSON.stringify(config));
 
                 // SYNC TO FIREBASE
                 db.ref('products').set(list).then(() => {
-                    console.log("✅ Synced to Firebase!");
+                    console.log("✅ Synced to Firebase! Count:", list.length);
                     alert("Success: Product saved to cloud!");
                     renderProductList();
+
+                    // Clear inputs ONLY after success
+                    titleInput.value = '';
+                    priceInput.value = '';
+                    document.getElementById('new-prod-is-free').checked = false;
+                    togglePriceField(false);
+                    document.getElementById('new-prod-img-base64').value = '';
+                    document.getElementById('img-preview-box').style.display = 'none';
+                    descInput.value = '';
+                    document.getElementById('new-prod-file-data').value = '';
+                    document.getElementById('new-prod-file-name').value = '';
+                    document.getElementById('file-name-display').textContent = 'No file selected';
+                    document.getElementById('file-name-display').style.color = 'inherit';
+                    document.getElementById('remove-file-btn').style.display = 'none';
+                    document.getElementById('new-prod-file-input').value = '';
                 }).catch(err => {
                     console.error("❌ Firebase sync error:", err);
                     alert("Error: Database sync failed!");
                 });
-
-                // Clear inputs
-                titleInput.value = '';
-                priceInput.value = '';
-                document.getElementById('new-prod-is-free').checked = false;
-                togglePriceField(false);
-                document.getElementById('new-prod-img-base64').value = '';
-                document.getElementById('new-prod-img-file').value = '';
-                document.getElementById('img-preview-box').style.display = 'none';
-                descInput.value = '';
-                document.getElementById('new-prod-file-data').value = '';
-                document.getElementById('new-prod-file-name').value = '';
-                document.getElementById('file-name-display').textContent = 'No file selected';
-                document.getElementById('file-name-display').style.color = 'inherit';
-                document.getElementById('remove-file-btn').style.display = 'none';
-                document.getElementById('new-prod-file-input').value = '';
-
-                alert('Success: Product Updated & Saved!');
             } else {
-                alert("Please enter title and price.");
+                alert("Please enter a title.");
             }
         }
 
