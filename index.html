@@ -158,27 +158,25 @@
                 container.innerHTML = html || '<p style="grid-column:1/-1; text-align:center; opacity:0.5; padding:2rem;">No bots available.</p>';
             }
 
-            // Sync from Firebase
+            // Sync from Firebase - STRICT CLOUD MODE
             db.ref('products').on('value', (snapshot) => {
                 const data = snapshot.val();
-                console.log("Cloud Update:", data);
+                console.log("Cloud Update Received:", data);
 
-                // If data is null, it means the database is EXPLICITLY empty.
-                // We only use DEFAULTS if there's no data AND no record of previous setup.
-                if (data === null) {
-                    if (localStorage.getItem('has_interacted')) {
-                        loadedProducts = []; // Keep it empty if the user deleted everything
-                    } else {
-                        loadedProducts = GLOBAL_DEFAULTS;
-                    }
+                // If cloud is empty, it is empty. No auto-defaults.
+                if (!data) {
+                    loadedProducts = [];
                 } else {
                     loadedProducts = Array.isArray(data) ? data : Object.values(data);
                     loadedProducts = loadedProducts.filter(p => p !== null);
-                    localStorage.setItem('has_interacted', 'true'); // Mark that we have real data now
                 }
 
                 render();
-                if (typeof currentProducts !== 'undefined') currentProducts = loadedProducts;
+                // Sync the Admin memory variable immediately
+                if (typeof currentProducts !== 'undefined') {
+                    currentProducts = [...loadedProducts];
+                    if (typeof renderProductList === 'function') renderProductList();
+                }
             });
 
             window.downloadHomeFree = function (idx) {
@@ -1178,16 +1176,23 @@
             }
         }
 
-        function removeProduct(idx) {
-            if (!confirm("Delete this product?")) return;
-            let list = [...currentProducts];
-            list.splice(idx, 1);
-            currentProducts = list;
+        async function removeProduct(idx) {
+            if (!confirm("Are you sure you want to PERMANENTLY delete this product?")) return;
 
-            // Sync to Firebase
-            db.ref('products').set(list);
+            // 1. Update local memory immediately
+            currentProducts.splice(idx, 1);
+            const newList = [...currentProducts];
 
-            renderProductList();
+            // 2. Sync to Firebase
+            try {
+                await db.ref('products').set(newList);
+                console.log("Deleted from cloud successfully.");
+                alert("Product deleted!");
+                renderProductList();
+            } catch (err) {
+                console.error("Delete failed:", err);
+                alert("Cloud sync failed. Product may return.");
+            }
         }
 
         function saveSettings(alertUser = false) {
