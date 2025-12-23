@@ -85,12 +85,11 @@
             const container = document.getElementById('bots-grid-container');
             if (!container) return;
 
-            // MASTER DETECTION: Use this everywhere
             const isProductFree = (p) => {
                 if (!p) return false;
-                const price = String(p.price || "").trim();
-                const isFreeFlag = p.isFree === true || p.isFree === "true" || p.isFree === "on";
-                return isFreeFlag || price === "0" || price === "0.00" || price === "" || price.toLowerCase() === "free";
+                // If isFree is checked, OR price is 0/empty, it's FREE
+                const price = String(p.price || "").replace("$", "").trim();
+                return p.isFree === true || p.isFree === "true" || price === "0" || price === "0.00" || price === "";
             };
 
             const GLOBAL_DEFAULTS = [
@@ -161,28 +160,16 @@
             // Sync from Firebase
             db.ref('products').on('value', (snapshot) => {
                 const data = snapshot.val();
-                console.log("Firebase Products Received:", data);
-                if (!data) {
-                    loadedProducts = GLOBAL_DEFAULTS;
-                } else {
+                console.log("Cloud Update Received:", data);
+                if (data) {
                     loadedProducts = Array.isArray(data) ? data : Object.values(data);
+                    loadedProducts = loadedProducts.filter(p => p !== null);
+                } else {
+                    loadedProducts = GLOBAL_DEFAULTS;
                 }
-                // Cleanup nulls from array
-                loadedProducts = loadedProducts.filter(p => p !== null);
                 render();
-
-                // Also update Admin Panel memory if it's open
-                if (typeof currentProducts !== 'undefined') {
-                    currentProducts = loadedProducts;
-                    if (document.getElementById('admin-overlay').style.display === 'block') {
-                        renderProductList();
-                    }
-                }
-            }, (error) => {
-                console.warn("Firebase failed. Fallback to storage/defaults.", error);
-                const cfg = JSON.parse(localStorage.getItem(CONFIG_KEY));
-                loadedProducts = (cfg && cfg.products && cfg.products.length > 0) ? cfg.products : GLOBAL_DEFAULTS;
-                render();
+                // Ensure Admin panel currentProducts stay in sync
+                if (typeof currentProducts !== 'undefined') currentProducts = loadedProducts;
             });
 
             window.downloadHomeFree = function (idx) {
@@ -1114,8 +1101,8 @@
             }
 
             if (title) { // Only title is strictly required now, price can be 0
-                const config = JSON.parse(localStorage.getItem(CONFIG_KEY)) || {};
-                let list = Array.isArray(config.products) ? config.products : [];
+                // USE THE GLOBAL SYNCED LIST INSTEAD OF LOCALSTORAGE
+                let list = [...currentProducts];
 
                 if (editingIndex > -1) {
                     list[editingIndex] = {
@@ -1143,6 +1130,9 @@
                 }
 
                 currentProducts = list;
+
+                // Save a local backup just in case
+                const config = JSON.parse(localStorage.getItem(CONFIG_KEY)) || {};
                 config.products = list;
                 localStorage.setItem(CONFIG_KEY, JSON.stringify(config));
 
@@ -1176,14 +1166,12 @@
         }
 
         function removeProduct(idx) {
-            const config = JSON.parse(localStorage.getItem(CONFIG_KEY)) || {};
-            let list = Array.isArray(config.products) ? config.products : [];
+            if (!confirm("Delete this product?")) return;
+            let list = [...currentProducts];
             list.splice(idx, 1);
             currentProducts = list;
-            config.products = list;
-            localStorage.setItem(CONFIG_KEY, JSON.stringify(config));
 
-            // SYNC TO FIREBASE
+            // Sync to Firebase
             db.ref('products').set(list);
 
             renderProductList();
