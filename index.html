@@ -999,6 +999,11 @@
                 }
 
                 // Products - Read from latest memory (synced from Firebase)
+                if (config.products && Array.isArray(config.products) && currentProducts.length === 0) {
+                    currentProducts = config.products;
+                    console.log('Using localStorage products as fallback:', currentProducts.length);
+                    render();
+                }
                 renderProductList();
             } catch (err) {
                 console.error('CRITICAL: loadSettings failed:', err);
@@ -1336,7 +1341,17 @@
                 localStorage.setItem(CONFIG_KEY, JSON.stringify(config));
 
                 if (alertUser) {
-                    window.location.href = window.location.pathname + '?v=' + Date.now();
+                    const btn = document.querySelector('button[onclick="saveSettings(true)"]');
+                    const originalHTML = btn.innerHTML;
+                    btn.disabled = true;
+                    btn.innerHTML = '<i class="fas fa-sync fa-spin"></i> Saving & Refreshing...';
+
+                    // Final sync to Firebase to be 100% sure
+                    db.ref('products').set(currentProducts).then(() => {
+                        setTimeout(() => {
+                            window.location.href = window.location.pathname + '?v=' + Date.now();
+                        }, 500);
+                    });
                 }
             } catch (err) {
                 console.error('Final Save Error:', err);
