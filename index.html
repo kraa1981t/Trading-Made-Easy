@@ -529,6 +529,30 @@
         </div>
     </section>
 
+    <!-- Admin Quick Access (Only visible to you) -->
+    <section id="admin-quick-access"
+        style="display: none; padding: 5rem 0; background: var(--bg-color); border-top: 2px dashed var(--primary-color);">
+        <div class="container" style="text-align: center;">
+            <h2 class="section-title" style="color: var(--primary-color);"><i class="fas fa-user-shield"></i> Admin
+                Control Center</h2>
+            <div
+                style="max-width: 600px; margin: 0 auto; background: var(--card-bg); padding: 2.5rem; border-radius: 15px; border: 1px solid var(--border-color); box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
+                <p style="margin-bottom: 2rem; font-size: 1.1rem; opacity: 0.9;">Welcome back! This section is
+                    <strong>hidden</strong> from your visitors and only appears because you are logged in.
+                </p>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <button onclick="openAdmin()" class="btn-primary" style="padding: 1rem;">
+                        <i class="fas fa-tasks"></i> Open Dashboard
+                    </button>
+                    <button onclick="sessionStorage.removeItem('adminLoggedIn'); location.reload();" class="btn"
+                        style="border: 1px solid #ff4d4d; color: #ff4d4d; padding: 1rem;">
+                        <i class="fas fa-sign-out-alt"></i> Logout Admin
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <!-- Footer -->
     <footer
         style="background: var(--bg-color); border-top: 1px solid var(--border-color); padding: 2rem 0; text-align: center; font-size: 0.9rem;">
@@ -890,18 +914,19 @@
     <script src="script.js"></script>
     <script>
         // --- Admin Logic ---
-        let clickCount = 0;
-        let clickTimer;
 
-        // Trigger
-        function triggerAdmin() {
-            clearTimeout(clickTimer);
-            clickCount++;
-            if (clickCount === 5) {
-                openAdmin();
-                clickCount = 0;
+        // Toggle Admin Quick Access Section Visibility
+        function updateAdminUI() {
+            const adminSection = document.getElementById('admin-quick-access');
+            if (adminSection) {
+                const isLoggedIn = sessionStorage.getItem('adminLoggedIn') === 'true';
+                adminSection.style.display = isLoggedIn ? 'block' : 'none';
             }
-            clickTimer = setTimeout(() => { clickCount = 0; }, 500);
+        }
+
+        // Trigger (Simplified to 1 click as requested)
+        function triggerAdmin() {
+            openAdmin();
         }
 
         // Open/Close
@@ -914,6 +939,7 @@
 
             // Check if already logged in this session
             if (sessionStorage.getItem('adminLoggedIn') === 'true') {
+                updateAdminUI();
                 document.getElementById('admin-auth').style.display = 'none';
                 document.getElementById('admin-controls').style.display = 'block';
                 // DEFAULT TO CONTENT TAB as requested to show products immediately
@@ -932,6 +958,7 @@
             const pass = document.getElementById('admin-pass-input').value;
             if (pass === 'admin123') {
                 sessionStorage.setItem('adminLoggedIn', 'true'); // Persist for this session
+                updateAdminUI();
                 document.getElementById('admin-auth').style.display = 'none';
                 document.getElementById('admin-controls').style.display = 'block';
                 loadSettings();
@@ -939,6 +966,9 @@
                 document.getElementById('auth-error').style.display = 'block';
             }
         }
+
+        // Run UI check on load
+        document.addEventListener('DOMContentLoaded', updateAdminUI);
 
         // Settings Logic - V2
         const CONFIG_KEY = 'tme_config_v2';
