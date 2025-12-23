@@ -67,6 +67,9 @@
             } catch (e) { console.error('Admin Config Error:', e); }
         })();
 
+        // Global Products State
+        let currentProducts = [];
+
         // Initialize Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyCvMayEuNTlQ5CWbjrrqw3aft_H044-uQM",
@@ -92,13 +95,9 @@
                 return isFreeFlag || priceValue === "0" || priceValue === "0.00" || priceValue === "" || priceValue.toLowerCase() === "free";
             };
 
-            const GLOBAL_DEFAULTS = [
-                { id: 101, title: "Momentum Hunter 2.0", price: "149", image: "images/bot1.png", desc: "High-precision trend following algorithm for MT5.", isFree: false },
-                { id: 102, title: "Risk Calculator Pro", price: "0", image: "images/bot2.png", desc: "Professional position sizing tool.", isFree: true, fileData: "#", fileName: "Risk.zip" }
-            ];
-
+            const GLOBAL_DEFAULTS = []; // Cleared to prevent ghost items
             let currentLang = localStorage.getItem('language') || 'en';
-            let loadedProducts = [];
+            // Removed local loadedProducts definition to use global currentProducts instead
 
             function render() {
                 const homeTrans = {
@@ -135,12 +134,12 @@
                 };
 
                 const freeBots = []; const paidBots = [];
-                loadedProducts.forEach((p, i) => {
+                currentProducts.forEach((p, i) => {
                     if (isProductFree(p)) freeBots.push({ data: p, actualIdx: i });
                     else paidBots.push({ data: p, actualIdx: i });
                 });
 
-                console.log("Rendering Total Products:", loadedProducts.length, "Free:", freeBots.length, "Paid:", paidBots.length);
+                console.log("Rendering Total Products:", currentProducts.length, "Free:", freeBots.length, "Paid:", paidBots.length);
                 let html = '';
                 if (freeBots.length > 0) {
                     html += `<div style="grid-column: 1/-1; margin-top:1rem;"><h3 style="color:#00D09C; border-bottom:1px solid #00D09C; padding-bottom:0.5rem; margin-bottom:1rem;"><i class="fas fa-gift"></i> ${t.free}</h3></div>`;
@@ -163,24 +162,19 @@
                 const data = snapshot.val();
                 console.log("Cloud Update Received:", data);
 
-                // If cloud is empty, it is empty. No auto-defaults.
                 if (!data) {
-                    loadedProducts = [];
+                    currentProducts = [];
                 } else {
-                    loadedProducts = Array.isArray(data) ? data : Object.values(data);
-                    loadedProducts = loadedProducts.filter(p => p !== null);
+                    currentProducts = (Array.isArray(data) ? data : Object.values(data)).filter(p => p !== null);
                 }
 
                 render();
-                // Sync the Admin memory variable immediately
-                if (typeof currentProducts !== 'undefined') {
-                    currentProducts = [...loadedProducts];
-                    if (typeof renderProductList === 'function') renderProductList();
-                }
+                // Ensure Admin panel UI updates if open
+                if (typeof renderProductList === 'function') renderProductList();
             });
 
             window.downloadHomeFree = function (idx) {
-                const p = loadedProducts[idx];
+                const p = currentProducts[idx];
                 if (!p || !p.fileData) return alert("No file attached.");
                 const a = document.createElement('a');
                 a.href = p.fileData; a.download = p.fileName || 'product.zip';
@@ -871,9 +865,8 @@
 
         // Settings Logic - V2
         const CONFIG_KEY = 'tme_config_v2';
-        let currentProducts = [];
-        let editingIndex = -1; // -1 means we are adding new, >=0 means we are editing existing
-        console.log('Global currentProducts initialized as empty array');
+        let editingIndex = -1;
+        console.log('Admin ready to manage cloud products');
 
         function switchTab(tab) {
             ['general', 'appearance', 'content'].forEach(t => {
