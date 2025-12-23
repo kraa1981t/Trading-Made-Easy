@@ -381,10 +381,7 @@
                 if (section === 'bots') {
                     title = t.bots_title; desc = t.bots_desc;
 
-                    const GLOBAL_DEFAULTS = [
-                        { id: 101, title: "Momentum Hunter 2.0", price: "149", image: "images/bot1.png", desc: "High-precision trend following algorithm for MT5.", isFree: false },
-                        { id: 102, title: "Risk Calculator Pro", price: "0", image: "images/bot2.png", desc: "Professional position sizing tool.", isFree: true, fileData: "#", fileName: "Risk.zip" }
-                    ];
+                    const GLOBAL_DEFAULTS = []; // Cleared to prevent ghost bots
 
                     const isFreeCheck = (p) => {
                         if (!p) return false;

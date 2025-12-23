@@ -726,6 +726,18 @@
                             <!-- Filled via JS -->
                         </div>
 
+                        <div
+                            style="background:rgba(255,170,0,0.1); padding:1rem; border-radius:5px; border:1px dashed #ffaa00; margin-bottom:1.5rem;">
+                            <h4 style="color:#ffaa00; margin-top:0;"><i class="fas fa-exclamation-triangle"></i> Cloud
+                                Control</h4>
+                            <p style="font-size:0.8rem; opacity:0.8;">If you see products on the site but not here, use
+                                the button below to wipe the cloud database and start fresh.</p>
+                            <button onclick="clearCloudDatabase()" class="btn"
+                                style="background:#ff4d4d; color:white; border:none; padding:0.5rem 1rem; font-size:0.8rem; margin-top:0.5rem;">
+                                <i class="fas fa-eraser"></i> Force Wipe Cloud Database
+                            </button>
+                        </div>
+
                         <div style="background:var(--bg-color); padding:1rem; border-radius:5px;">
                             <h4 style="margin-top:0;" data-i18n="adm_prod_add_title">Add New Product</h4>
                             <div
@@ -1166,6 +1178,18 @@
                 alert('Success: Product Updated & Saved!');
             } else {
                 alert("Please enter title and price.");
+            }
+        }
+
+        async function clearCloudDatabase() {
+            if (!confirm("CRITICAL: This will delete ALL products from your website forever. Are you absolutely sure?")) return;
+            try {
+                await db.ref('products').set(null);
+                currentProducts = [];
+                renderProductList();
+                alert("Cloud database has been wiped clean.");
+            } catch (err) {
+                alert("Failed to wipe cloud. Check console.");
             }
         }
 
