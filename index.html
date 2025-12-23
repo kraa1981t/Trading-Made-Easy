@@ -173,20 +173,37 @@
                 container.innerHTML = statusBadge + (html || `<p style="grid-column:1/-1; text-align:center; opacity:0.5; padding:2rem;">No bots available.</p>`);
             }
 
-            // Sync from Firebase - STRICT CLOUD MODE
+            // Sync Products from Firebase
             db.ref('products').on('value', (snapshot) => {
                 const data = snapshot.val();
-                console.log("Cloud Update Received:", data);
-
-                if (!data) {
-                    currentProducts = [];
-                } else {
-                    currentProducts = (Array.isArray(data) ? data : Object.values(data)).filter(p => p !== null);
-                }
-
+                console.log("Cloud Products Update:", data);
+                currentProducts = (Array.isArray(data) ? data : Object.values(data || [])).filter(p => p !== null);
                 render();
-                // Ensure Admin panel UI updates if open
                 if (typeof renderProductList === 'function') renderProductList();
+            });
+
+            // NEW: Sync Global Settings from Firebase (Cloud Config)
+            db.ref('site_config').on('value', (snapshot) => {
+                const cloudCfg = snapshot.val();
+                if (cloudCfg) {
+                    console.log("Cloud Settings Received:", cloudCfg);
+                    // Update LocalStorage so it persists across refreshes and applies immediately on next load
+                    localStorage.setItem(CONFIG_KEY, JSON.stringify(cloudCfg));
+
+                    // Apply immediate visual changes (dynamic)
+                    if (cloudCfg.appearance) {
+                        if (cloudCfg.appearance.siteTitle) document.title = cloudCfg.appearance.siteTitle;
+                        if (cloudCfg.appearance.primaryColor) {
+                            document.documentElement.style.setProperty('--primary-color', cloudCfg.appearance.primaryColor);
+                            document.documentElement.style.setProperty('--accent-color', cloudCfg.appearance.primaryColor);
+                        }
+                    }
+
+                    // If we are in the admin panel, we might want to refresh the inputs
+                    if (document.getElementById('admin-overlay').style.display === 'block') {
+                        loadSettings();
+                    }
+                }
             });
 
             window.downloadHomeFree = function (idx) {
@@ -1340,8 +1357,14 @@
                         btn.innerHTML = '<i class="fas fa-sync fa-spin"></i> Finalizing...';
                     }
 
-                    // Final sync to Firebase
-                    db.ref('products').set(currentProducts).then(() => {
+                    // SYNC EVERYTHING TO CLOUD
+                    const promises = [
+                        db.ref('products').set(currentProducts),
+                        db.ref('site_config').set(config)
+                    ];
+
+                    Promise.all(promises).then(() => {
+                        console.log("Cloud Sync Success (Products & Config)");
                         window.location.href = 'section-details.html?section=bots&v=' + Date.now();
                     }).catch(err => {
                         console.error("Cloud sync during save failed:", err);
