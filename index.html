@@ -58,8 +58,11 @@
                         style.textContent = css;
                         document.head.appendChild(style);
                         console.log('CSS applied:', css);
-                    } else {
-                        console.log('No CSS generated');
+                    }
+
+                    // Title Update
+                    if (cfg.appearance && cfg.appearance.siteTitle) {
+                        document.title = cfg.appearance.siteTitle;
                     }
                 } else {
                     console.log('No config found');
@@ -98,7 +101,13 @@
             // Utils moved to global scope
             const GLOBAL_DEFAULTS = []; // Cleared to prevent ghost items
             let currentLang = localStorage.getItem('language') || 'en';
-            // Removed local loadedProducts definition to use global currentProducts instead
+
+            // Apply Profile Image from Config
+            const cfg = JSON.parse(localStorage.getItem('tme_config_v2'));
+            if (cfg && cfg.appearance && cfg.appearance.profileBase64) {
+                const pImg = document.querySelector('.profile-img');
+                if (pImg) pImg.src = cfg.appearance.profileBase64;
+            }
 
             function render() {
                 const homeTrans = {
@@ -1157,7 +1166,7 @@
                     list.push(newBot);
                 }
 
-                console.log("Saving to Cloud:", newBot || "Updating existing");
+                console.log("Saving list to Cloud, item count:", list.length);
                 currentProducts = list;
 
                 // Save a local backup just in case
