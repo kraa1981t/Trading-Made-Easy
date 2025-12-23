@@ -87,9 +87,9 @@
 
             const isProductFree = (p) => {
                 if (!p) return false;
-                // If isFree is checked, OR price is 0/empty, it's FREE
-                const price = String(p.price || "").replace("$", "").trim();
-                return p.isFree === true || p.isFree === "true" || price === "0" || price === "0.00" || price === "";
+                const priceValue = String(p.price || "").replace("$", "").trim();
+                const isFreeFlag = p.isFree === true || p.isFree === "true" || p.isFree === "on";
+                return isFreeFlag || priceValue === "0" || priceValue === "0.00" || priceValue === "" || priceValue.toLowerCase() === "free";
             };
 
             const GLOBAL_DEFAULTS = [
@@ -140,6 +140,7 @@
                     else paidBots.push({ data: p, actualIdx: i });
                 });
 
+                console.log("Rendering Total Products:", loadedProducts.length, "Free:", freeBots.length, "Paid:", paidBots.length);
                 let html = '';
                 if (freeBots.length > 0) {
                     html += `<div style="grid-column: 1/-1; margin-top:1rem;"><h3 style="color:#00D09C; border-bottom:1px solid #00D09C; padding-bottom:0.5rem; margin-bottom:1rem;"><i class="fas fa-gift"></i> ${t.free}</h3></div>`;
@@ -1138,10 +1139,13 @@
 
                 // SYNC TO FIREBASE
                 db.ref('products').set(list).then(() => {
-                    console.log("Synced to Firebase successfully.");
-                }).catch(err => console.error("Firebase sync error:", err));
-
-                renderProductList();
+                    console.log("✅ Synced to Firebase!");
+                    alert("Success: Product saved to cloud!");
+                    renderProductList();
+                }).catch(err => {
+                    console.error("❌ Firebase sync error:", err);
+                    alert("Error: Database sync failed!");
+                });
 
                 // Clear inputs
                 titleInput.value = '';
