@@ -330,9 +330,9 @@
                 if (langSelect) langSelect.value = lang;
             }
 
-            function downloadFreeProduct(product) {
-                if (!product.fileData) {
-                    alert("Developer note: No file attached to this free product yet.");
+            window.downloadFreeProduct = function (product) {
+                if (!product || !product.fileData) {
+                    alert("No file attached to this product.");
                     return;
                 }
                 const link = document.createElement('a');
@@ -341,12 +341,12 @@
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
-            }
+            };
 
-            function downloadFreeProductByIndex(idx) {
+            window.downloadFreeProductByIndex = function (idx) {
                 const product = loadedProducts[idx];
                 if (!product || !product.fileData) {
-                    alert("No file available for this product.");
+                    alert("No file available for this product. Please ensure you uploaded a file in the admin panel.");
                     return;
                 }
                 const link = document.createElement('a');
@@ -355,7 +355,7 @@
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
-            }
+            };
 
             // Initialize Firebase
             const firebaseConfig = {
