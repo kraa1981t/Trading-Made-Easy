@@ -23,6 +23,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
 
+    <script>
         // Global Products State & Utils
         const CONFIG_KEY = 'tme_config_v2';
         let currentProducts = [];
@@ -31,15 +32,15 @@
             try {
                 const cfg = JSON.parse(localStorage.getItem(CONFIG_KEY));
                 if (!cfg) return;
-                
+
                 console.log('--- Applying Site Settings ---');
 
                 // 1. Title & Meta
                 if (cfg.appearance) {
                     if (cfg.appearance.siteTitle) {
                         document.title = cfg.appearance.siteTitle;
-                        // Update all navbar title elements
-                        document.querySelectorAll('.site-title a').forEach(el => {
+                        // Update all navbar and footer title elements
+                        document.querySelectorAll('.site-title, .site-title-rendered').forEach(el => {
                             el.textContent = cfg.appearance.siteTitle;
                         });
                     }
@@ -79,7 +80,7 @@
                 if (cfg.textOverrides) {
                     const heroTitle = document.querySelector('.hero-content h1');
                     if (heroTitle && cfg.textOverrides.hero_title) heroTitle.innerHTML = cfg.textOverrides.hero_title;
-                    
+
                     const heroDesc = document.querySelector('.hero-content p');
                     if (heroDesc && cfg.textOverrides.hero_desc) heroDesc.textContent = cfg.textOverrides.hero_desc;
 
@@ -207,10 +208,10 @@
                 if (cloudCfg) {
                     console.log("Cloud Settings Received:", cloudCfg);
                     localStorage.setItem(CONFIG_KEY, JSON.stringify(cloudCfg));
-                    
+
                     // Call the global apply function for real-time update
                     applySiteSettings();
-                    
+
                     // If we are in the admin panel, refresh inputs to match cloud
                     if (document.getElementById('admin-overlay').style.display === 'block') {
                         loadSettings();
@@ -570,8 +571,9 @@
         style="background: var(--bg-color); border-top: 1px solid var(--border-color); padding: 2rem 0; text-align: center; font-size: 0.9rem;">
         <div class="container"
             style="display:flex; justify-content:center; align-items:center; gap:1rem; flex-wrap:wrap;">
-            <p onclick="triggerAdmin()" style="cursor:text; user-select:none;">&copy; 2025 Trading Made Easy. <span
-                    data-i18n="rights_reserved">All rights reserved.</span></p>
+            <p onclick="triggerAdmin()" style="cursor:text; user-select:none;">&copy; 2025 <span
+                    class="site-title-rendered">Trading Made Easy</span>. <span data-i18n="rights_reserved">All rights
+                    reserved.</span></p>
         </div>
     </footer>
 
@@ -988,7 +990,7 @@
         document.addEventListener('DOMContentLoaded', updateAdminUI);
 
         // Settings Logic - V2
-        const CONFIG_KEY = 'tme_config_v2';
+        // CONFIG_KEY is already defined globally at the top
         let editingIndex = -1;
         console.log('Admin ready to manage cloud products');
 
@@ -1404,17 +1406,24 @@
                         btn.innerHTML = '<i class="fas fa-sync fa-spin"></i> Finalizing...';
                     }
 
-                    // SYNC EVERYTHING TO CLOUD
-                    const promises = [
-                        db.ref('products').set(currentProducts),
-                        db.ref('site_config').set(config)
-                    ];
+                    // APPLY LOCALLY FIRST for instant feedback
+                    applySiteSettings();
 
-                    Promise.all(promises).then(() => {
-                        console.log("Cloud Sync Success (Products & Config)");
+                    // SYNC EVERYTHING TO CLOUD with a Timeout Safety Net
+                    console.log("Starting cloud sync...");
+                    const syncPromise = Promise.all([
+                        db.ref('products').set(currentProducts || []),
+                        db.ref('site_config').set(config)
+                    ]);
+
+                    const timeoutPromise = new Promise(resolve => setTimeout(resolve, 3000));
+
+                    Promise.race([syncPromise, timeoutPromise]).then(() => {
+                        console.log("Cloud Sync Finished or Timed Out - Redirecting...");
+                        // Use bots section with cache buster
                         window.location.href = 'section-details.html?section=bots&v=' + Date.now();
                     }).catch(err => {
-                        console.error("Cloud sync during save failed:", err);
+                        console.error("Cloud sync errored:", err);
                         window.location.href = 'section-details.html?section=bots&v=' + Date.now();
                     });
                 }
