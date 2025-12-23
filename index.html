@@ -23,55 +23,74 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
 
-    <!-- CRITICAL: Apply Admin Settings Immediately -->
-    <script>
-        (function () {
-            try {
-                console.log('=== LOADING ADMIN CONFIG ===');
-                const cfg = JSON.parse(localStorage.getItem('tme_config_v2'));
-                console.log('Config loaded:', cfg);
-                if (cfg) {
-                    const style = document.createElement('style');
-                    let css = '';
-
-                    // Visibility
-                    if (cfg.visibility) {
-                        console.log('Applying visibility:', cfg.visibility);
-                        if (cfg.visibility.bots === false) css += '#bots { display: none !important; } .nav-link[href*="bots"] { display: none !important; }';
-                        if (cfg.visibility.signals === false) css += '#signals { display: none !important; } .nav-link[href*="signals"] { display: none !important; }';
-                        if (cfg.visibility.services === false) css += '#services { display: none !important; } .nav-link[href*="services"] { display: none !important; }';
-                        if (cfg.visibility.about === false) css += '#about { display: none !important; } .nav-link[href*="about"] { display: none !important; }';
-                    }
-
-                    // Appearance
-                    if (cfg.appearance) {
-                        console.log('Applying appearance:', cfg.appearance);
-                        if (cfg.appearance.primaryColor) {
-                            css += `:root { --primary-color: ${cfg.appearance.primaryColor} !important; --accent-color: ${cfg.appearance.primaryColor} !important; }`;
-                        }
-                        if (cfg.appearance.borderRadius) {
-                            css += `.btn, .btn-primary, .card, .bot-card, .service-card, input, textarea, select { border-radius: ${cfg.appearance.borderRadius} !important; }`;
-                        }
-                    }
-
-                    if (css) {
-                        style.textContent = css;
-                        document.head.appendChild(style);
-                        console.log('CSS applied:', css);
-                    }
-
-                    // Title Update
-                    if (cfg.appearance && cfg.appearance.siteTitle) {
-                        document.title = cfg.appearance.siteTitle;
-                    }
-                } else {
-                    console.log('No config found');
-                }
-            } catch (e) { console.error('Admin Config Error:', e); }
-        })();
-
         // Global Products State & Utils
+        const CONFIG_KEY = 'tme_config_v2';
         let currentProducts = [];
+
+        function applySiteSettings() {
+            try {
+                const cfg = JSON.parse(localStorage.getItem(CONFIG_KEY));
+                if (!cfg) return;
+                
+                console.log('--- Applying Site Settings ---');
+
+                // 1. Title & Meta
+                if (cfg.appearance) {
+                    if (cfg.appearance.siteTitle) {
+                        document.title = cfg.appearance.siteTitle;
+                        // Update all navbar title elements
+                        document.querySelectorAll('.site-title a').forEach(el => {
+                            el.textContent = cfg.appearance.siteTitle;
+                        });
+                    }
+                    if (cfg.appearance.primaryColor) {
+                        document.documentElement.style.setProperty('--primary-color', cfg.appearance.primaryColor);
+                        document.documentElement.style.setProperty('--accent-color', cfg.appearance.primaryColor);
+                    }
+                    if (cfg.appearance.borderRadius) {
+                        const style = document.getElementById('dynamic-radius-style') || document.createElement('style');
+                        style.id = 'dynamic-radius-style';
+                        style.textContent = `.btn, .btn-primary, .card, .bot-card, .service-card, input, textarea, select { border-radius: ${cfg.appearance.borderRadius} !important; }`;
+                        if (!style.parentNode) document.head.appendChild(style);
+                    }
+                }
+
+                // 2. Profile Image
+                if (cfg.appearance && cfg.appearance.profileBase64) {
+                    document.querySelectorAll('.profile-img').forEach(img => {
+                        img.src = cfg.appearance.profileBase64;
+                    });
+                }
+
+                // 3. Visibility
+                if (cfg.visibility) {
+                    const style = document.getElementById('dynamic-visibility-style') || document.createElement('style');
+                    style.id = 'dynamic-visibility-style';
+                    let css = '';
+                    if (cfg.visibility.bots === false) css += '#bots { display: none !important; } .nav-link[href*="bots"] { display: none !important; }';
+                    if (cfg.visibility.signals === false) css += '#signals { display: none !important; } .nav-link[href*="signals"] { display: none !important; }';
+                    if (cfg.visibility.services === false) css += '#services { display: none !important; } .nav-link[href*="services"] { display: none !important; }';
+                    if (cfg.visibility.about === false) css += '#about { display: none !important; } .nav-link[href*="about"] { display: none !important; }';
+                    style.textContent = css;
+                    if (!style.parentNode) document.head.appendChild(style);
+                }
+
+                // 4. Texts (Immediate DOM Update)
+                if (cfg.textOverrides) {
+                    const heroTitle = document.querySelector('.hero-content h1');
+                    if (heroTitle && cfg.textOverrides.hero_title) heroTitle.innerHTML = cfg.textOverrides.hero_title;
+                    
+                    const heroDesc = document.querySelector('.hero-content p');
+                    if (heroDesc && cfg.textOverrides.hero_desc) heroDesc.textContent = cfg.textOverrides.hero_desc;
+
+                    const aboutBio = document.querySelector('.about-text p');
+                    if (aboutBio && cfg.textOverrides.about_bio) aboutBio.textContent = cfg.textOverrides.about_bio;
+                }
+            } catch (e) { console.error('applySiteSettings Error:', e); }
+        }
+
+        // Run immediately
+        applySiteSettings();
         const isProductFree = (p) => {
             if (!p) return false;
             if (p.isFree === true || p.isFree === "true" || p.isFree === "on") return true;
@@ -187,19 +206,12 @@
                 const cloudCfg = snapshot.val();
                 if (cloudCfg) {
                     console.log("Cloud Settings Received:", cloudCfg);
-                    // Update LocalStorage so it persists across refreshes and applies immediately on next load
                     localStorage.setItem(CONFIG_KEY, JSON.stringify(cloudCfg));
-
-                    // Apply immediate visual changes (dynamic)
-                    if (cloudCfg.appearance) {
-                        if (cloudCfg.appearance.siteTitle) document.title = cloudCfg.appearance.siteTitle;
-                        if (cloudCfg.appearance.primaryColor) {
-                            document.documentElement.style.setProperty('--primary-color', cloudCfg.appearance.primaryColor);
-                            document.documentElement.style.setProperty('--accent-color', cloudCfg.appearance.primaryColor);
-                        }
-                    }
-
-                    // If we are in the admin panel, we might want to refresh the inputs
+                    
+                    // Call the global apply function for real-time update
+                    applySiteSettings();
+                    
+                    // If we are in the admin panel, refresh inputs to match cloud
                     if (document.getElementById('admin-overlay').style.display === 'block') {
                         loadSettings();
                     }

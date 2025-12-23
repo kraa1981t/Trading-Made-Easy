@@ -136,9 +136,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const translations = {
         en: {
             nav_home: "Home", nav_bots: "MT5 Bots", nav_signals: "Signals", nav_services: "Services", nav_about: "About", nav_contact: "Contact",
-            site_title: "Trading Made Easy",
-            hero_title: "Precision Trading. <span style='color: var(--primary-color);'>Automated.</span>",
-            hero_subtitle: "\"A platform dedicated to automated trading solutions that transform complex market analysis into precise and profitable algorithms.\"",
+            site_title: (siteConfig && siteConfig.appearance && siteConfig.appearance.siteTitle) || "Trading Made Easy",
+            hero_title: (siteConfig && siteConfig.textOverrides && siteConfig.textOverrides.hero_title) || "Precision Trading. <span style='color: var(--primary-color);'>Automated.</span>",
+            hero_subtitle: (siteConfig && siteConfig.textOverrides && siteConfig.textOverrides.hero_desc) || "\"A platform dedicated to automated trading solutions that transform complex market analysis into precise and profitable algorithms.\"",
             hero_btn_view: "View Bots", hero_btn_consult: "Get Consultation",
             stat_success: "Success Rate", stat_traders: "Active Traders", stat_algos: "Proprietary Algos",
             latest_offer_title: "Latest Offer:", latest_offer_text: "Get 20% off on the Momentum Hunter 2.0 this week!",
@@ -186,9 +186,9 @@ document.addEventListener('DOMContentLoaded', () => {
         },
         ar: {
             nav_home: "الرئيسية", nav_bots: "روبوتات MT5", nav_signals: "الإشارات", nav_services: "الخدمات", nav_about: "من نحن", nav_contact: "اتصل بنا",
-            site_title: "التداول السهل",
-            hero_title: "تداول دقيق. <span style='color: var(--primary-color);'>مؤتمت.</span>",
-            hero_subtitle: "\"منصة مخصصة لحلول التداول الآلي، تحول تحليل السوق المعقد إلى خوارزميات دقيقة ومربحة.\"",
+            site_title: (siteConfig && siteConfig.appearance && siteConfig.appearance.siteTitle) || "التداول السهل",
+            hero_title: (siteConfig && siteConfig.textOverrides && siteConfig.textOverrides.hero_title) || "تداول دقيق. <span style='color: var(--primary-color);'>مؤتمت.</span>",
+            hero_subtitle: (siteConfig && siteConfig.textOverrides && siteConfig.textOverrides.hero_desc) || "\"منصة مخصصة لحلول التداول الآلي، تحول تحليل السوق المعقد إلى خوارزميات دقيقة ومربحة.\"",
             hero_btn_view: "شاهد الروبوتات", hero_btn_consult: "احصل على استشارة",
             stat_success: "نسبة النجاح", stat_traders: "متداول نشط", stat_algos: "خوارزميات خاصة",
             latest_offer_title: "أحدث العروض:", latest_offer_text: "احصل على خصم 20% على Momentum Hunter 2.0 هذا الأسبوع!",

@@ -8,9 +8,62 @@
     <title>Section Details | Trading Made Easy</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Firebase SDK (Compat) -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+    <script>
+        const CONFIG_KEY = 'tme_config_v2';
+        function applySiteSettings() {
+            try {
+                const cfg = JSON.parse(localStorage.getItem(CONFIG_KEY));
+                if (!cfg) return;
+                console.log('--- Applying Site Settings (Details Page) ---');
+
+                if (cfg.appearance) {
+                    if (cfg.appearance.siteTitle) {
+                        document.title = cfg.appearance.siteTitle;
+                        document.querySelectorAll('.site-title a').forEach(el => {
+                            el.textContent = cfg.appearance.siteTitle;
+                        });
+                    }
+                    if (cfg.appearance.primaryColor) {
+                        document.documentElement.style.setProperty('--primary-color', cfg.appearance.primaryColor);
+                        document.documentElement.style.setProperty('--accent-color', cfg.appearance.primaryColor);
+                    }
+                    if (cfg.appearance.borderRadius) {
+                        const style = document.getElementById('dynamic-radius-style') || document.createElement('style');
+                        style.id = 'dynamic-radius-style';
+                        style.textContent = `.btn, .btn-primary, .card, .bot-card, .service-card, input, textarea, select { border-radius: ${cfg.appearance.borderRadius} !important; }`;
+                        if (!style.parentNode) document.head.appendChild(style);
+                    }
+                }
+            } catch (e) { console.error('applySiteSettings Error:', e); }
+        }
+
+        // Initialize Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyCvMayEuNTlQ5CWbjrrqw3aft_H044-uQM",
+            authDomain: "trading-made-easy-e8450.firebaseapp.com",
+            projectId: "trading-made-easy-e8450",
+            databaseURL: "https://trading-made-easy-e8450-default-rtdb.firebaseio.com/",
+            storageBucket: "trading-made-easy-e8450.firebasestorage.app",
+            messagingSenderId: "693217251684",
+            appId: "1:693217251684:web:f27779dc51e21fabceaa71"
+        };
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        // Sync Global Settings
+        db.ref('site_config').on('value', snap => {
+            const cloudCfg = snap.val();
+            if (cloudCfg) {
+                localStorage.setItem(CONFIG_KEY, JSON.stringify(cloudCfg));
+                applySiteSettings();
+            }
+        });
+
+        // Run immediately on load
+        applySiteSettings();
+    </script>
     <style>
         .details-hero {
             padding: 6rem 0 3rem;
