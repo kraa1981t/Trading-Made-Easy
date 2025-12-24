@@ -946,11 +946,7 @@
                                 </button>
                             </div>
 
-                            <!-- List of existing custom sections for deletion -->
-                            <div id="custom-sections-admin-list"
-                                style="margin-top:1.5rem; border-top:1px dashed var(--border-color); padding-top:1rem;">
-                                <!-- Managed via JS -->
-                            </div>
+                            <!-- List was here, moved to Content Tab for better organization -->
                         </div>
                     </div>
                 </div>
@@ -2253,8 +2249,12 @@
                     // 6. Update LocalStorage only AFTER successful cloud write
                     localStorage.setItem(CONFIG_KEY, JSON.stringify(config));
 
-                    console.log("Delete finalized in cloud. Reloading...");
-                    window.location.reload();
+                    console.log("Delete finalized in cloud. LIVE UPDATE.");
+
+                    // 7. Updates UI instantly without reload
+                    applySiteSettings();
+                    refreshCustomSectionsList();
+                    if (typeof refreshSectionList === 'function') refreshSectionList();
 
                 } catch (err) {
                     console.error("Hard Delete Failed:", err);
@@ -2265,32 +2265,20 @@
             }
 
             function refreshCustomSectionsList() {
-                const list = document.getElementById('custom-sections-admin-list');
                 const textEdits = document.getElementById('custom-sections-text-edits');
-                if (!list) return;
+                if (!textEdits) return;
 
                 const config = JSON.parse(localStorage.getItem(CONFIG_KEY)) || {};
                 const customSecs = config.customSections || [];
 
-                // 1. Management List (Delete)
                 if (customSecs.length === 0) {
-                    list.innerHTML = '<p style="font-size:0.75rem; opacity:0.5; text-align:center;">No custom sections yet.</p>';
-                    if (textEdits) textEdits.innerHTML = '';
+                    textEdits.innerHTML = '<p style="font-size:0.75rem; opacity:0.5; text-align:center; padding:1rem;">Add dynamic elements to see them here.</p>';
                     return;
                 }
 
-                let html = '<h5 style="margin-bottom:0.5rem; font-size:0.8rem;">Existing Custom Sections:</h5>';
-                let editHtml = '<h4 style="margin-bottom:1rem; opacity:0.8;">Custom Sections Content</h4>';
+                let editHtml = '<h4 style="margin-bottom:1.5rem; opacity:0.8; font-weight:bold;"><i class="fas fa-edit"></i> Manage Custom Elements</h4>';
 
                 customSecs.forEach(sec => {
-                    // Management
-                    html += `
-                        <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(0,0,0,0.1); padding:0.5rem; border-radius:4px; margin-bottom:0.3rem;">
-                            <span style="font-size:0.8rem;">${(sec.title || "Untitled").substring(0, 30)}</span>
-                            <button onclick="removeCustomSection('${sec.id}')" style="background:none; border:none; color:#ff4d4d; cursor:pointer;"><i class="fas fa-trash"></i></button>
-                        </div>
-                    `;
-
                     // Text Edits
                     const titleVal = String((config.textOverrides && config.textOverrides[sec.id + '_title']) || sec.title || "");
                     const contentVal = String((config.textOverrides && config.textOverrides[sec.id + '_content']) || sec.content || "");
@@ -2299,38 +2287,59 @@
                     const iconVal = String((config.textOverrides && config.textOverrides[sec.id + '_icon']) || sec.icon || "");
 
                     editHtml += `
-                        <div style="margin-bottom:1.5rem; padding-bottom:1rem; border-bottom:1px dashed var(--border-color);">
-                            <label style="display:block; font-size:0.8rem; font-weight:bold; margin-bottom:0.5rem;">Edit: ${sec.title || "New Element"}</label>
+                        <div style="margin-bottom:2rem; padding:1rem; border:1px solid var(--border-color); border-radius:8px; background:rgba(255,255,255,0.02); position:relative;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; border-bottom:1px dashed var(--border-color); padding-bottom:0.5rem;">
+                                <label style="font-size:0.85rem; font-weight:bold; color:var(--primary-color);">Edit: ${sec.title || "New Element"}</label>
+                                <button onclick="removeCustomSection('${sec.id}')" 
+                                    style="background:rgba(255,77,77,0.1); border:1px solid #ff4d4d; color:#ff4d4d; padding:0.2rem 0.5rem; border-radius:4px; font-size:0.7rem; cursor:pointer; transition:0.3s;">
+                                    <i class="fas fa-trash"></i> Delete Permanent
+                                </button>
+                            </div>
+                            
                             <div style="display:grid; gap:0.5rem;">
                                 <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.5rem;">
-                                    <input type="text" id="adm-txt-${sec.id}-title" value="${titleVal.replace(/"/g, '&quot;')}" placeholder="Title"
-                                        style="width:100%; padding:0.5rem; background:var(--bg-color); border:1px solid var(--border-color); color:var(--text-color); border-radius:4px;">
-                                    <select id="adm-txt-${sec.id}-placement" style="width:100%; padding:0.5rem; background:var(--bg-color); border:1px solid var(--border-color); color:var(--text-color); border-radius:4px;">
-                                        <option value="body" ${placementVal === 'body' ? 'selected' : ''}>Main Body</option>
-                                        <option value="navbar" ${placementVal === 'navbar' ? 'selected' : ''}>Navbar</option>
-                                        <option value="sidebar-left" ${placementVal === 'sidebar-left' ? 'selected' : ''}>Left Sidebar</option>
-                                        <option value="sidebar-right" ${placementVal === 'sidebar-right' ? 'selected' : ''}>Right Sidebar</option>
-                                        <option value="footer" ${placementVal === 'footer' ? 'selected' : ''}>Footer</option>
-                                    </select>
+                                    <div>
+                                        <label style="font-size:0.7rem; opacity:0.6;">Display Title</label>
+                                        <input type="text" id="adm-txt-${sec.id}-title" value="${titleVal.replace(/"/g, '&quot;')}" 
+                                            style="width:100%; padding:0.5rem; background:var(--bg-color); border:1px solid var(--border-color); color:var(--text-color); border-radius:4px;">
+                                    </div>
+                                    <div>
+                                        <label style="font-size:0.7rem; opacity:0.6;">Placement Location</label>
+                                        <select id="adm-txt-${sec.id}-placement" style="width:100%; padding:0.5rem; background:var(--bg-color); border:1px solid var(--border-color); color:var(--text-color); border-radius:4px;">
+                                            <option value="body" ${placementVal === 'body' ? 'selected' : ''}>Main Body</option>
+                                            <option value="navbar" ${placementVal === 'navbar' ? 'selected' : ''}>Navbar</option>
+                                            <option value="sidebar-left" ${placementVal === 'sidebar-left' ? 'selected' : ''}>Left Sidebar</option>
+                                            <option value="sidebar-right" ${placementVal === 'sidebar-right' ? 'selected' : ''}>Right Sidebar</option>
+                                            <option value="footer" ${placementVal === 'footer' ? 'selected' : ''}>Footer</option>
+                                        </select>
+                                    </div>
                                 </div>
                                 <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.5rem;">
-                                    <select id="adm-txt-${sec.id}-align" style="width:100%; padding:0.5rem; background:var(--bg-color); border:1px solid var(--border-color); color:var(--text-color); border-radius:4px;">
-                                        <option value="left" ${alignVal === 'left' ? 'selected' : ''}>Left</option>
-                                        <option value="center" ${alignVal === 'center' ? 'selected' : ''}>Center</option>
-                                        <option value="right" ${alignVal === 'right' ? 'selected' : ''}>Right</option>
-                                    </select>
-                                    <input type="text" id="adm-txt-${sec.id}-icon" value="${iconVal}" placeholder="Icon (fas fa-star)"
-                                        style="width:100%; padding:0.5rem; background:var(--bg-color); border:1px solid var(--border-color); color:var(--text-color); border-radius:4px;">
+                                    <div>
+                                        <label style="font-size:0.7rem; opacity:0.6;">Text Alignment</label>
+                                        <select id="adm-txt-${sec.id}-align" style="width:100%; padding:0.5rem; background:var(--bg-color); border:1px solid var(--border-color); color:var(--text-color); border-radius:4px;">
+                                            <option value="left" ${alignVal === 'left' ? 'selected' : ''}>Left</option>
+                                            <option value="center" ${alignVal === 'center' ? 'selected' : ''}>Center</option>
+                                            <option value="right" ${alignVal === 'right' ? 'selected' : ''}>Right</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label style="font-size:0.7rem; opacity:0.6;">FontAwesome Icon</label>
+                                        <input type="text" id="adm-txt-${sec.id}-icon" value="${iconVal}" placeholder="fas fa-star"
+                                            style="width:100%; padding:0.5rem; background:var(--bg-color); border:1px solid var(--border-color); color:var(--text-color); border-radius:4px;">
+                                    </div>
                                 </div>
-                                <textarea id="adm-txt-${sec.id}-content" rows="2" placeholder="Content/URL"
-                                    style="width:100%; padding:0.5rem; background:var(--bg-color); border:1px solid var(--border-color); color:var(--text-color); border-radius:4px;">${contentVal}</textarea>
+                                <div>
+                                    <label style="font-size:0.7rem; opacity:0.6;">Content / Link URL</label>
+                                    <textarea id="adm-txt-${sec.id}-content" rows="2" 
+                                        style="width:100%; padding:0.5rem; background:var(--bg-color); border:1px solid var(--border-color); color:var(--text-color); border-radius:4px;">${contentVal}</textarea>
+                                </div>
                             </div>
                         </div>
                     `;
                 });
 
-                list.innerHTML = html;
-                if (textEdits) textEdits.innerHTML = editHtml;
+                textEdits.innerHTML = editHtml;
             }
 
             function togglePriceField(isFree) {
