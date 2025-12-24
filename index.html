@@ -64,22 +64,31 @@
                 }
 
                 // 3. Render Custom Dynamic Sections
-                const customContainer = document.getElementById('custom-sections-container');
-                if (customContainer && cfg.customSections && Array.isArray(cfg.customSections)) {
-                    let customHTML = '';
+                const wrapper = document.getElementById('page-sections-wrapper');
+                if (wrapper && cfg.customSections && Array.isArray(cfg.customSections)) {
+                    // Remove old dynamic sections first to avoid duplicates on re-apply
+                    wrapper.querySelectorAll('.dynamic-section').forEach(el => el.remove());
+
                     cfg.customSections.forEach(sec => {
-                        customHTML += `
-                            <section id="${sec.id}" class="section-padding" style="padding: 5rem 0; background: var(--bg-color); border-top: 1px solid var(--border-color);">
-                                <div class="container">
-                                    <h2 class="section-title" style="color: var(--primary-color);">${sec.title}</h2>
-                                    <div class="custom-sec-content" style="color: var(--text-color); opacity: 0.9; line-height: 1.6;">
-                                        ${sec.content}
-                                    </div>
+                        const secEl = document.createElement('section');
+                        secEl.id = sec.id;
+                        secEl.className = 'section-padding dynamic-section';
+                        secEl.style.cssText = 'padding: 5rem 0; background: var(--bg-color); border-top: 1px solid var(--border-color);';
+
+                        // Check for overrides
+                        const title = (cfg.textOverrides && cfg.textOverrides[sec.id + '_title']) || sec.title;
+                        const content = (cfg.textOverrides && cfg.textOverrides[sec.id + '_content']) || sec.content;
+
+                        secEl.innerHTML = `
+                            <div class="container">
+                                <h2 class="section-title" style="color: var(--primary-color);">${title}</h2>
+                                <div class="custom-sec-content" style="color: var(--text-color); opacity: 0.9; line-height: 1.6;">
+                                    ${content}
                                 </div>
-                            </section>
+                            </div>
                         `;
+                        wrapper.appendChild(secEl);
                     });
-                    customContainer.innerHTML = customHTML;
                 }
 
                 // 4. Visibility (Granular Elements)
@@ -656,8 +665,7 @@
             </div>
         </section>
 
-        <!-- Custom Sections Container (Will be appended to) -->
-        </div>
+        <!-- Placeholder for Dynamic Sections Rendered via JS -->
     </main>
 
     <!-- Admin Quick Access -->
@@ -1146,6 +1154,11 @@
                                     style="width:100%; padding:0.8rem; background:var(--bg-color); border:1px solid var(--border-color); color:var(--text-color); border-radius:5px;"
                                     placeholder="Welcome to our platform...&#10;New bot release coming soon..."></textarea>
                             </div>
+                            <!-- NEW: Placeholder for Custom Sections Text Edits -->
+                            <div id="custom-sections-text-edits"
+                                style="margin-top:2rem; border-top:1px solid var(--border-color); padding-top:1.5rem;">
+                                <!-- Populated by JS -->
+                            </div>
                         </div>
 
                         <!-- Products Manager -->
@@ -1479,6 +1492,9 @@
 
                     // Products - Managed exclusively via Firebase to prevent local storage quota issues.
                     renderProductList();
+
+                    // Refresh Dynamic Sections UI
+                    if (typeof refreshCustomSectionsList === 'function') refreshCustomSectionsList();
                 } catch (err) {
                     console.error('CRITICAL: loadSettings failed:', err);
                 }
@@ -1824,33 +1840,46 @@
                             sig_feat2: getValue('adm-sig-feat2'),
                             sig_feat3: getValue('adm-sig-feat3'),
                             stat_success: getValue('adm-stat-success')
-                        },
-                        elementVisibility: {
-                            hero_offer: getChecked('adm-vis-offer', true),
-                            sig_feat1: getChecked('adm-vis-sig1', true),
-                            sig_feat2: getChecked('adm-vis-sig2', true),
-                            sig_feat3: getChecked('adm-vis-sig3', true),
-                            stat_success: getChecked('adm-vis-stat1', true),
-                            // Nav
-                            nav_home: getChecked('adm-vis-nav-home', true),
-                            nav_bots: getChecked('adm-vis-nav-bots', true),
-                            nav_signals: getChecked('adm-vis-nav-signals', true),
-                            nav_services: getChecked('adm-vis-nav-services', true),
-                            nav_about: getChecked('adm-vis-nav-about', true),
-                            nav_contact: getChecked('adm-vis-nav-contact', true)
-                        },
-                        links: {
-                            facebook: getValue('adm-link-fb'),
-                            pinterest: getValue('adm-link-pin'),
-                            email: getValue('adm-link-email')
-                        },
-                        wallets: {
-                            usdt: getValue('adm-wallet-usdt'),
-                            ltc: getValue('adm-wallet-ltc'),
-                            payeer: getValue('adm-wallet-payeer')
-                        },
-                        sectionsConfig: getSectionsState() // SAVE NEW SECTIONS STATE
+                        }
                     };
+
+                    // 2.1 Collect Custom Sections Overrides Automatically
+                    const customSecs = storageData.customSections || [];
+                    customSecs.forEach(sec => {
+                        const customTitle = getValue(`adm-txt-${sec.id}-title`);
+                        const customContent = getValue(`adm-txt-${sec.id}-content`);
+                        if (customTitle) config.textOverrides[sec.id + '_title'] = customTitle;
+                        if (customContent) config.textOverrides[sec.id + '_content'] = customContent;
+                    });
+
+                    config.elementVisibility = {
+                        hero_offer: getChecked('adm-vis-offer', true),
+                        sig_feat1: getChecked('adm-vis-sig1', true),
+                        sig_feat2: getChecked('adm-vis-sig2', true),
+                        sig_feat3: getChecked('adm-vis-sig3', true),
+                        stat_success: getChecked('adm-vis-stat1', true),
+                        // Nav
+                        nav_home: getChecked('adm-vis-nav-home', true),
+                        nav_bots: getChecked('adm-vis-nav-bots', true),
+                        nav_signals: getChecked('adm-vis-nav-signals', true),
+                        nav_services: getChecked('adm-vis-nav-services', true),
+                        nav_about: getChecked('adm-vis-nav-about', true),
+                        nav_contact: getChecked('adm-vis-nav-contact', true)
+                    };
+
+                    config.links = {
+                        facebook: getValue('adm-link-fb'),
+                        pinterest: getValue('adm-link-pin'),
+                        email: getValue('adm-link-email')
+                    };
+
+                    config.wallets = {
+                        usdt: getValue('adm-wallet-usdt'),
+                        ltc: getValue('adm-wallet-ltc'),
+                        payeer: getValue('adm-wallet-payeer')
+                    };
+
+                    config.sectionsConfig = getSectionsState(); // SAVE NEW SECTIONS STATE
 
                     console.log('FINAL SAVE: Saving following config:', config);
                     try {
@@ -2033,26 +2062,50 @@
 
             function refreshCustomSectionsList() {
                 const list = document.getElementById('custom-sections-admin-list');
+                const textEdits = document.getElementById('custom-sections-text-edits');
                 if (!list) return;
 
                 const config = JSON.parse(localStorage.getItem(CONFIG_KEY)) || {};
                 const customSecs = config.customSections || [];
 
+                // 1. Management List (Delete)
                 if (customSecs.length === 0) {
                     list.innerHTML = '<p style="font-size:0.75rem; opacity:0.5; text-align:center;">No custom sections yet.</p>';
+                    if (textEdits) textEdits.innerHTML = '';
                     return;
                 }
 
                 let html = '<h5 style="margin-bottom:0.5rem; font-size:0.8rem;">Existing Custom Sections:</h5>';
+                let editHtml = '<h4 style="margin-bottom:1rem; opacity:0.8;">Custom Sections Content</h4>';
+
                 customSecs.forEach(sec => {
+                    // Management
                     html += `
                         <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(0,0,0,0.1); padding:0.5rem; border-radius:4px; margin-bottom:0.3rem;">
                             <span style="font-size:0.8rem;">${sec.title}</span>
                             <button onclick="removeCustomSection('${sec.id}')" style="background:none; border:none; color:#ff4d4d; cursor:pointer;"><i class="fas fa-trash"></i></button>
                         </div>
                     `;
+
+                    // Text Edits
+                    const titleVal = (config.textOverrides && config.textOverrides[sec.id + '_title']) || sec.title;
+                    const contentVal = (config.textOverrides && config.textOverrides[sec.id + '_content']) || sec.content;
+
+                    editHtml += `
+                        <div style="margin-bottom:1.5rem; padding-bottom:1rem; border-bottom:1px dashed var(--border-color);">
+                            <label style="display:block; font-size:0.8rem; font-weight:bold; margin-bottom:0.5rem;">Section: ${sec.title}</label>
+                            <div style="display:grid; gap:0.5rem;">
+                                <input type="text" id="adm-txt-${sec.id}-title" value="${titleVal.replace(/"/g, '&quot;')}" placeholder="Custom Title"
+                                    style="width:100%; padding:0.5rem; background:var(--bg-color); border:1px solid var(--border-color); color:var(--text-color); border-radius:4px;">
+                                <textarea id="adm-txt-${sec.id}-content" rows="3" placeholder="Custom Content (HTML allowed)"
+                                    style="width:100%; padding:0.5rem; background:var(--bg-color); border:1px solid var(--border-color); color:var(--text-color); border-radius:4px;">${contentVal}</textarea>
+                            </div>
+                        </div>
+                    `;
                 });
+
                 list.innerHTML = html;
+                if (textEdits) textEdits.innerHTML = editHtml;
             }
 
             function togglePriceField(isFree) {
