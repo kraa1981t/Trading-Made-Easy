@@ -1898,23 +1898,31 @@
                         // APPLY LOCALLY FIRST for instant feedback
                         applySiteSettings();
 
-                        // SYNC ONLY CONFIG TO CLOUD (Products are saved individually)
-                        console.log("Starting cloud sync (Config Only)...");
-                        const syncPromise = db.ref('site_config').set(config);
+                        // SYNC ONLY CONFIG TO CLOUD
+                        console.log("Starting cloud sync (Config Only)...", config);
 
-                        const timeoutPromise = new Promise(resolve => setTimeout(resolve, 3000));
+                        // Use a timeout to ensure we don't hang the UI
+                        let syncDone = false;
+                        const handleFinish = () => {
+                            if (syncDone) return;
+                            syncDone = true;
+                            console.log("Sync process finished - Reloading...");
+                            window.location.reload();
+                        };
 
-                        Promise.race([syncPromise, timeoutPromise]).then(() => {
-                            console.log("Cloud Sync Finished - Reloading...");
-                            window.location.reload();
-                        }).catch(err => {
-                            console.error("Cloud sync errored:", err);
-                            window.location.reload();
-                        });
+                        db.ref('site_config').set(config)
+                            .then(handleFinish)
+                            .catch(err => {
+                                console.error("Cloud sync errored:", err);
+                                handleFinish();
+                            });
+
+                        // Safety timeout 4 seconds
+                        setTimeout(handleFinish, 4000);
                     }
                 } catch (err) {
-                    console.error('Final Save Error:', err);
-                    alert('Save failed. See console.');
+                    console.error("saveSettings Error:", err);
+                    alert("Save failed! " + err.message);
                 }
             }
 
@@ -2016,37 +2024,54 @@
             }
 
             function addCustomSection() {
-                const titleInput = document.getElementById('new-sec-title');
-                const contentInput = document.getElementById('new-sec-content');
-                const title = titleInput.value.trim();
-                const content = contentInput.value.trim();
+                try {
+                    const titleInput = document.getElementById('new-sec-title');
+                    const contentInput = document.getElementById('new-sec-content');
+                    const title = titleInput.value.trim();
+                    const content = contentInput.value.trim();
 
-                if (!title || !content) {
-                    alert("Please provide both a title and content for the new section.");
-                    return;
+                    if (!title || !content) {
+                        alert("Please provide both a title and content for the new section.");
+                        return;
+                    }
+
+                    // 1. Get latest config
+                    const config = JSON.parse(localStorage.getItem(CONFIG_KEY)) || {};
+                    config.customSections = config.customSections || [];
+
+                    // 2. Create new section
+                    const newId = 'custom-sec-' + Date.now();
+                    const newSec = { id: newId, title, content };
+                    config.customSections.push(newSec);
+
+                    // 3. Ensure it's in the order list immediately
+                    if (!config.sectionsConfig) config.sectionsConfig = { order: [], hidden: [] };
+                    if (!config.sectionsConfig.order) config.sectionsConfig.order = [];
+                    // Add to the end of order if not there
+                    if (!config.sectionsConfig.order.includes(newId)) {
+                        config.sectionsConfig.order.push(newId);
+                    }
+
+                    // 4. Save to localStorage first
+                    localStorage.setItem(CONFIG_KEY, JSON.stringify(config));
+
+                    // Clear fields
+                    titleInput.value = '';
+                    contentInput.value = '';
+
+                    console.log("Section created locally, triggering final save and sync...");
+
+                    // 5. Apply and Sync
+                    applySiteSettings();
+                    refreshSectionList();
+                    refreshCustomSectionsList();
+
+                    // Call saveSettings(true) to handle cloud sync and reload
+                    saveSettings(true);
+                } catch (err) {
+                    console.error("addCustomSection Error:", err);
+                    alert("Failed to create section. Check console.");
                 }
-
-                const config = JSON.parse(localStorage.getItem(CONFIG_KEY)) || {};
-                config.customSections = config.customSections || [];
-
-                const newSec = {
-                    id: 'custom-sec-' + Date.now(),
-                    title: title,
-                    content: content
-                };
-
-                config.customSections.push(newSec);
-                localStorage.setItem(CONFIG_KEY, JSON.stringify(config));
-
-                // Clear fields
-                titleInput.value = '';
-                contentInput.value = '';
-
-                // NEW: Use the same logic as other settings (Apply -> Save -> Sync -> Reload)
-                applySiteSettings();
-                refreshSectionList();
-                refreshCustomSectionsList();
-                saveSettings(true);
             }
 
             function removeCustomSection(id) {
