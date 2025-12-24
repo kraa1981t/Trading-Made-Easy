@@ -63,6 +63,22 @@
                     });
                 }
 
+                // 2.1 SEO Meta
+                if (cfg.appearance && cfg.appearance.metaDesc) {
+                    let meta = document.querySelector('meta[name="description"]');
+                    if (meta) meta.content = cfg.appearance.metaDesc;
+                }
+
+                // 2.2 Social Links
+                if (cfg.links) {
+                    const fb = document.querySelector('a[href*="facebook.com"]');
+                    if (fb && cfg.links.facebook) fb.href = cfg.links.facebook;
+                    const pin = document.querySelector('a[href*="pinterest.com"]');
+                    if (pin && cfg.links.pinterest) pin.href = cfg.links.pinterest;
+                    const email = document.querySelector('a[href^="mailto:"]');
+                    if (email && cfg.links.email) email.href = "mailto:" + cfg.links.email;
+                }
+
                 // 3. Render Custom Dynamic Elements/Sections
                 const wrapper = document.getElementById('page-sections-wrapper');
                 const navMenu = document.querySelector('.nav-menu');

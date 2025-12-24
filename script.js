@@ -72,64 +72,18 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 5000);
     }
 
-    // --- Apply Admin Settings ---
-    if (siteConfig) {
-        // Visibility
-        if (siteConfig.visibility) {
-            const toggleDisplay = (id, visible) => {
-                const el = document.getElementById(id);
-                if (el) el.style.display = visible === false ? 'none' : 'block';
-            };
-            toggleDisplay('bots', siteConfig.visibility.bots);
-            toggleDisplay('signals', siteConfig.visibility.signals);
-            toggleDisplay('services', siteConfig.visibility.services);
-            toggleDisplay('about', siteConfig.visibility.about);
-        }
+    // --- Apply Admin Settings (MODIFIED: Moved to index.html for Page Builder) ---
+    // Note: Most site settings are now handled dynamically in index.html's applySiteSettings()
+    // to support the real-time cloud sync and Page Builder placements.
 
-        // Custom Sections
-        if (siteConfig.customSections && siteConfig.customSections.length > 0) {
-            const existingWrapper = document.getElementById('custom-sections-wrapper');
-            if (!existingWrapper) {
-                const container = document.createElement('div');
-                container.id = 'custom-sections-wrapper';
-                const footer = document.querySelector('footer');
-                if (footer) footer.parentNode.insertBefore(container, footer);
-                siteConfig.customSections.forEach(sec => {
-                    const secDiv = document.createElement('section');
-                    secDiv.id = sec.id;
-                    secDiv.className = 'section';
-                    secDiv.innerHTML = sec.html;
-                    container.appendChild(secDiv);
-                });
-            }
-        }
-
-        // SEO
-        if (siteConfig.appearance && siteConfig.appearance.metaDesc) {
-            let meta = document.querySelector('meta[name="description"]');
-            if (!meta) {
-                meta = document.createElement('meta');
-                meta.name = "description";
-                document.head.appendChild(meta);
-            }
-            meta.content = siteConfig.appearance.metaDesc;
-        }
-
-        // Social Links
-        if (siteConfig.links) {
-            const fb = document.querySelector('a[href*="facebook.com"]');
-            if (fb && siteConfig.links.facebook) fb.href = siteConfig.links.facebook;
-            const pin = document.querySelector('a[href*="pinterest.com"]');
-            if (pin && siteConfig.links.pinterest) pin.href = siteConfig.links.pinterest;
-            const email = document.querySelector('a[href^="mailto:"]');
-            if (email && siteConfig.links.email) email.href = "mailto:" + siteConfig.links.email;
-        }
-
-        // Profile Picture
-        if (siteConfig.appearance && siteConfig.appearance.profileBase64) {
-            const profImg = document.querySelector('.profile-img');
-            if (profImg) profImg.src = siteConfig.appearance.profileBase64;
-        }
+    // Social Links & Theme Persistence
+    if (siteConfig && siteConfig.links) {
+        const fb = document.querySelector('a[href*="facebook.com"]');
+        if (fb && siteConfig.links.facebook) fb.href = siteConfig.links.facebook;
+        const pin = document.querySelector('a[href*="pinterest.com"]');
+        if (pin && siteConfig.links.pinterest) pin.href = siteConfig.links.pinterest;
+        const email = document.querySelector('a[href^="mailto:"]');
+        if (email && siteConfig.links.email) email.href = "mailto:" + siteConfig.links.email;
     }
 
     // --- Language & Translations ---
