@@ -63,7 +63,26 @@
                     });
                 }
 
-                // 3. Visibility (Granular Elements)
+                // 3. Render Custom Dynamic Sections
+                const customContainer = document.getElementById('custom-sections-container');
+                if (customContainer && cfg.customSections && Array.isArray(cfg.customSections)) {
+                    let customHTML = '';
+                    cfg.customSections.forEach(sec => {
+                        customHTML += `
+                            <section id="${sec.id}" class="section-padding" style="padding: 5rem 0; background: var(--bg-color); border-top: 1px solid var(--border-color);">
+                                <div class="container">
+                                    <h2 class="section-title" style="color: var(--primary-color);">${sec.title}</h2>
+                                    <div class="custom-sec-content" style="color: var(--text-color); opacity: 0.9; line-height: 1.6;">
+                                        ${sec.content}
+                                    </div>
+                                </div>
+                            </section>
+                        `;
+                    });
+                    customContainer.innerHTML = customHTML;
+                }
+
+                // 4. Visibility (Granular Elements)
                 if (cfg.elementVisibility) {
                     const toggle = (id, show) => {
                         const el = document.getElementById(id);
@@ -377,255 +396,271 @@
         </div>
     </header>
 
-    <!-- Hero Section -->
-    <section id="hero" class="hero">
-        <div class="container">
-            <h1 data-aos="fade-up" data-i18n="hero_title">Precision Trading. <span id="hero-title-suffix"
-                    style="color: var(--primary-color);">Automated.</span></h1>
-            <p data-i18n="hero_subtitle" id="hero-desc-text">"A platform dedicated to automated trading solutions that
-                transform complex
-                market analysis into precise and profitable algorithms."</p>
-            <div class="hero-cta">
-                <a href="#bots" class="btn btn-primary" data-i18n="hero_btn_view">View Bots</a>
-                <a href="#contact" class="btn" style="border: 1px solid var(--text-color); margin-left: 1rem;"
-                    data-i18n="hero_btn_consult">Get Consultation</a>
-            </div>
-
-            <div class="hero-stats">
-                <div class="stat-item" id="stat-item-1">
-                    <h3>78%</h3>
-                    <p data-i18n="stat_success">Success Rate</p>
+    <main id="page-sections-wrapper">
+        <!-- Hero Section -->
+        <section id="hero" class="hero">
+            <div class="container">
+                <h1 data-aos="fade-up" data-i18n="hero_title">Precision Trading. <span id="hero-title-suffix"
+                        style="color: var(--primary-color);">Automated.</span></h1>
+                <p data-i18n="hero_subtitle" id="hero-desc-text">"A platform dedicated to automated trading solutions
+                    that
+                    transform complex
+                    market analysis into precise and profitable algorithms."</p>
+                <div class="hero-cta">
+                    <a href="#bots" class="btn btn-primary" data-i18n="hero_btn_view">View Bots</a>
+                    <a href="#contact" class="btn" style="border: 1px solid var(--text-color); margin-left: 1rem;"
+                        data-i18n="hero_btn_consult">Get Consultation</a>
                 </div>
-                <div class="stat-item" id="stat-item-2">
-                    <h3>500+</h3>
-                    <p data-i18n="stat_traders">Active Traders</p>
+
+                <div class="hero-stats">
+                    <div class="stat-item" id="stat-item-1">
+                        <h3>78%</h3>
+                        <p data-i18n="stat_success">Success Rate</p>
+                    </div>
+                    <div class="stat-item" id="stat-item-2">
+                        <h3>500+</h3>
+                        <p data-i18n="stat_traders">Active Traders</p>
+                    </div>
+                    <div class="stat-item" id="stat-item-3">
+                        <h3>15+</h3>
+                        <p data-i18n="stat_algos">Proprietary Algos</p>
+                    </div>
                 </div>
-                <div class="stat-item" id="stat-item-3">
-                    <h3>15+</h3>
-                    <p data-i18n="stat_algos">Proprietary Algos</p>
+
+                <div id="hero-offer-container" style="margin-top: 3rem; font-size: 0.9rem; color: var(--accent-color);">
+                    <strong data-i18n="latest_offer_title">Latest Offer:</strong> <span
+                        data-i18n="latest_offer_text">Get
+                        20% off on the Momentum Hunter 2.0 this week!</span>
                 </div>
             </div>
+        </section>
 
-            <div id="hero-offer-container" style="margin-top: 3rem; font-size: 0.9rem; color: var(--accent-color);">
-                <strong data-i18n="latest_offer_title">Latest Offer:</strong> <span data-i18n="latest_offer_text">Get
-                    20% off on the Momentum Hunter 2.0 this week!</span>
-            </div>
-        </div>
-    </section>
-
-    <!-- MT5 Bots Section -->
-    <section id="bots" class="bots-section">
-        <div class="container">
-            <h2 class="section-title" data-i18n="bots_section_title">Premium MT5 Bots</h2>
-            <p id="bots-subtitle" style="text-align:center; margin-bottom:2rem; opacity:0.8;">Discover our range of
-                high-precision MT5 Expert Advisors.</p>
-            <div class="bots-grid" id="bots-grid-container">
-                <!-- Bots will be dynamically loaded here by JavaScript -->
-            </div>
-        </div>
-    </section>
-
-    <!-- Daily Trading Signals -->
-    <section id="signals" class="section" style="background: var(--card-bg);">
-        <div class="container">
-            <h2 class="section-title" data-i18n="signals_title">Daily Trading Signals</h2>
-            <div style="display: flex; gap: 2rem; align-items: center; justify-content: center; flex-wrap: wrap;">
-                <div style="flex: 1; min-width: 300px;">
-                    <h3><i class="fas fa-bullseye" style="color: var(--primary-color);"></i> <span
-                            data-i18n="sig_prec">High Precision Entries</span></h3>
-                    <p style="margin-bottom: 1rem;" data-i18n="sig_prec_desc">Get real-time entry and exit points
-                        directly to your device.</p>
-                    <ul style="list-style: none; padding: 0;">
-                        <li id="sig-feat-1" style="margin-bottom: 0.5rem;"><i class="fas fa-check-circle"
-                                style="color: var(--primary-color);"></i> <span data-i18n="sig_feat1">Major Forex
-                                Pairs</span></li>
-                        <li id="sig-feat-2" style="margin-bottom: 0.5rem;"><i class="fas fa-check-circle"
-                                style="color: var(--primary-color);"></i> <span data-i18n="sig_feat2">Gold &
-                                Indices</span></li>
-                        <li id="sig-feat-3" style="margin-bottom: 0.5rem;"><i class="fas fa-check-circle"
-                                style="color: var(--primary-color);"></i> <span data-i18n="sig_feat3">Risk:Reward 1:3
-                                Min</span></li>
-                    </ul>
+        <!-- MT5 Bots Section -->
+        <section id="bots" class="bots-section">
+            <div class="container">
+                <h2 class="section-title" data-i18n="bots_section_title">Premium MT5 Bots</h2>
+                <p id="bots-subtitle" style="text-align:center; margin-bottom:2rem; opacity:0.8;">Discover our range of
+                    high-precision MT5 Expert Advisors.</p>
+                <div class="bots-grid" id="bots-grid-container">
+                    <!-- Bots will be dynamically loaded here by JavaScript -->
                 </div>
-                <div
-                    style="flex: 1; min-width: 300px; background: var(--bg-color); padding: 2rem; border-radius: 10px; border: 1px solid var(--border-color);">
-                    <h4 data-i18n="sig_brief">Today's Audio Briefing</h4>
+            </div>
+        </section>
+
+        <!-- Daily Trading Signals -->
+        <section id="signals" class="section" style="background: var(--card-bg);">
+            <div class="container">
+                <h2 class="section-title" data-i18n="signals_title">Daily Trading Signals</h2>
+                <div style="display: flex; gap: 2rem; align-items: center; justify-content: center; flex-wrap: wrap;">
+                    <div style="flex: 1; min-width: 300px;">
+                        <h3><i class="fas fa-bullseye" style="color: var(--primary-color);"></i> <span
+                                data-i18n="sig_prec">High Precision Entries</span></h3>
+                        <p style="margin-bottom: 1rem;" data-i18n="sig_prec_desc">Get real-time entry and exit points
+                            directly to your device.</p>
+                        <ul style="list-style: none; padding: 0;">
+                            <li id="sig-feat-1" style="margin-bottom: 0.5rem;"><i class="fas fa-check-circle"
+                                    style="color: var(--primary-color);"></i> <span data-i18n="sig_feat1">Major Forex
+                                    Pairs</span></li>
+                            <li id="sig-feat-2" style="margin-bottom: 0.5rem;"><i class="fas fa-check-circle"
+                                    style="color: var(--primary-color);"></i> <span data-i18n="sig_feat2">Gold &
+                                    Indices</span></li>
+                            <li id="sig-feat-3" style="margin-bottom: 0.5rem;"><i class="fas fa-check-circle"
+                                    style="color: var(--primary-color);"></i> <span data-i18n="sig_feat3">Risk:Reward
+                                    1:3
+                                    Min</span></li>
+                        </ul>
+                    </div>
                     <div
-                        style="margin-top: 1rem; background: #e2e8f0; padding: 1rem; border-radius: 50px; display: flex; align-items: center; gap: 1rem;">
-                        <button
-                            style="width: 40px; height: 40px; border-radius: 50%; background: var(--primary-color); border: none; color: white;"><i
-                                class="fas fa-play"></i></button>
-                        <div style="height: 4px; flex: 1; background: #cbd5e0; border-radius: 2px;"></div>
-                        <span style="font-size: 0.8rem; color: #2d3748;">00:00 / 02:45</span>
-                    </div>
-                    <p style="margin-top: 1rem; font-size: 0.9rem; color: var(--secondary-color);"
-                        data-i18n="sig_brief_desc">Daily market outlook and key levels for EURUSD and XAUUSD.</p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Statistics Section -->
-    <section id="stats" class="stat-section">
-        <div class="container">
-            <h2 class="section-title" style="color: #fff; border-bottom-color: #fff;" data-i18n="stats_section_title">
-                Platform Activity</h2>
-            <div class="stat-grid">
-                <div class="stat-box">
-                    <h2>12k+</h2>
-                    <p data-i18n="stat_visits">Monthly Visits</p>
-                </div>
-                <div class="stat-box">
-                    <h2>850+</h2>
-                    <p data-i18n="stat_views">Product Views</p>
-                </div>
-                <div class="stat-box">
-                    <h2>300+</h2>
-                    <p data-i18n="stat_purchases">Bot Purchases</p>
-                </div>
-                <div class="stat-box">
-                    <h2>$1M+</h2>
-                    <p data-i18n="stat_profit">Client Profit Generated</p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Services & Other Services -->
-    <section id="services" class="services-section">
-        <div class="container">
-            <h2 class="section-title" data-i18n="services_section_title">Services Offered</h2>
-
-            <div class="services-list" style="margin-bottom: 3rem;">
-                <div class="service-badge" data-i18n="serv_custom">Custom Trading Bot Development</div>
-                <div class="service-badge" data-i18n="serv_algo">Algorithmic Strategy Design</div>
-                <div class="service-badge" data-i18n="serv_opt">System Optimization</div>
-                <div class="service-badge" data-i18n="serv_ment">Technical Mentorship</div>
-            </div>
-
-            <!-- Other Services Dropdown Placeholder -->
-            <div style="max-width: 400px; margin: 0 auto; text-align: center;">
-                <label for="other-services" style="display: block; margin-bottom: 0.5rem; font-weight: 600;"
-                    data-i18n="serv_other_label">Other Specialized Services</label>
-                <select id="other-services"
-                    style="width: 100%; padding: 1rem; border-radius: 5px; border: 1px solid var(--border-color);">
-                    <option value="" data-i18n="serv_select">Select a Service...</option>
-                    <option value="cloud">VPS Hosting Setup</option>
-                    <option value="data">Historical Data Cleaning</option>
-                    <option value="api">Exchange API Integration</option>
-                    <option value="consult">Risk Management Audit</option>
-                    <option value="custom">Custom Indicator Creation</option>
-                </select>
-            </div>
-        </div>
-    </section>
-
-    <!-- Payment Gateways -->
-    <section id="payments" class="section">
-        <div class="container">
-            <h2 class="section-title" data-i18n="pay_title">Secure Payments</h2>
-            <div style="display: flex; justify-content: center; gap: 3rem; flex-wrap: wrap; opacity: 0.7;">
-                <!-- Using FontAwesome icons as placeholders for logos -->
-                <i class="fab fa-cc-visa fa-3x"></i>
-                <i class="fab fa-cc-mastercard fa-3x"></i>
-                <i class="fab fa-paypal fa-3x"></i>
-                <i class="fab fa-bitcoin fa-3x"></i>
-                <i class="fab fa-ethereum fa-3x"></i>
-            </div>
-        </div>
-    </section>
-
-    <!-- About Me -->
-    <section id="about" class="about-section">
-        <div class="container">
-            <h2 class="section-title" data-i18n="about_title">About the Developer</h2>
-            <div class="about-container">
-                <div style="text-align: center;">
-                    <img src="images/profile.png" alt="KRAA MOHAMED" class="profile-img"
-                        onerror="this.src='https://ui-avatars.com/api/?name=K+M&background=00ff88&color=fff'">
-                    <h3 style="margin-top: 1rem;">KRAA MOHAMED</h3>
-                    <p style="color: var(--primary-color); font-weight: 600;" data-i18n="about_role">Senior Algorithmic
-                        Trading Developer</p>
-                </div>
-                <div>
-                    <h3 data-i18n="about_bio_title">Bio</h3>
-                    <p style="margin-bottom: 2rem;" data-i18n="about_bio_text">"To pioneer next-generation algorithmic
-                        trading systems that democratize institutional-grade trading tools, making advanced market
-                        analysis accessible and actionable for traders worldwide."</p>
-
-                    <h3 data-i18n="about_arsenal_title">Technical Arsenal</h3>
-                    <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 2rem;">
-                        <span class="service-badge" style="padding: 0.5rem 1rem; font-size: 0.8rem;">Python</span>
-                        <span class="service-badge" style="padding: 0.5rem 1rem; font-size: 0.8rem;">MQL4/5</span>
-                        <span class="service-badge" style="padding: 0.5rem 1rem; font-size: 0.8rem;">C++</span>
-                        <span class="service-badge" style="padding: 0.5rem 1rem; font-size: 0.8rem;">AWS</span>
-                        <span class="service-badge" style="padding: 0.5rem 1rem; font-size: 0.8rem;">Docker</span>
-                        <span class="service-badge" style="padding: 0.5rem 1rem; font-size: 0.8rem;">Pandas</span>
-                    </div>
-
-                    <h3 data-i18n="about_exp_title">Professional Experience</h3>
-                    <div class="timeline">
-                        <div class="timeline-item">
-                            <div class="timeline-date">2020 - Present</div>
-                            <h4 data-i18n="exp_role1">Algorithmic Trading Consultant</h4>
-                            <p>FinTech Solutions Ltd.</p>
-                            <ul style="font-size: 0.9rem; margin-top: 0.5rem; list-style: disc; padding-left: 1rem;">
-                                <li data-i18n="exp_desc1a">Deployed 15+ proprietary algorithms (78% success rate).</li>
-                                <li data-i18n="exp_desc1b">Reduced latency by 40% via architecture optimization.</li>
-                            </ul>
+                        style="flex: 1; min-width: 300px; background: var(--bg-color); padding: 2rem; border-radius: 10px; border: 1px solid var(--border-color);">
+                        <h4 data-i18n="sig_brief">Today's Audio Briefing</h4>
+                        <div
+                            style="margin-top: 1rem; background: #e2e8f0; padding: 1rem; border-radius: 50px; display: flex; align-items: center; gap: 1rem;">
+                            <button
+                                style="width: 40px; height: 40px; border-radius: 50%; background: var(--primary-color); border: none; color: white;"><i
+                                    class="fas fa-play"></i></button>
+                            <div style="height: 4px; flex: 1; background: #cbd5e0; border-radius: 2px;"></div>
+                            <span style="font-size: 0.8rem; color: #2d3748;">00:00 / 02:45</span>
                         </div>
-                        <div class="timeline-item">
-                            <div class="timeline-date">2017 - 2020</div>
-                            <h4 data-i18n="exp_role2">Senior MQL5 Developer</h4>
-                            <p>Quantitative Edge</p>
-                            <ul style="font-size: 0.9rem; margin-top: 0.5rem; list-style: disc; padding-left: 1rem;">
-                                <li data-i18n="exp_desc2a">Led migration from MQL4 to MQL5 for 200+ clients.</li>
-                                <li data-i18n="exp_desc2b">Implemented efficient backtesting frameworks.</li>
-                            </ul>
-                        </div>
-                        <div class="timeline-item">
-                            <div class="timeline-date">2014 - 2017</div>
-                            <h4 data-i18n="exp_role3">Trading Systems Analyst</h4>
-                            <p>Capital Markets Group</p>
-                        </div>
+                        <p style="margin-top: 1rem; font-size: 0.9rem; color: var(--secondary-color);"
+                            data-i18n="sig_brief_desc">Daily market outlook and key levels for EURUSD and XAUUSD.</p>
                     </div>
                 </div>
             </div>
-        </div>
-    </section>
+        </section>
 
-    <!-- Contact Us -->
-    <section id="contact" class="contact-section">
-        <div class="container">
-            <h2 class="section-title" data-i18n="contact_title">Get In Touch</h2>
-            <form class="contact-form">
-                <div class="form-group">
-                    <input type="text" placeholder="Your Name" required data-i18n-placeholder="form_name">
-                </div>
-                <div class="form-group">
-                    <input type="email" placeholder="Your Email" required data-i18n-placeholder="form_email">
-                </div>
-                <div class="form-group">
-                    <textarea rows="5" placeholder="Your Message" required data-i18n-placeholder="form_msg"></textarea>
-                </div>
-                <button type="submit" class="btn-primary" data-i18n="form_send">Send Message</button>
-            </form>
-
-            <div style="text-align: center; margin-top: 3rem;">
-                <p style="margin-bottom: 1rem;" data-i18n="follow_us">Follow us on social media:</p>
-                <div style="display: flex; justify-content: center; gap: 1.5rem;">
-                    <a href="https://www.facebook.com/jamal.duer.5" target="_blank" style="font-size: 1.5rem;"><i
-                            class="fab fa-facebook"></i></a>
-                    <a href="mailto:bachasalman69@gmail.com" style="font-size: 1.5rem;"><i
-                            class="fas fa-envelope"></i></a>
-                    <a href="https://www.pinterest.com/taybegames1981/" target="_blank" style="font-size: 1.5rem;"><i
-                            class="fab fa-pinterest"></i></a>
+        <!-- Statistics Section -->
+        <section id="stats" class="stat-section">
+            <div class="container">
+                <h2 class="section-title" style="color: #fff; border-bottom-color: #fff;"
+                    data-i18n="stats_section_title">
+                    Platform Activity</h2>
+                <div class="stat-grid">
+                    <div class="stat-box">
+                        <h2>12k+</h2>
+                        <p data-i18n="stat_visits">Monthly Visits</p>
+                    </div>
+                    <div class="stat-box">
+                        <h2>850+</h2>
+                        <p data-i18n="stat_views">Product Views</p>
+                    </div>
+                    <div class="stat-box">
+                        <h2>300+</h2>
+                        <p data-i18n="stat_purchases">Bot Purchases</p>
+                    </div>
+                    <div class="stat-box">
+                        <h2>$1M+</h2>
+                        <p data-i18n="stat_profit">Client Profit Generated</p>
+                    </div>
                 </div>
             </div>
-        </div>
-    </section>
+        </section>
 
-    <!-- Admin Quick Access (Only visible to you) -->
+        <!-- Services & Other Services -->
+        <section id="services" class="services-section">
+            <div class="container">
+                <h2 class="section-title" data-i18n="services_section_title">Services Offered</h2>
+
+                <div class="services-list" style="margin-bottom: 3rem;">
+                    <div class="service-badge" data-i18n="serv_custom">Custom Trading Bot Development</div>
+                    <div class="service-badge" data-i18n="serv_algo">Algorithmic Strategy Design</div>
+                    <div class="service-badge" data-i18n="serv_opt">System Optimization</div>
+                    <div class="service-badge" data-i18n="serv_ment">Technical Mentorship</div>
+                </div>
+
+                <!-- Other Services Dropdown Placeholder -->
+                <div style="max-width: 400px; margin: 0 auto; text-align: center;">
+                    <label for="other-services" style="display: block; margin-bottom: 0.5rem; font-weight: 600;"
+                        data-i18n="serv_other_label">Other Specialized Services</label>
+                    <select id="other-services"
+                        style="width: 100%; padding: 1rem; border-radius: 5px; border: 1px solid var(--border-color);">
+                        <option value="" data-i18n="serv_select">Select a Service...</option>
+                        <option value="cloud">VPS Hosting Setup</option>
+                        <option value="data">Historical Data Cleaning</option>
+                        <option value="api">Exchange API Integration</option>
+                        <option value="consult">Risk Management Audit</option>
+                        <option value="custom">Custom Indicator Creation</option>
+                    </select>
+                </div>
+            </div>
+        </section>
+
+        <!-- Payment Gateways -->
+        <section id="payments" class="section">
+            <div class="container">
+                <h2 class="section-title" data-i18n="pay_title">Secure Payments</h2>
+                <div style="display: flex; justify-content: center; gap: 3rem; flex-wrap: wrap; opacity: 0.7;">
+                    <!-- Using FontAwesome icons as placeholders for logos -->
+                    <i class="fab fa-cc-visa fa-3x"></i>
+                    <i class="fab fa-cc-mastercard fa-3x"></i>
+                    <i class="fab fa-paypal fa-3x"></i>
+                    <i class="fab fa-bitcoin fa-3x"></i>
+                    <i class="fab fa-ethereum fa-3x"></i>
+                </div>
+            </div>
+        </section>
+
+        <!-- About Me -->
+        <section id="about" class="about-section">
+            <div class="container">
+                <h2 class="section-title" data-i18n="about_title">About the Developer</h2>
+                <div class="about-container">
+                    <div style="text-align: center;">
+                        <img src="images/profile.png" alt="KRAA MOHAMED" class="profile-img"
+                            onerror="this.src='https://ui-avatars.com/api/?name=K+M&background=00ff88&color=fff'">
+                        <h3 style="margin-top: 1rem;">KRAA MOHAMED</h3>
+                        <p style="color: var(--primary-color); font-weight: 600;" data-i18n="about_role">Senior
+                            Algorithmic
+                            Trading Developer</p>
+                    </div>
+                    <div>
+                        <h3 data-i18n="about_bio_title">Bio</h3>
+                        <p style="margin-bottom: 2rem;" data-i18n="about_bio_text">"To pioneer next-generation
+                            algorithmic
+                            trading systems that democratize institutional-grade trading tools, making advanced market
+                            analysis accessible and actionable for traders worldwide."</p>
+
+                        <h3 data-i18n="about_arsenal_title">Technical Arsenal</h3>
+                        <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 2rem;">
+                            <span class="service-badge" style="padding: 0.5rem 1rem; font-size: 0.8rem;">Python</span>
+                            <span class="service-badge" style="padding: 0.5rem 1rem; font-size: 0.8rem;">MQL4/5</span>
+                            <span class="service-badge" style="padding: 0.5rem 1rem; font-size: 0.8rem;">C++</span>
+                            <span class="service-badge" style="padding: 0.5rem 1rem; font-size: 0.8rem;">AWS</span>
+                            <span class="service-badge" style="padding: 0.5rem 1rem; font-size: 0.8rem;">Docker</span>
+                            <span class="service-badge" style="padding: 0.5rem 1rem; font-size: 0.8rem;">Pandas</span>
+                        </div>
+
+                        <h3 data-i18n="about_exp_title">Professional Experience</h3>
+                        <div class="timeline">
+                            <div class="timeline-item">
+                                <div class="timeline-date">2020 - Present</div>
+                                <h4 data-i18n="exp_role1">Algorithmic Trading Consultant</h4>
+                                <p>FinTech Solutions Ltd.</p>
+                                <ul
+                                    style="font-size: 0.9rem; margin-top: 0.5rem; list-style: disc; padding-left: 1rem;">
+                                    <li data-i18n="exp_desc1a">Deployed 15+ proprietary algorithms (78% success rate).
+                                    </li>
+                                    <li data-i18n="exp_desc1b">Reduced latency by 40% via architecture optimization.
+                                    </li>
+                                </ul>
+                            </div>
+                            <div class="timeline-item">
+                                <div class="timeline-date">2017 - 2020</div>
+                                <h4 data-i18n="exp_role2">Senior MQL5 Developer</h4>
+                                <p>Quantitative Edge</p>
+                                <ul
+                                    style="font-size: 0.9rem; margin-top: 0.5rem; list-style: disc; padding-left: 1rem;">
+                                    <li data-i18n="exp_desc2a">Led migration from MQL4 to MQL5 for 200+ clients.</li>
+                                    <li data-i18n="exp_desc2b">Implemented efficient backtesting frameworks.</li>
+                                </ul>
+                            </div>
+                            <div class="timeline-item">
+                                <div class="timeline-date">2014 - 2017</div>
+                                <h4 data-i18n="exp_role3">Trading Systems Analyst</h4>
+                                <p>Capital Markets Group</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Contact Us -->
+        <section id="contact" class="contact-section">
+            <div class="container">
+                <h2 class="section-title" data-i18n="contact_title">Get In Touch</h2>
+                <form class="contact-form">
+                    <div class="form-group">
+                        <input type="text" placeholder="Your Name" required data-i18n-placeholder="form_name">
+                    </div>
+                    <div class="form-group">
+                        <input type="email" placeholder="Your Email" required data-i18n-placeholder="form_email">
+                    </div>
+                    <div class="form-group">
+                        <textarea rows="5" placeholder="Your Message" required
+                            data-i18n-placeholder="form_msg"></textarea>
+                    </div>
+                    <button type="submit" class="btn-primary" data-i18n="form_send">Send Message</button>
+                </form>
+
+                <div style="text-align: center; margin-top: 3rem;">
+                    <p style="margin-bottom: 1rem;" data-i18n="follow_us">Follow us on social media:</p>
+                    <div style="display: flex; justify-content: center; gap: 1.5rem;">
+                        <a href="https://www.facebook.com/jamal.duer.5" target="_blank" style="font-size: 1.5rem;"><i
+                                class="fab fa-facebook"></i></a>
+                        <a href="mailto:bachasalman69@gmail.com" style="font-size: 1.5rem;"><i
+                                class="fas fa-envelope"></i></a>
+                        <a href="https://www.pinterest.com/taybegames1981/" target="_blank"
+                            style="font-size: 1.5rem;"><i class="fab fa-pinterest"></i></a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Custom Sections Container (Will be appended to) -->
+        </div>
+    </main>
+
+    <!-- Admin Quick Access -->
     <section id="admin-quick-access"
         style="display: none; padding: 5rem 0; background: var(--bg-color); border-top: 2px dashed var(--primary-color);">
         <div class="container" style="text-align: center;">
@@ -655,7 +690,8 @@
         <div class="container"
             style="display:flex; justify-content:center; align-items:center; gap:1rem; flex-wrap:wrap;">
             <p onclick="triggerAdmin()" style="cursor:text; user-select:none;">&copy; 2025 <span
-                    class="site-title-rendered">Trading Made Easy</span>. <span data-i18n="rights_reserved">All rights
+                    class="site-title-rendered">Trading Made Easy</span>. <span data-i18n="rights_reserved">All
+                    rights
                     reserved.</span></p>
         </div>
     </footer>
@@ -753,7 +789,8 @@
                                     style="width:100%; padding:0.5rem; background:var(--bg-color); border:1px solid var(--border-color); color:var(--text-color); border-radius:5px;">
                             </div>
                             <div>
-                                <label style="display:block; font-size:0.8rem; opacity:0.7;">Payeer Account ID</label>
+                                <label style="display:block; font-size:0.8rem; opacity:0.7;">Payeer Account
+                                    ID</label>
                                 <input type="text" id="adm-wallet-payeer" placeholder="P1000..."
                                     style="width:100%; padding:0.5rem; background:var(--bg-color); border:1px solid var(--border-color); color:var(--text-color); border-radius:5px;">
                             </div>
@@ -765,15 +802,50 @@
                 <div id="tab-sections" style="display:none;">
                     <div class="admin-card"
                         style="background:var(--card-bg); padding:2rem; border-radius:10px; margin-bottom:2rem; border:1px solid var(--border-color);">
-                        <h3 style="margin-bottom:1rem;"><i class="fas fa-sort"></i> Reorder & Hide Page Sections</h3>
-                        <p style="font-size:0.9rem; opacity:0.8; margin-bottom:1.5rem;">Drag and drop or use buttons to
+                        <h3 style="margin-bottom:1rem;"><i class="fas fa-sort"></i> Reorder & Hide Page Sections
+                        </h3>
+                        <p style="font-size:0.9rem; opacity:0.8; margin-bottom:1.5rem;">Drag and drop or use buttons
+                            to
                             reorder sections. Toggle the eye icon to hide/show them.</p>
 
                         <div id="sections-list-editor" style="display:flex; flex-direction:column; gap:0.8rem;">
                             <!-- Populated by JS -->
                         </div>
                         <button onclick="refreshSectionList()" class="btn" style="margin-top:1rem; font-size:0.8rem;"><i
-                                class="fas fa-sync"></i> Refresh List</button>
+                                class="fas fa-sync"></i> Refresh
+                            List</button>
+
+                        <!-- NEW: Add Custom Section Form -->
+                        <div
+                            style="margin-top:2.5rem; border-top:2px solid var(--border-color); padding-top:1.5rem; background:rgba(0,255,136,0.05); padding:1.5rem; border-radius:10px;">
+                            <h4 style="margin-bottom:1rem; display:flex; align-items:center; gap:0.5rem;"><i
+                                    class="fas fa-plus-square"></i> Add New Dynamic Section</h4>
+                            <div style="display:grid; gap:1rem;">
+                                <div>
+                                    <label style="display:block; font-size:0.8rem; margin-bottom:0.3rem;">Section
+                                        Title</label>
+                                    <input type="text" id="new-sec-title" placeholder="e.g. Special Offer"
+                                        style="width:100%; padding:0.6rem; background:var(--bg-color); border:1px solid var(--border-color); color:var(--text-color); border-radius:5px;">
+                                </div>
+                                <div>
+                                    <label style="display:block; font-size:0.8rem; margin-bottom:0.3rem;">Content
+                                        (Text
+                                        or HTML)</label>
+                                    <textarea id="new-sec-content" rows="4"
+                                        placeholder="Type your section content here..."
+                                        style="width:100%; padding:0.6rem; background:var(--bg-color); border:1px solid var(--border-color); color:var(--text-color); border-radius:5px;"></textarea>
+                                </div>
+                                <button onclick="addCustomSection()" class="btn-primary" style="width:100%;">
+                                    <i class="fas fa-plus-circle"></i> Create Section
+                                </button>
+                            </div>
+
+                            <!-- List of existing custom sections for deletion -->
+                            <div id="custom-sections-admin-list"
+                                style="margin-top:1.5rem; border-top:1px dashed var(--border-color); padding-top:1rem;">
+                                <!-- Managed via JS -->
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -879,7 +951,8 @@
 
                             <!-- NEW: Navigation Links Editor -->
                             <div style="margin-top:2rem; border-top:1px dashed var(--border-color); padding-top:1rem;">
-                                <h4 style="margin-bottom:1rem; opacity:0.8;">Navigation Menu Labels (Visibility)</h4>
+                                <h4 style="margin-bottom:1rem; opacity:0.8;">Navigation Menu Labels (Visibility)
+                                </h4>
                                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem;">
                                     <div>
                                         <div style="display:flex; justify-content:space-between; font-size:0.75rem;">
@@ -972,7 +1045,8 @@
 
                             <!-- NEW: Section Titles -->
                             <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem; margin-top:1.5rem;">
-                                <h4 style="grid-column:1/-1; margin-bottom:0.5rem; opacity:0.8;">Section Headings</h4>
+                                <h4 style="grid-column:1/-1; margin-bottom:0.5rem; opacity:0.8;">Section Headings
+                                </h4>
                                 <div>
                                     <label style="display:block; font-size:0.8rem; margin-bottom:0.3rem;">Bots
                                         Section</label>
@@ -1020,7 +1094,8 @@
                                             style="width:100%; padding:0.5rem; background:var(--bg-color); border:1px solid var(--border-color); color:var(--text-color); border-radius:4px;">
                                     </div>
                                     <div>
-                                        <label style="font-size:0.8rem;">Bots Subtitle (Discover our range...)</label>
+                                        <label style="font-size:0.8rem;">Bots Subtitle (Discover our
+                                            range...)</label>
                                         <input type="text" id="adm-txt-bots-sub"
                                             style="width:100%; padding:0.5rem; background:var(--bg-color); border:1px solid var(--border-color); color:var(--text-color); border-radius:4px;">
                                     </div>
@@ -1047,7 +1122,8 @@
 
                                     <div
                                         style="grid-column: 1/-1; margin-top:1rem; border-top:1px dashed var(--border-color); padding-top:1rem;">
-                                        <h5 style="margin-bottom:0.5rem;"><i class="fas fa-bullhorn"></i> Latest Signal
+                                        <h5 style="margin-bottom:0.5rem;"><i class="fas fa-bullhorn"></i> Latest
+                                            Signal
                                             (Briefing)</h5>
                                         <input type="text" id="adm-txt-sig-brief-title"
                                             placeholder="Briefing Title (e.g. Today's Outlook)"
@@ -1100,7 +1176,8 @@
                                 <h4 style="color:#ffaa00; margin-top:0;"><i class="fas fa-exclamation-triangle"></i>
                                     Cloud
                                     Control</h4>
-                                <p style="font-size:0.8rem; opacity:0.8;">If you see products on the site but not here,
+                                <p style="font-size:0.8rem; opacity:0.8;">If you see products on the site but not
+                                    here,
                                     use
                                     the button below to wipe the cloud database and start fresh.</p>
                                 <button onclick="clearCloudDatabase()" class="btn"
@@ -1113,7 +1190,8 @@
                                 style="background:var(--bg-color); padding:1rem; border-radius:5px; border:1px solid var(--border-color);">
                                 <div
                                     style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
-                                    <h4 style="margin:0;" id="adm-prod-form-title" data-i18n="adm_prod_add_title">Add
+                                    <h4 style="margin:0;" id="adm-prod-form-title" data-i18n="adm_prod_add_title">
+                                        Add
                                         New
                                         Product</h4>
                                     <button id="cancel-edit-btn" onclick="cancelProductEdit()" class="btn"
@@ -1161,7 +1239,8 @@
                                     style="background:rgba(0,0,0,0.1); padding:0.8rem; border-radius:5px; margin-bottom:1rem; border:1px dashed var(--border-color);">
                                     <label
                                         style="display:block; font-size:0.8rem; margin-bottom:0.5rem; font-weight:600;"
-                                        data-i18n="adm_file_label"><i class="fas fa-file-archive"></i> Product Download
+                                        data-i18n="adm_file_label"><i class="fas fa-file-archive"></i> Product
+                                        Download
                                         File
                                         (.zip, .rar,
                                         etc.)</label>
@@ -1287,7 +1366,10 @@
                 });
 
                 if (tab === 'content') renderProductList();
-                if (tab === 'sections' && typeof refreshSectionList === 'function') refreshSectionList();
+                if (tab === 'sections') {
+                    if (typeof refreshSectionList === 'function') refreshSectionList();
+                    if (typeof refreshCustomSectionsList === 'function') refreshCustomSectionsList();
+                }
             }
 
             function loadSettings() {
@@ -1902,6 +1984,75 @@
                     // Easier: insert next before current
                     parent.insertBefore(items[index], items[index + 1].nextSibling);
                 }
+            }
+
+            function addCustomSection() {
+                const titleInput = document.getElementById('new-sec-title');
+                const contentInput = document.getElementById('new-sec-content');
+                const title = titleInput.value.trim();
+                const content = contentInput.value.trim();
+
+                if (!title || !content) {
+                    alert("Please provide both a title and content for the new section.");
+                    return;
+                }
+
+                const config = JSON.parse(localStorage.getItem(CONFIG_KEY)) || {};
+                config.customSections = config.customSections || [];
+
+                const newSec = {
+                    id: 'custom-sec-' + Date.now(),
+                    title: title,
+                    content: content
+                };
+
+                config.customSections.push(newSec);
+                localStorage.setItem(CONFIG_KEY, JSON.stringify(config));
+
+                // Clear fields
+                titleInput.value = '';
+                contentInput.value = '';
+
+                alert("Custom Section Created! Click 'Save All Changes' to publish.");
+                applySiteSettings();
+                refreshSectionList();
+                refreshCustomSectionsList();
+            }
+
+            function removeCustomSection(id) {
+                if (!confirm("Remove this custom section?")) return;
+                const config = JSON.parse(localStorage.getItem(CONFIG_KEY)) || {};
+                if (config.customSections) {
+                    config.customSections = config.customSections.filter(s => s.id !== id);
+                    localStorage.setItem(CONFIG_KEY, JSON.stringify(config));
+                    applySiteSettings();
+                    refreshSectionList();
+                    refreshCustomSectionsList();
+                }
+            }
+
+            function refreshCustomSectionsList() {
+                const list = document.getElementById('custom-sections-admin-list');
+                if (!list) return;
+
+                const config = JSON.parse(localStorage.getItem(CONFIG_KEY)) || {};
+                const customSecs = config.customSections || [];
+
+                if (customSecs.length === 0) {
+                    list.innerHTML = '<p style="font-size:0.75rem; opacity:0.5; text-align:center;">No custom sections yet.</p>';
+                    return;
+                }
+
+                let html = '<h5 style="margin-bottom:0.5rem; font-size:0.8rem;">Existing Custom Sections:</h5>';
+                customSecs.forEach(sec => {
+                    html += `
+                        <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(0,0,0,0.1); padding:0.5rem; border-radius:4px; margin-bottom:0.3rem;">
+                            <span style="font-size:0.8rem;">${sec.title}</span>
+                            <button onclick="removeCustomSection('${sec.id}')" style="background:none; border:none; color:#ff4d4d; cursor:pointer;"><i class="fas fa-trash"></i></button>
+                        </div>
+                    `;
+                });
+                list.innerHTML = html;
             }
 
             function togglePriceField(isFree) {
