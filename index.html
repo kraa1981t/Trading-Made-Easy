@@ -2026,9 +2026,10 @@
                 }
             }
 
-            function addCustomSection(e) {
-                const addBtn = e ? e.currentTarget : event.currentTarget;
-                const originalHTML = addBtn.innerHTML;
+            async function addCustomSection(e) {
+                if (e) e.preventDefault();
+                const addBtn = e ? e.currentTarget : document.querySelector('button[onclick="addCustomSection(event)"]');
+                const originalHTML = addBtn ? addBtn.innerHTML : 'Create Section';
 
                 try {
                     const titleInput = document.getElementById('new-sec-title');
@@ -2041,32 +2042,51 @@
                         return;
                     }
 
-                    addBtn.disabled = true;
-                    addBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating...';
+                    if (addBtn) {
+                        addBtn.disabled = true;
+                        addBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Syncing...';
+                    }
 
-                    // 1. Load latest from local
-                    const config = JSON.parse(localStorage.getItem(CONFIG_KEY)) || { customSections: [] };
-                    if (!config.customSections) config.customSections = [];
+                    // 1. Get current config from LocalStorage (Source of Truth)
+                    const config = JSON.parse(localStorage.getItem(CONFIG_KEY)) || {};
+                    config.customSections = config.customSections || [];
+                    config.textOverrides = config.textOverrides || {};
+                    config.sectionsConfig = config.sectionsConfig || { order: [], hidden: [] };
+                    if (!config.sectionsConfig.order) config.sectionsConfig.order = [];
 
-                    // 2. Add New Sec
+                    // 2. Create New ID and add to Lists
                     const newId = 'custom-sec-' + Date.now();
+
+                    // Add to raw list
                     config.customSections.push({ id: newId, title, content });
 
-                    // 3. Inject into order
-                    if (!config.sectionsConfig) config.sectionsConfig = { order: [], hidden: [] };
-                    if (!config.sectionsConfig.order) config.sectionsConfig.order = [];
-                    if (!config.sectionsConfig.order.includes(newId)) config.sectionsConfig.order.push(newId);
+                    // Add to overrides to ensure consistency
+                    config.textOverrides[newId + '_title'] = title;
+                    config.textOverrides[newId + '_content'] = content;
 
-                    // 4. Save to Local
+                    // Add to layout order (at the bottom)
+                    if (!config.sectionsConfig.order.includes(newId)) {
+                        config.sectionsConfig.order.push(newId);
+                    }
+
+                    console.log("Saving new section to cloud:", newId);
+
+                    // 3. Save to LocalStorage
                     localStorage.setItem(CONFIG_KEY, JSON.stringify(config));
 
-                    // 5. Trigger final save (which will sync and reload)
-                    saveSettings(true);
+                    // 4. Sync to Cloud and Reload (Same Logic as Variables)
+                    await db.ref('site_config').set(config);
+
+                    console.log("Cloud sync complete. Reloading...");
+                    window.location.reload();
+
                 } catch (err) {
                     console.error("addCustomSection error:", err);
-                    alert("Error creating section: " + err.message);
-                    addBtn.disabled = false;
-                    addBtn.innerHTML = originalHTML;
+                    alert("Error: " + err.message);
+                    if (addBtn) {
+                        addBtn.disabled = false;
+                        addBtn.innerHTML = originalHTML;
+                    }
                 }
             }
 
