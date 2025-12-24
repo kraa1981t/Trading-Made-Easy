@@ -2192,17 +2192,43 @@
                 }
             }
 
-            function removeCustomSection(id) {
-                if (!confirm("Remove this custom section?")) return;
-                const config = JSON.parse(localStorage.getItem(CONFIG_KEY)) || {};
-                if (config.customSections) {
-                    config.customSections = config.customSections.filter(s => s.id !== id);
+            async function removeCustomSection(id) {
+                if (!confirm("Are you sure you want to delete this element permanently?")) return;
+
+                try {
+                    // 1. Load latest config
+                    const config = JSON.parse(localStorage.getItem(CONFIG_KEY)) || {};
+
+                    // 2. Filter out the section
+                    if (config.customSections) {
+                        config.customSections = config.customSections.filter(s => s.id !== id);
+                    }
+
+                    // 3. Clean up order list
+                    if (config.sectionsConfig && config.sectionsConfig.order) {
+                        config.sectionsConfig.order = config.sectionsConfig.order.filter(oid => oid !== id);
+                    }
+
+                    // 4. Clean up text overrides
+                    if (config.textOverrides) {
+                        const suffixes = ['_title', '_content', '_placement', '_align', '_icon'];
+                        suffixes.forEach(sfx => delete config.textOverrides[id + sfx]);
+                    }
+
+                    // 5. Save locally first
                     localStorage.setItem(CONFIG_KEY, JSON.stringify(config));
 
-                    applySiteSettings();
-                    refreshSectionList();
-                    refreshCustomSectionsList();
-                    saveSettings(true); // Force sync and reload
+                    console.log("Element deleted locally. Syncing to cloud...");
+
+                    // 6. Direct Cloud Sync & Reload
+                    await db.ref('site_config').set(config);
+
+                    console.log("Cloud synced after deletion. Reloading page.");
+                    window.location.reload();
+
+                } catch (err) {
+                    console.error("removeCustomSection error:", err);
+                    alert("Failed to delete from cloud: " + err.message);
                 }
             }
 
