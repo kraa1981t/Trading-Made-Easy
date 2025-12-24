@@ -371,16 +371,20 @@
 
             // NEW: Sync Global Settings from Firebase (Cloud Config)
             db.ref('site_config').on('value', (snapshot) => {
+                // If we are currently writing to the cloud, ignore the echo to prevent data rollback
+                if (typeof isPerformingCloudAction !== 'undefined' && isPerformingCloudAction) return;
+
                 const cloudCfg = snapshot.val();
                 if (cloudCfg) {
-                    console.log("Cloud Settings Received:", cloudCfg);
+                    console.log("Cloud Settings Received (Syncing Local):", cloudCfg);
                     localStorage.setItem(CONFIG_KEY, JSON.stringify(cloudCfg));
 
                     // Call the global apply function for real-time update
                     applySiteSettings();
 
                     // If we are in the admin panel, refresh inputs to match cloud
-                    if (document.getElementById('admin-overlay').style.display === 'block') {
+                    const overlay = document.getElementById('admin-overlay');
+                    if (overlay && overlay.style.display === 'block') {
                         loadSettings();
                     }
                 }
@@ -2208,14 +2212,23 @@
                 }
             }
 
+            // FLAG to prevent listener loops while saving
+            let isPerformingCloudAction = false;
+
             async function removeCustomSection(id) {
                 if (!confirm("Are you sure you want to delete this element permanently?")) return;
 
-                try {
-                    // 1. Load latest config
-                    const config = JSON.parse(localStorage.getItem(CONFIG_KEY)) || {};
+                if (isPerformingCloudAction) return;
+                isPerformingCloudAction = true;
 
-                    // 2. Filter out the section
+                try {
+                    console.log("Starting Hard Delete for:", id);
+
+                    // 1. Fetch FRESH data from Cloud to be 100% sure we have the latest
+                    const snapshot = await db.ref('site_config').once('value');
+                    let config = snapshot.val() || { customSections: [], textOverrides: {}, sectionsConfig: { order: [] } };
+
+                    // 2. Perform Filtering on the FRESH data
                     if (config.customSections) {
                         config.customSections = config.customSections.filter(s => s.id !== id);
                     }
@@ -2224,27 +2237,30 @@
                     if (config.sectionsConfig && config.sectionsConfig.order) {
                         config.sectionsConfig.order = config.sectionsConfig.order.filter(oid => oid !== id);
                     }
-
-                    // 4. Clean up text overrides
-                    if (config.textOverrides) {
-                        const suffixes = ['_title', '_content', '_placement', '_align', '_icon'];
-                        suffixes.forEach(sfx => delete config.textOverrides[id + sfx]);
+                    if (config.sectionsConfig && config.sectionsConfig.hidden) {
+                        config.sectionsConfig.hidden = config.sectionsConfig.hidden.filter(hid => hid !== id);
                     }
 
-                    // 5. Save locally first
-                    localStorage.setItem(CONFIG_KEY, JSON.stringify(config));
+                    // 4. Clean up all associated overrides
+                    if (config.textOverrides) {
+                        const keysToDelete = Object.keys(config.textOverrides).filter(key => key.startsWith(id));
+                        keysToDelete.forEach(key => delete config.textOverrides[key]);
+                    }
 
-                    console.log("Element deleted locally. Syncing to cloud...");
-
-                    // 6. Direct Cloud Sync & Reload
+                    // 5. Hard Write back to Firebase (This overrides EVERYTHING in the cloud)
                     await db.ref('site_config').set(config);
 
-                    console.log("Cloud synced after deletion. Reloading page.");
+                    // 6. Update LocalStorage only AFTER successful cloud write
+                    localStorage.setItem(CONFIG_KEY, JSON.stringify(config));
+
+                    console.log("Delete finalized in cloud. Reloading...");
                     window.location.reload();
 
                 } catch (err) {
-                    console.error("removeCustomSection error:", err);
-                    alert("Failed to delete from cloud: " + err.message);
+                    console.error("Hard Delete Failed:", err);
+                    alert("Sync Error: " + err.message);
+                } finally {
+                    isPerformingCloudAction = false;
                 }
             }
 
