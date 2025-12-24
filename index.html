@@ -63,31 +63,78 @@
                     });
                 }
 
-                // 3. Render Custom Dynamic Sections
+                // 3. Render Custom Dynamic Elements/Sections
                 const wrapper = document.getElementById('page-sections-wrapper');
-                if (wrapper && cfg.customSections && Array.isArray(cfg.customSections)) {
-                    // Remove old dynamic sections first to avoid duplicates on re-apply
-                    wrapper.querySelectorAll('.dynamic-section').forEach(el => el.remove());
+                const navMenu = document.querySelector('.nav-menu');
+                const footer = document.querySelector('footer .container');
+
+                if (cfg.customSections && Array.isArray(cfg.customSections)) {
+                    // Clean up previously rendered dynamic elements
+                    document.querySelectorAll('.dynamic-element').forEach(el => el.remove());
 
                     cfg.customSections.forEach(sec => {
-                        const secEl = document.createElement('section');
-                        secEl.id = sec.id;
-                        secEl.className = 'section-padding dynamic-section';
-                        secEl.style.cssText = 'padding: 5rem 0; background: var(--bg-color); border-top: 1px solid var(--border-color);';
-
-                        // Check for overrides
+                        const placement = (cfg.textOverrides && cfg.textOverrides[sec.id + '_placement']) || sec.placement || 'body';
                         const title = (cfg.textOverrides && cfg.textOverrides[sec.id + '_title']) || sec.title;
                         const content = (cfg.textOverrides && cfg.textOverrides[sec.id + '_content']) || sec.content;
+                        const align = (cfg.textOverrides && cfg.textOverrides[sec.id + '_align']) || sec.align || 'center';
+                        const icon = (cfg.textOverrides && cfg.textOverrides[sec.id + '_icon']) || sec.icon || '';
 
-                        secEl.innerHTML = `
-                            <div class="container">
-                                <h2 class="section-title" style="color: var(--primary-color);">${title}</h2>
-                                <div class="custom-sec-content" style="color: var(--text-color); opacity: 0.9; line-height: 1.6;">
-                                    ${content}
-                                </div>
-                            </div>
-                        `;
-                        wrapper.appendChild(secEl);
+                        if (placement === 'navbar' && navMenu) {
+                            // Render as a Nav Link
+                            const link = document.createElement('a');
+                            link.href = content.startsWith('http') ? content : content; // Supports URLs or internal IDs
+                            link.className = 'nav-link dynamic-element';
+                            link.innerHTML = `${icon ? `<i class="${icon}"></i> ` : ''}${title}`;
+                            navMenu.appendChild(link);
+                        }
+                        else if (placement === 'footer' && footer) {
+                            // Render as a Footer Link/Text
+                            const span = document.createElement('span');
+                            span.className = 'dynamic-element';
+                            span.style.cssText = 'margin: 0 10px; opacity: 0.8;';
+                            span.innerHTML = `${icon ? `<i class="${icon}"></i> ` : ''}<a href="${content.startsWith('http') ? content : '#'}" style="color:inherit;">${title}</a>`;
+                            footer.appendChild(span);
+                        }
+                        else if ((placement === 'sidebar-left' || placement === 'sidebar-right')) {
+                            // Sidebar logic - find or create sidebar container
+                            let sb = document.getElementById(placement);
+                            if (!sb) {
+                                sb = document.createElement('div');
+                                sb.id = placement;
+                                sb.className = 'dynamic-element';
+                                sb.style.cssText = `position: fixed; ${placement === 'sidebar-left' ? 'left: 20px;' : 'right: 20px;'} top: 50%; transform: translateY(-50%); width: 60px; z-index: 100; display: flex; flex-direction: column; gap: 1rem;`;
+                                document.body.appendChild(sb);
+                            }
+                            const item = document.createElement('div');
+                            item.className = 'sidebar-item';
+                            item.style.cssText = `background: var(--card-bg); border: 1px solid var(--border-color); width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.3s; box-shadow: 0 5px 15px rgba(0,0,0,0.2);`;
+                            item.title = title;
+                            item.innerHTML = `<a href="${content.startsWith('http') ? content : '#'}" style="color: var(--primary-color); font-size: 1.2rem;"><i class="${icon || 'fas fa-link'}"></i></a>`;
+                            item.onmouseover = () => item.style.transform = 'scale(1.1) rotate(10deg)';
+                            item.onmouseout = () => item.style.transform = 'scale(1)';
+                            sb.appendChild(item);
+                        }
+                        else {
+                            // Default: Main Body Section
+                            if (wrapper) {
+                                const secEl = document.createElement('section');
+                                secEl.id = sec.id;
+                                secEl.className = 'section-padding dynamic-section dynamic-element';
+                                secEl.style.cssText = `padding: 5rem 0; background: var(--bg-color); border-top: 1px solid var(--border-color); text-align: ${align};`;
+
+                                secEl.innerHTML = `
+                                    <div class="container">
+                                        <h2 class="section-title" style="color: var(--primary-color); justify-content: ${align === 'center' ? 'center' : (align === 'right' ? 'flex-end' : 'flex-start')};">
+                                            ${icon ? `<i class="${icon}" style="margin-right:0.5rem;"></i>` : ''}${title}
+                                        </h2>
+                                        <div class="custom-sec-content" style="color: var(--text-color); opacity: 0.9; line-height: 1.6; max-width: 800px; margin: ${align === 'center' ? '0 auto' : (align === 'right' ? '0 0 0 auto' : '0 auto 0 0')};">
+                                            ${content}
+                                        </div>
+                                    </div>
+                                `;
+                                wrapper.appendChild(secEl);
+                            }
+                        }
                     });
                 }
 
@@ -829,18 +876,49 @@
                             <h4 style="margin-bottom:1rem; display:flex; align-items:center; gap:0.5rem;"><i
                                     class="fas fa-plus-square"></i> Add New Dynamic Section</h4>
                             <div style="display:grid; gap:1rem;">
-                                <div>
-                                    <label style="display:block; font-size:0.8rem; margin-bottom:0.3rem;">Section
-                                        Title</label>
-                                    <input type="text" id="new-sec-title" placeholder="e.g. Special Offer"
-                                        style="width:100%; padding:0.6rem; background:var(--bg-color); border:1px solid var(--border-color); color:var(--text-color); border-radius:5px;">
+                                <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+                                    <div>
+                                        <label style="display:block; font-size:0.8rem; margin-bottom:0.3rem;">Element
+                                            Title</label>
+                                        <input type="text" id="new-sec-title" placeholder="e.g. Courses Tab"
+                                            style="width:100%; padding:0.6rem; background:var(--bg-color); border:1px solid var(--border-color); color:var(--text-color); border-radius:5px;">
+                                    </div>
+                                    <div>
+                                        <label
+                                            style="display:block; font-size:0.8rem; margin-bottom:0.3rem;">Placement</label>
+                                        <select id="new-sec-placement"
+                                            style="width:100%; padding:0.6rem; background:var(--bg-color); border:1px solid var(--border-color); color:var(--text-color); border-radius:5px;">
+                                            <option value="body">Main Page Section</option>
+                                            <option value="navbar">Top Navigation Bar</option>
+                                            <option value="sidebar-left">Sidebar (Left)</option>
+                                            <option value="sidebar-right">Sidebar (Right)</option>
+                                            <option value="footer">Footer Area</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+                                    <div>
+                                        <label
+                                            style="display:block; font-size:0.8rem; margin-bottom:0.3rem;">Alignment</label>
+                                        <select id="new-sec-align"
+                                            style="width:100%; padding:0.6rem; background:var(--bg-color); border:1px solid var(--border-color); color:var(--text-color); border-radius:5px;">
+                                            <option value="center">Center</option>
+                                            <option value="left">Left</option>
+                                            <option value="right">Right</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label style="display:block; font-size:0.8rem; margin-bottom:0.3rem;">Icon
+                                            (FontAwesome)</label>
+                                        <input type="text" id="new-sec-icon" placeholder="fas fa-star"
+                                            style="width:100%; padding:0.6rem; background:var(--bg-color); border:1px solid var(--border-color); color:var(--text-color); border-radius:5px;">
+                                    </div>
                                 </div>
                                 <div>
-                                    <label style="display:block; font-size:0.8rem; margin-bottom:0.3rem;">Content
-                                        (Text
-                                        or HTML)</label>
-                                    <textarea id="new-sec-content" rows="4"
-                                        placeholder="Type your section content here..."
+                                    <label style="display:block; font-size:0.8rem; margin-bottom:0.3rem;">Content (Text,
+                                        HTML, or Link URL if Navbar)</label>
+                                    <textarea id="new-sec-content" rows="3"
+                                        placeholder="Type content or paste URL here..."
                                         style="width:100%; padding:0.6rem; background:var(--bg-color); border:1px solid var(--border-color); color:var(--text-color); border-radius:5px;"></textarea>
                                 </div>
                                 <button onclick="addCustomSection(event)" class="btn-primary" style="width:100%;">
@@ -1848,8 +1926,15 @@
                     customSecs.forEach(sec => {
                         const customTitle = getValue(`adm-txt-${sec.id}-title`);
                         const customContent = getValue(`adm-txt-${sec.id}-content`);
+                        const customPlacement = getValue(`adm-txt-${sec.id}-placement`);
+                        const customAlign = getValue(`adm-txt-${sec.id}-align`);
+                        const customIcon = getValue(`adm-txt-${sec.id}-icon`);
+
                         if (customTitle) config.textOverrides[sec.id + '_title'] = customTitle;
                         if (customContent) config.textOverrides[sec.id + '_content'] = customContent;
+                        if (customPlacement) config.textOverrides[sec.id + '_placement'] = customPlacement;
+                        if (customAlign) config.textOverrides[sec.id + '_align'] = customAlign;
+                        if (customIcon) config.textOverrides[sec.id + '_icon'] = customIcon;
                     });
 
                     config.elementVisibility = {
@@ -2034,8 +2119,15 @@
                 try {
                     const titleInput = document.getElementById('new-sec-title');
                     const contentInput = document.getElementById('new-sec-content');
+                    const placementInput = document.getElementById('new-sec-placement');
+                    const alignInput = document.getElementById('new-sec-align');
+                    const iconInput = document.getElementById('new-sec-icon');
+
                     const title = titleInput.value.trim();
                     const content = contentInput.value.trim();
+                    const placement = placementInput ? placementInput.value : 'body';
+                    const align = alignInput ? alignInput.value : 'center';
+                    const icon = iconInput ? iconInput.value : '';
 
                     if (!title || !content) {
                         alert("Title and content are required.");
@@ -2057,12 +2149,22 @@
                     // 2. Create New ID and add to Lists
                     const newId = 'custom-sec-' + Date.now();
 
-                    // Add to raw list
-                    config.customSections.push({ id: newId, title, content });
+                    // Add to raw list with NEW metadata
+                    config.customSections.push({
+                        id: newId,
+                        title,
+                        content,
+                        placement,
+                        align,
+                        icon
+                    });
 
                     // Add to overrides to ensure consistency
                     config.textOverrides[newId + '_title'] = title;
                     config.textOverrides[newId + '_content'] = content;
+                    config.textOverrides[newId + '_placement'] = placement;
+                    config.textOverrides[newId + '_align'] = align;
+                    config.textOverrides[newId + '_icon'] = icon;
 
                     // Add to layout order (at the bottom)
                     if (!config.sectionsConfig.order.includes(newId)) {
@@ -2134,14 +2236,35 @@
                     // Text Edits
                     const titleVal = String((config.textOverrides && config.textOverrides[sec.id + '_title']) || sec.title || "");
                     const contentVal = String((config.textOverrides && config.textOverrides[sec.id + '_content']) || sec.content || "");
+                    const placementVal = String((config.textOverrides && config.textOverrides[sec.id + '_placement']) || sec.placement || "body");
+                    const alignVal = String((config.textOverrides && config.textOverrides[sec.id + '_align']) || sec.align || "center");
+                    const iconVal = String((config.textOverrides && config.textOverrides[sec.id + '_icon']) || sec.icon || "");
 
                     editHtml += `
                         <div style="margin-bottom:1.5rem; padding-bottom:1rem; border-bottom:1px dashed var(--border-color);">
-                            <label style="display:block; font-size:0.8rem; font-weight:bold; margin-bottom:0.5rem;">Section: ${sec.title || "New Section"}</label>
+                            <label style="display:block; font-size:0.8rem; font-weight:bold; margin-bottom:0.5rem;">Edit: ${sec.title || "New Element"}</label>
                             <div style="display:grid; gap:0.5rem;">
-                                <input type="text" id="adm-txt-${sec.id}-title" value="${titleVal.replace(/"/g, '&quot;')}" placeholder="Custom Title"
-                                    style="width:100%; padding:0.5rem; background:var(--bg-color); border:1px solid var(--border-color); color:var(--text-color); border-radius:4px;">
-                                <textarea id="adm-txt-${sec.id}-content" rows="3" placeholder="Custom Content (HTML allowed)"
+                                <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.5rem;">
+                                    <input type="text" id="adm-txt-${sec.id}-title" value="${titleVal.replace(/"/g, '&quot;')}" placeholder="Title"
+                                        style="width:100%; padding:0.5rem; background:var(--bg-color); border:1px solid var(--border-color); color:var(--text-color); border-radius:4px;">
+                                    <select id="adm-txt-${sec.id}-placement" style="width:100%; padding:0.5rem; background:var(--bg-color); border:1px solid var(--border-color); color:var(--text-color); border-radius:4px;">
+                                        <option value="body" ${placementVal === 'body' ? 'selected' : ''}>Main Body</option>
+                                        <option value="navbar" ${placementVal === 'navbar' ? 'selected' : ''}>Navbar</option>
+                                        <option value="sidebar-left" ${placementVal === 'sidebar-left' ? 'selected' : ''}>Left Sidebar</option>
+                                        <option value="sidebar-right" ${placementVal === 'sidebar-right' ? 'selected' : ''}>Right Sidebar</option>
+                                        <option value="footer" ${placementVal === 'footer' ? 'selected' : ''}>Footer</option>
+                                    </select>
+                                </div>
+                                <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.5rem;">
+                                    <select id="adm-txt-${sec.id}-align" style="width:100%; padding:0.5rem; background:var(--bg-color); border:1px solid var(--border-color); color:var(--text-color); border-radius:4px;">
+                                        <option value="left" ${alignVal === 'left' ? 'selected' : ''}>Left</option>
+                                        <option value="center" ${alignVal === 'center' ? 'selected' : ''}>Center</option>
+                                        <option value="right" ${alignVal === 'right' ? 'selected' : ''}>Right</option>
+                                    </select>
+                                    <input type="text" id="adm-txt-${sec.id}-icon" value="${iconVal}" placeholder="Icon (fas fa-star)"
+                                        style="width:100%; padding:0.5rem; background:var(--bg-color); border:1px solid var(--border-color); color:var(--text-color); border-radius:4px;">
+                                </div>
+                                <textarea id="adm-txt-${sec.id}-content" rows="2" placeholder="Content/URL"
                                     style="width:100%; padding:0.5rem; background:var(--bg-color); border:1px solid var(--border-color); color:var(--text-color); border-radius:4px;">${contentVal}</textarea>
                             </div>
                         </div>
