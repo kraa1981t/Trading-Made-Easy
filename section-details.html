@@ -361,6 +361,34 @@
                 }
             };
 
+            // --- CRITICAL FIX: Merge Admin Overrides into Translations ---
+            if (siteConfig && siteConfig.textOverrides) {
+                const txt = siteConfig.textOverrides;
+                const updateAll = (key, val) => {
+                    if (!val) return;
+                    Object.keys(translations).forEach(l => {
+                        if (translations[l]) translations[l][key] = val;
+                    });
+                };
+
+                // Section Titles
+                updateAll('bots_title', txt.bots_title);
+                updateAll('signals_title', txt.signals_title);
+                updateAll('services_title', txt.services_title);
+                updateAll('contact_title', txt.contact_title);
+                updateAll('pay_title', txt.pay_title); // If used
+
+                // Services content (Mapping badges to card titles for consistency)
+                updateAll('serv1_t', txt.serv_badge_1);
+                updateAll('serv2_t', txt.serv_badge_2);
+                updateAll('serv3_t', txt.serv_badge_3);
+
+                // Stats
+                updateAll('sig_stat1', txt.stat_success); // Mapping success rate to signal stat 1
+
+                console.log("Overrides applied to Section Details translations.");
+            }
+
             const langSelect = document.querySelector('.lang-select');
             const params = new URLSearchParams(window.location.search);
             const section = params.get('section') || 'bots';
@@ -372,6 +400,30 @@
                 } else {
                     document.documentElement.dir = 'ltr';
                     document.documentElement.lang = lang;
+                }
+
+                // --- FORCE APPLY OVERRIDES ON EVERY UPDATE ---
+                const cfg = JSON.parse(localStorage.getItem('tme_config_v2'));
+                if (cfg && cfg.textOverrides) {
+                    const txt = cfg.textOverrides;
+                    // Helper to safely override current lang
+                    const setT = (k, v) => { if (v && translations[lang]) translations[lang][k] = v; };
+
+                    // Apply all known text overrides
+                    setT('bots_title', txt.bots_title);
+                    setT('signals_title', txt.signals_title);
+                    setT('services_title', txt.services_title);
+                    setT('contact_title', txt.contact_title);
+
+                    // Services Badges -> Titles
+                    setT('serv1_t', txt.serv_badge_1);
+                    setT('serv2_t', txt.serv_badge_2);
+                    setT('serv3_t', txt.serv_badge_3);
+
+                    // Stats
+                    setT('sig_stat1', txt.stat_success);
+
+                    console.log('Text overrides re-applied for:', lang);
                 }
 
                 // Static Nav Translations
