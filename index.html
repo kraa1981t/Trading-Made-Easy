@@ -876,6 +876,10 @@
                                     style="width:100%; padding:0.5rem; background:var(--bg-color); border:1px solid var(--border-color); color:var(--text-color); border-radius:5px;">
                             </div>
                         </div>
+                        <button onclick="saveSettings(true);" class="btn-primary"
+                            style="width:100%; margin-top:2rem; font-weight:bold;">
+                            <i class="fas fa-save"></i> Save & Apply General Settings
+                        </button>
                     </div>
                 </div>
 
@@ -941,7 +945,8 @@
                                     </div>
                                 </div>
                                 <div>
-                                    <label style="display:block; font-size:0.8rem; margin-bottom:0.3rem;">Content (Text,
+                                    <label style="display:block; font-size:0.8rem; margin-bottom:0.3rem;">Content
+                                        (Text,
                                         HTML, or Link URL if Navbar)</label>
                                     <textarea id="new-sec-content" rows="3"
                                         placeholder="Type content or paste URL here..."
@@ -1018,6 +1023,10 @@
                                 <input type="hidden" id="adm-app-profile-base64">
                             </div>
                         </div>
+                        <button onclick="saveSettings(true);" class="btn-primary"
+                            style="width:100%; margin-top:2rem; font-weight:bold;">
+                            <i class="fas fa-magic"></i> Save & Apply Appearance
+                        </button>
                     </div>
                 </div>
 
@@ -1254,369 +1263,371 @@
                                     style="width:100%; padding:0.8rem; background:var(--bg-color); border:1px solid var(--border-color); color:var(--text-color); border-radius:5px;"
                                     placeholder="Welcome to our platform...&#10;New bot release coming soon..."></textarea>
                             </div>
+
                             <!-- NEW: Placeholder for Custom Sections Text Edits -->
                             <div id="custom-sections-text-edits"
                                 style="margin-top:2rem; border-top:1px solid var(--border-color); padding-top:1.5rem;">
                                 <!-- Populated by JS -->
                             </div>
                         </div>
+                        <button onclick="saveSettings(true);" class="btn-primary"
+                            style="width:100%; margin-top:2rem; font-weight:bold;">
+                            <i class="fas fa-save"></i> Save & Apply Content
+                        </button>
+                    </div>
 
-                        <!-- Products Manager -->
-                        <div class="admin-card"
-                            style="background:var(--card-bg); padding:2rem; border-radius:10px; margin-bottom:2rem; border:1px solid var(--border-color);">
+                    <!-- Products Manager -->
+                    <div class="admin-card"
+                        style="background:var(--card-bg); padding:2rem; border-radius:10px; margin-bottom:2rem; border:1px solid var(--border-color);">
+                        <div
+                            style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+                            <h3 style="margin:0;" data-i18n="adm_prod_manage_title">Manage Products (Bots)</h3>
+                            <button onclick="loadSettings()" class="btn"
+                                style="font-size:0.7rem; padding:0.3rem 0.6rem; opacity:0.7;"
+                                data-i18n="adm_prod_refresh"><i class="fas fa-sync"></i> Refresh List</button>
+                        </div>
+
+                        <div id="adm-prod-list" style="margin-bottom:1.5rem; display:grid; gap:0.5rem;">
+                            <!-- Filled via JS -->
+                        </div>
+
+                        <div id="db-inspector"
+                            style="margin-bottom:1.5rem; font-family:monospace; font-size:0.7rem; background:#000; padding:0.5rem; border-radius:5px; color:#0f0; max-height:150px; overflow:auto; display:none;">
+                            <!-- Debug JSON here -->
+                        </div>
+                        <button
+                            onclick="document.getElementById('db-inspector').style.display='block'; document.getElementById('db-inspector').textContent = JSON.stringify(currentProducts, null, 2);"
+                            class="btn" style="font-size:0.6rem; opacity:0.5;">Show Raw Data (Debug)</button>
+
+                        <div
+                            style="background:rgba(255,170,0,0.1); padding:1rem; border-radius:5px; border:1px dashed #ffaa00; margin-bottom:1.5rem;">
+                            <h4 style="color:#ffaa00; margin-top:0;"><i class="fas fa-exclamation-triangle"></i>
+                                Cloud
+                                Control</h4>
+                            <p style="font-size:0.8rem; opacity:0.8;">If you see products on the site but not
+                                here,
+                                use
+                                the button below to wipe the cloud database and start fresh.</p>
+                            <button onclick="clearCloudDatabase()" class="btn"
+                                style="background:#ff4d4d; color:white; border:none; padding:0.5rem 1rem; font-size:0.8rem; margin-top:0.5rem;">
+                                <i class="fas fa-eraser"></i> Force Wipe Cloud Database
+                            </button>
+                        </div>
+
+                        <div
+                            style="background:var(--bg-color); padding:1rem; border-radius:5px; border:1px solid var(--border-color);">
                             <div
-                                style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
-                                <h3 style="margin:0;" data-i18n="adm_prod_manage_title">Manage Products (Bots)</h3>
-                                <button onclick="loadSettings()" class="btn"
-                                    style="font-size:0.7rem; padding:0.3rem 0.6rem; opacity:0.7;"
-                                    data-i18n="adm_prod_refresh"><i class="fas fa-sync"></i> Refresh List</button>
+                                style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+                                <h4 style="margin:0;" id="adm-prod-form-title" data-i18n="adm_prod_add_title">
+                                    Add
+                                    New
+                                    Product</h4>
+                                <button id="cancel-edit-btn" onclick="cancelProductEdit()" class="btn"
+                                    style="display:none; background:#666; font-size:0.7rem; padding:0.2rem 0.5rem;">Cancel
+                                    Edit</button>
                             </div>
-
-                            <div id="adm-prod-list" style="margin-bottom:1.5rem; display:grid; gap:0.5rem;">
-                                <!-- Filled via JS -->
-                            </div>
-
-                            <div id="db-inspector"
-                                style="margin-bottom:1.5rem; font-family:monospace; font-size:0.7rem; background:#000; padding:0.5rem; border-radius:5px; color:#0f0; max-height:150px; overflow:auto; display:none;">
-                                <!-- Debug JSON here -->
-                            </div>
-                            <button
-                                onclick="document.getElementById('db-inspector').style.display='block'; document.getElementById('db-inspector').textContent = JSON.stringify(currentProducts, null, 2);"
-                                class="btn" style="font-size:0.6rem; opacity:0.5;">Show Raw Data (Debug)</button>
-
                             <div
-                                style="background:rgba(255,170,0,0.1); padding:1rem; border-radius:5px; border:1px dashed #ffaa00; margin-bottom:1.5rem;">
-                                <h4 style="color:#ffaa00; margin-top:0;"><i class="fas fa-exclamation-triangle"></i>
-                                    Cloud
-                                    Control</h4>
-                                <p style="font-size:0.8rem; opacity:0.8;">If you see products on the site but not
-                                    here,
-                                    use
-                                    the button below to wipe the cloud database and start fresh.</p>
-                                <button onclick="clearCloudDatabase()" class="btn"
-                                    style="background:#ff4d4d; color:white; border:none; padding:0.5rem 1rem; font-size:0.8rem; margin-top:0.5rem;">
-                                    <i class="fas fa-eraser"></i> Force Wipe Cloud Database
-                                </button>
+                                style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.8rem; background:rgba(0,208,156,0.1); padding:0.5rem; border-radius:5px; border:1px solid var(--primary-color);">
+                                <label style="font-size:0.85rem; font-weight:600; cursor:pointer;"
+                                    data-i18n="adm_prod_type_free">Free Product?</label>
+                                <input type="checkbox" id="new-prod-is-free" onchange="togglePriceField(this.checked)">
                             </div>
-
-                            <div
-                                style="background:var(--bg-color); padding:1rem; border-radius:5px; border:1px solid var(--border-color);">
-                                <div
-                                    style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
-                                    <h4 style="margin:0;" id="adm-prod-form-title" data-i18n="adm_prod_add_title">
-                                        Add
-                                        New
-                                        Product</h4>
-                                    <button id="cancel-edit-btn" onclick="cancelProductEdit()" class="btn"
-                                        style="display:none; background:#666; font-size:0.7rem; padding:0.2rem 0.5rem;">Cancel
-                                        Edit</button>
+                            <input type="text" id="new-prod-title" placeholder="Product Title"
+                                data-i18n-placeholder="adm_prod_title_placeholder"
+                                style="width:100%; margin-bottom:0.5rem; padding:0.5rem; background:var(--card-bg); color:var(--text-color); border:1px solid var(--border-color);">
+                            <div style="display:flex; gap:0.5rem; margin-bottom:0.5rem; align-items:center;">
+                                <div id="price-field-wrapper" style="width:30%;">
+                                    <input type="text" id="new-prod-price" placeholder="Price ($)"
+                                        data-i18n-placeholder="adm_prod_price_placeholder"
+                                        style="width:100%; padding:0.5rem; background:var(--card-bg); color:var(--text-color); border:1px solid var(--border-color);">
                                 </div>
-                                <div
-                                    style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.8rem; background:rgba(0,208,156,0.1); padding:0.5rem; border-radius:5px; border:1px solid var(--primary-color);">
-                                    <label style="font-size:0.85rem; font-weight:600; cursor:pointer;"
-                                        data-i18n="adm_prod_type_free">Free Product?</label>
-                                    <input type="checkbox" id="new-prod-is-free"
-                                        onchange="togglePriceField(this.checked)">
-                                </div>
-                                <input type="text" id="new-prod-title" placeholder="Product Title"
-                                    data-i18n-placeholder="adm_prod_title_placeholder"
-                                    style="width:100%; margin-bottom:0.5rem; padding:0.5rem; background:var(--card-bg); color:var(--text-color); border:1px solid var(--border-color);">
-                                <div style="display:flex; gap:0.5rem; margin-bottom:0.5rem; align-items:center;">
-                                    <div id="price-field-wrapper" style="width:30%;">
-                                        <input type="text" id="new-prod-price" placeholder="Price ($)"
-                                            data-i18n-placeholder="adm_prod_price_placeholder"
-                                            style="width:100%; padding:0.5rem; background:var(--card-bg); color:var(--text-color); border:1px solid var(--border-color);">
-                                    </div>
-                                    <div style="width:70%; display:flex; gap:0.5rem; align-items:center;">
-                                        <input type="file" id="new-prod-img-file" accept="image/*" style="display:none;"
-                                            onchange="previewImage(this)">
-                                        <button onclick="document.getElementById('new-prod-img-file').click()"
-                                            class="btn"
-                                            style="flex:1; padding:0.5rem; font-size:0.8rem; background:var(--bg-color); border:1px solid var(--border-color); color:var(--text-color);"
-                                            data-i18n="adm_prod_img_btn">
-                                            <i class="fas fa-image"></i> Choose Image
-                                        </button>
-                                        <div id="img-preview-box"
-                                            style="width:40px; height:40px; border:1px solid var(--border-color); border-radius:5px; background:center/cover no-repeat; display:none;">
-                                        </div>
-                                    </div>
-                                    <input type="hidden" id="new-prod-img-base64">
-                                </div>
-                                <textarea id="new-prod-desc" placeholder="Short Description"
-                                    data-i18n-placeholder="adm_prod_desc_placeholder"
-                                    style="width:100%; margin-bottom:0.5rem; padding:0.5rem; background:var(--card-bg); color:var(--text-color); border:1px solid var(--border-color);"
-                                    rows="2"></textarea>
-
-                                <!-- Downloadable File Field -->
-                                <div
-                                    style="background:rgba(0,0,0,0.1); padding:0.8rem; border-radius:5px; margin-bottom:1rem; border:1px dashed var(--border-color);">
-                                    <label
-                                        style="display:block; font-size:0.8rem; margin-bottom:0.5rem; font-weight:600;"
-                                        data-i18n="adm_file_label"><i class="fas fa-file-archive"></i> Product
-                                        Download
-                                        File
-                                        (.zip, .rar,
-                                        etc.)</label>
-                                    <div style="display:flex; gap:0.5rem; align-items:center;">
-                                        <input type="file" id="new-prod-file-input" style="display:none;"
-                                            onchange="handleProductFile(this)">
-                                        <button onclick="document.getElementById('new-prod-file-input').click()"
-                                            class="btn"
-                                            style="padding:0.5rem; font-size:0.8rem; border:1px solid var(--border-color); background:var(--bg-color); color:var(--text-color);"
-                                            data-i18n="adm_file_btn">
-                                            <i class="fas fa-upload"></i> Choose/Update File
-                                        </button>
-                                        <button id="remove-file-btn" onclick="removeProductFile()" class="btn"
-                                            style="padding:0.5rem; font-size:0.8rem; border:1px solid #ff4d4d; background:rgba(255,77,77,0.1); color:#ff4d4d; display:none;"
-                                            data-i18n="adm_file_remove">
-                                            <i class="fas fa-trash"></i> Remove File
-                                        </button>
-                                        <span id="file-name-display" style="font-size:0.8rem; opacity:0.7;"
-                                            data-i18n="adm_file_none">No file
-                                            selected</span>
-                                        <input type="hidden" id="new-prod-file-data">
-                                        <input type="hidden" id="new-prod-file-name">
+                                <div style="width:70%; display:flex; gap:0.5rem; align-items:center;">
+                                    <input type="file" id="new-prod-img-file" accept="image/*" style="display:none;"
+                                        onchange="previewImage(this)">
+                                    <button onclick="document.getElementById('new-prod-img-file').click()" class="btn"
+                                        style="flex:1; padding:0.5rem; font-size:0.8rem; background:var(--bg-color); border:1px solid var(--border-color); color:var(--text-color);"
+                                        data-i18n="adm_prod_img_btn">
+                                        <i class="fas fa-image"></i> Choose Image
+                                    </button>
+                                    <div id="img-preview-box"
+                                        style="width:40px; height:40px; border:1px solid var(--border-color); border-radius:5px; background:center/cover no-repeat; display:none;">
                                     </div>
                                 </div>
-
-                                <button id="add-prod-btn" onclick="addNewProduct()" class="btn-primary"
-                                    style="width:100%; padding:0.8rem; font-size:0.9rem; font-weight:bold; margin-top:0.5rem;"
-                                    data-i18n="adm_prod_add_btn">
-                                    <i class="fas fa-plus-circle"></i> Add Product to Website
-                                </button>
+                                <input type="hidden" id="new-prod-img-base64">
                             </div>
+                            <textarea id="new-prod-desc" placeholder="Short Description"
+                                data-i18n-placeholder="adm_prod_desc_placeholder"
+                                style="width:100%; margin-bottom:0.5rem; padding:0.5rem; background:var(--card-bg); color:var(--text-color); border:1px solid var(--border-color);"
+                                rows="2"></textarea>
+
+                            <!-- Downloadable File Field -->
+                            <div
+                                style="background:rgba(0,0,0,0.1); padding:0.8rem; border-radius:5px; margin-bottom:1rem; border:1px dashed var(--border-color);">
+                                <label style="display:block; font-size:0.8rem; margin-bottom:0.5rem; font-weight:600;"
+                                    data-i18n="adm_file_label"><i class="fas fa-file-archive"></i> Product
+                                    Download
+                                    File
+                                    (.zip, .rar,
+                                    etc.)</label>
+                                <div style="display:flex; gap:0.5rem; align-items:center;">
+                                    <input type="file" id="new-prod-file-input" style="display:none;"
+                                        onchange="handleProductFile(this)">
+                                    <button onclick="document.getElementById('new-prod-file-input').click()" class="btn"
+                                        style="padding:0.5rem; font-size:0.8rem; border:1px solid var(--border-color); background:var(--bg-color); color:var(--text-color);"
+                                        data-i18n="adm_file_btn">
+                                        <i class="fas fa-upload"></i> Choose/Update File
+                                    </button>
+                                    <button id="remove-file-btn" onclick="removeProductFile()" class="btn"
+                                        style="padding:0.5rem; font-size:0.8rem; border:1px solid #ff4d4d; background:rgba(255,77,77,0.1); color:#ff4d4d; display:none;"
+                                        data-i18n="adm_file_remove">
+                                        <i class="fas fa-trash"></i> Remove File
+                                    </button>
+                                    <span id="file-name-display" style="font-size:0.8rem; opacity:0.7;"
+                                        data-i18n="adm_file_none">No file
+                                        selected</span>
+                                    <input type="hidden" id="new-prod-file-data">
+                                    <input type="hidden" id="new-prod-file-name">
+                                </div>
+                            </div>
+
+                            <button id="add-prod-btn" onclick="addNewProduct()" class="btn-primary"
+                                style="width:100%; padding:0.8rem; font-size:0.9rem; font-weight:bold; margin-top:0.5rem;"
+                                data-i18n="adm_prod_add_btn">
+                                <i class="fas fa-plus-circle"></i> Add Product to Website
+                            </button>
                         </div>
                     </div>
-
-                    <!-- Global Save -->
-                    <div
-                        style="position:sticky; bottom:1rem; background:var(--card-bg); padding:1rem; border-top:1px solid var(--border-color); border-radius:10px; box-shadow:0 -5px 20px rgba(0,0,0,0.2); display:flex; justify-content:flex-end;">
-                        <button id="final-save-btn" onclick="saveSettings(true);" class="btn-primary"
-                            style="width:200px;" data-i18n="adm_save_all">Save All Changes</button>
-                    </div>
-
                 </div>
+
+                <!-- Global Save -->
+                <div
+                    style="position:sticky; bottom:1rem; background:var(--card-bg); padding:1rem; border-top:1px solid var(--border-color); border-radius:10px; box-shadow:0 -5px 20px rgba(0,0,0,0.2); display:flex; justify-content:flex-end;">
+                    <button id="final-save-btn" onclick="saveSettings(true);" class="btn-primary" style="width:200px;"
+                        data-i18n="adm_save_all">Save All Changes</button>
+                </div>
+
             </div>
         </div>
+    </div>
 
-        <!-- Scripts -->
-        <script src="script.js"></script>
-        <script>
-            // --- Admin Logic ---
+    <!-- Scripts -->
+    <script src="script.js"></script>
+    <script>
+        // --- Admin Logic ---
 
-            // Toggle Admin Quick Access Section Visibility
-            function updateAdminUI() {
-                const adminSection = document.getElementById('admin-quick-access');
-                if (adminSection) {
-                    const isLoggedIn = localStorage.getItem('adminLoggedIn') === 'true'; // Persistent login
-                    adminSection.style.display = isLoggedIn ? 'block' : 'none';
-                }
+        // Toggle Admin Quick Access Section Visibility
+        function updateAdminUI() {
+            const adminSection = document.getElementById('admin-quick-access');
+            if (adminSection) {
+                const isLoggedIn = localStorage.getItem('adminLoggedIn') === 'true'; // Persistent login
+                adminSection.style.display = isLoggedIn ? 'block' : 'none';
             }
+        }
 
-            // Trigger (Simplified to 1 click as requested)
-            function triggerAdmin() {
-                openAdmin();
+        // Trigger (Simplified to 1 click as requested)
+        function triggerAdmin() {
+            openAdmin();
+        }
+
+        // Open/Close
+        function openAdmin() {
+            document.getElementById('admin-overlay').style.display = 'block';
+            document.body.style.overflow = 'hidden';
+
+            // Re-load settings to ensure products are ready
+            loadSettings();
+
+            // Check if already logged in
+            if (localStorage.getItem('adminLoggedIn') === 'true') {
+                updateAdminUI();
+                document.getElementById('admin-auth').style.display = 'none';
+                document.getElementById('admin-controls').style.display = 'block';
+                // DEFAULT TO CONTENT TAB as requested to show products immediately
+                switchTab('content');
             }
+        }
 
-            // Open/Close
-            function openAdmin() {
-                document.getElementById('admin-overlay').style.display = 'block';
-                document.body.style.overflow = 'hidden';
+        function closeAdmin() {
+            document.getElementById('admin-overlay').style.display = 'none';
+            document.body.style.overflow = 'auto';
+            location.reload(); // Reload to apply changes
+        }
 
-                // Re-load settings to ensure products are ready
+        // Auth
+        function verifyAdmin() {
+            const pass = document.getElementById('admin-pass-input').value;
+            if (pass === 'admin123') {
+                localStorage.setItem('adminLoggedIn', 'true'); // Persist globally
+                updateAdminUI();
+                document.getElementById('admin-auth').style.display = 'none';
+                document.getElementById('admin-controls').style.display = 'block';
                 loadSettings();
-
-                // Check if already logged in
-                if (localStorage.getItem('adminLoggedIn') === 'true') {
-                    updateAdminUI();
-                    document.getElementById('admin-auth').style.display = 'none';
-                    document.getElementById('admin-controls').style.display = 'block';
-                    // DEFAULT TO CONTENT TAB as requested to show products immediately
-                    switchTab('content');
-                }
+            } else {
+                document.getElementById('auth-error').style.display = 'block';
             }
+        }
 
-            function closeAdmin() {
-                document.getElementById('admin-overlay').style.display = 'none';
-                document.body.style.overflow = 'auto';
-                location.reload(); // Reload to apply changes
+        function logoutAdmin() {
+            localStorage.removeItem('adminLoggedIn');
+            location.reload();
+        }
+
+        // Run UI check on load
+        document.addEventListener('DOMContentLoaded', updateAdminUI);
+
+        // Settings Logic - V2
+        // CONFIG_KEY is already defined globally at the top
+        let editingIndex = -1;
+        console.log('Admin ready to manage cloud products');
+
+        function switchTab(tab) {
+            ['general', 'appearance', 'content', 'sections'].forEach(t => {
+                const contentDiv = document.getElementById('tab-' + t);
+                const btn = document.getElementById('tab-btn-' + t);
+
+                if (contentDiv) contentDiv.style.display = (t === tab) ? 'block' : 'none';
+                if (btn) btn.style.opacity = (t === tab) ? '1' : '0.6';
+            });
+
+            if (tab === 'content') renderProductList();
+            if (tab === 'sections') {
+                if (typeof refreshSectionList === 'function') refreshSectionList();
+                if (typeof refreshCustomSectionsList === 'function') refreshCustomSectionsList();
             }
+        }
 
-            // Auth
-            function verifyAdmin() {
-                const pass = document.getElementById('admin-pass-input').value;
-                if (pass === 'admin123') {
-                    localStorage.setItem('adminLoggedIn', 'true'); // Persist globally
-                    updateAdminUI();
-                    document.getElementById('admin-auth').style.display = 'none';
-                    document.getElementById('admin-controls').style.display = 'block';
-                    loadSettings();
-                } else {
-                    document.getElementById('auth-error').style.display = 'block';
-                }
-            }
+        function loadSettings() {
+            try {
+                const config = JSON.parse(localStorage.getItem(CONFIG_KEY)) || { visibility: {}, textOverrides: {}, appearance: {}, products: [] };
+                console.log('--- loadSettings Started ---', config);
 
-            function logoutAdmin() {
-                localStorage.removeItem('adminLoggedIn');
-                location.reload();
-            }
+                const setVal = (id, val) => {
+                    const el = document.getElementById(id);
+                    if (el) el.value = val || '';
+                };
+                const setCheck = (id, val) => {
+                    const el = document.getElementById(id);
+                    if (el) el.checked = val !== false;
+                };
 
-            // Run UI check on load
-            document.addEventListener('DOMContentLoaded', updateAdminUI);
+                // Visibility
+                setCheck('adm-vis-bots', config.visibility.bots);
+                setCheck('adm-vis-signals', config.visibility.signals);
+                setCheck('adm-vis-services', config.visibility.services);
+                setCheck('adm-vis-about', config.visibility.about);
 
-            // Settings Logic - V2
-            // CONFIG_KEY is already defined globally at the top
-            let editingIndex = -1;
-            console.log('Admin ready to manage cloud products');
+                // Appearance
+                const app = config.appearance || {};
+                setVal('adm-app-title', app.siteTitle || "Trading Made Easy");
+                setVal('adm-app-color', app.primaryColor || "#00ff88");
+                setVal('adm-app-radius', app.borderRadius || "10px");
 
-            function switchTab(tab) {
-                ['general', 'appearance', 'content', 'sections'].forEach(t => {
-                    const contentDiv = document.getElementById('tab-' + t);
-                    const btn = document.getElementById('tab-btn-' + t);
+                // Texts
+                const txt = config.textOverrides || {};
+                setVal('adm-txt-hero', txt.hero_title || "Precision Trading. Automated.");
+                setVal('adm-txt-hero-desc', txt.hero_desc || "A platform dedicated to...");
+                setVal('adm-txt-about', txt.about_bio || "");
+                setVal('adm-txt-ticker', txt.ticker_msgs || "");
 
-                    if (contentDiv) contentDiv.style.display = (t === tab) ? 'block' : 'none';
-                    if (btn) btn.style.opacity = (t === tab) ? '1' : '0.6';
-                });
+                // New Section Titles
+                setVal('adm-txt-bots-title', txt.bots_title || "Premium MT5 Bots");
+                setVal('adm-txt-signals-title', txt.signals_title || "Daily Trading Signals");
+                setVal('adm-txt-services-title', txt.services_title || "Services Offered");
+                setVal('adm-txt-stats-title', txt.stats_title || "Platform Activity");
+                setVal('adm-txt-pay-title', txt.pay_title || "Secure Payments");
+                setVal('adm-txt-contact-title', txt.contact_title || "Get In Touch");
 
-                if (tab === 'content') renderProductList();
-                if (tab === 'sections') {
-                    if (typeof refreshSectionList === 'function') refreshSectionList();
-                    if (typeof refreshCustomSectionsList === 'function') refreshCustomSectionsList();
-                }
-            }
+                // Detailed Overrides Load
+                setVal('adm-txt-about-role', txt.about_role || "");
+                setVal('adm-nav-home', txt.nav_home || "Home");
+                setVal('adm-nav-bots', txt.nav_bots || "MT5 Bots");
+                setVal('adm-nav-signals', txt.nav_signals || "Signals");
+                setVal('adm-nav-services', txt.nav_services || "Services");
+                setVal('adm-nav-about', txt.nav_about || "About");
+                setVal('adm-nav-contact', txt.nav_contact || "Contact");
+                setVal('adm-txt-offer-text', txt.latest_offer_text || "");
+                setVal('adm-sig-feat1', txt.sig_feat1 || "");
+                setVal('adm-sig-feat2', txt.sig_feat2 || "");
+                setVal('adm-sig-feat3', txt.sig_feat3 || "");
+                setVal('adm-stat-success', txt.stat_success || "");
 
-            function loadSettings() {
-                try {
-                    const config = JSON.parse(localStorage.getItem(CONFIG_KEY)) || { visibility: {}, textOverrides: {}, appearance: {}, products: [] };
-                    console.log('--- loadSettings Started ---', config);
+                // Element Visibility
+                const ev = config.elementVisibility || {};
+                setCheck('adm-vis-offer', ev.hero_offer !== false); // default true
+                setCheck('adm-vis-sig1', ev.sig_feat1 !== false);
+                setCheck('adm-vis-sig2', ev.sig_feat2 !== false);
+                setCheck('adm-vis-sig3', ev.sig_feat3 !== false);
+                setCheck('adm-vis-stat1', ev.stat_success !== false);
 
-                    const setVal = (id, val) => {
-                        const el = document.getElementById(id);
-                        if (el) el.value = val || '';
-                    };
-                    const setCheck = (id, val) => {
-                        const el = document.getElementById(id);
-                        if (el) el.checked = val !== false;
-                    };
+                setCheck('adm-vis-nav-home', ev.nav_home !== false);
+                setCheck('adm-vis-nav-bots', ev.nav_bots !== false);
+                setCheck('adm-vis-nav-signals', ev.nav_signals !== false);
+                setCheck('adm-vis-nav-services', ev.nav_services !== false);
+                setCheck('adm-vis-nav-about', ev.nav_about !== false);
+                setCheck('adm-vis-nav-contact', ev.nav_contact !== false);
 
-                    // Visibility
-                    setCheck('adm-vis-bots', config.visibility.bots);
-                    setCheck('adm-vis-signals', config.visibility.signals);
-                    setCheck('adm-vis-services', config.visibility.services);
-                    setCheck('adm-vis-about', config.visibility.about);
+                setCheck('adm-vis-nav-about', ev.nav_about !== false);
+                setCheck('adm-vis-nav-contact', ev.nav_contact !== false);
 
-                    // Appearance
-                    const app = config.appearance || {};
-                    setVal('adm-app-title', app.siteTitle || "Trading Made Easy");
-                    setVal('adm-app-color', app.primaryColor || "#00ff88");
-                    setVal('adm-app-radius', app.borderRadius || "10px");
+                // Specific Text Overrides
+                setVal('adm-txt-hero-suffix', txt.hero_suffix || "Automated.");
+                setVal('adm-txt-bots-sub', txt.bots_subtitle || "Discover our range of high-precision MT5 Expert Advisors.");
+                setVal('adm-txt-serv-1', txt.serv_badge_1 || "Custom Trading Bot Development");
+                setVal('adm-txt-serv-2', txt.serv_badge_2 || "");
+                setVal('adm-txt-serv-3', txt.serv_badge_3 || "");
+                setVal('adm-txt-serv-4', txt.serv_badge_4 || "");
 
-                    // Texts
-                    const txt = config.textOverrides || {};
-                    setVal('adm-txt-hero', txt.hero_title || "Precision Trading. Automated.");
-                    setVal('adm-txt-hero-desc', txt.hero_desc || "A platform dedicated to...");
-                    setVal('adm-txt-about', txt.about_bio || "");
-                    setVal('adm-txt-ticker', txt.ticker_msgs || "");
+                setVal('adm-txt-sig-brief-title', txt.sig_brief_title || "Today's Audio Briefing");
+                setVal('adm-txt-sig-brief-desc', txt.sig_brief_desc || "Daily market outlook...");
 
-                    // New Section Titles
-                    setVal('adm-txt-bots-title', txt.bots_title || "Premium MT5 Bots");
-                    setVal('adm-txt-signals-title', txt.signals_title || "Daily Trading Signals");
-                    setVal('adm-txt-services-title', txt.services_title || "Services Offered");
-                    setVal('adm-txt-stats-title', txt.stats_title || "Platform Activity");
-                    setVal('adm-txt-pay-title', txt.pay_title || "Secure Payments");
-                    setVal('adm-txt-contact-title', txt.contact_title || "Get In Touch");
+                // Links
+                const lnks = config.links || {};
+                setVal('adm-link-fb', lnks.facebook || "");
+                setVal('adm-link-pin', lnks.pinterest || "");
+                setVal('adm-link-email', lnks.email || "");
 
-                    // Detailed Overrides Load
-                    setVal('adm-txt-about-role', txt.about_role || "");
-                    setVal('adm-nav-home', txt.nav_home || "Home");
-                    setVal('adm-nav-bots', txt.nav_bots || "MT5 Bots");
-                    setVal('adm-nav-signals', txt.nav_signals || "Signals");
-                    setVal('adm-nav-services', txt.nav_services || "Services");
-                    setVal('adm-nav-about', txt.nav_about || "About");
-                    setVal('adm-nav-contact', txt.nav_contact || "Contact");
-                    setVal('adm-txt-offer-text', txt.latest_offer_text || "");
-                    setVal('adm-sig-feat1', txt.sig_feat1 || "");
-                    setVal('adm-sig-feat2', txt.sig_feat2 || "");
-                    setVal('adm-sig-feat3', txt.sig_feat3 || "");
-                    setVal('adm-stat-success', txt.stat_success || "");
+                // Wallets
+                const wall = config.wallets || {};
+                setVal('adm-wallet-usdt', wall.usdt || "TR7NHqjeKQxGTCi8q8zy4pL8otSzgjLj6t");
+                setVal('adm-wallet-ltc', wall.ltc || "LM2nyQpYFp1e8oM7i8E4qN1D4vK5sR1zT9");
+                setVal('adm-wallet-payeer', wall.payeer || "P1000200030");
 
-                    // Element Visibility
-                    const ev = config.elementVisibility || {};
-                    setCheck('adm-vis-offer', ev.hero_offer !== false); // default true
-                    setCheck('adm-vis-sig1', ev.sig_feat1 !== false);
-                    setCheck('adm-vis-sig2', ev.sig_feat2 !== false);
-                    setCheck('adm-vis-sig3', ev.sig_feat3 !== false);
-                    setCheck('adm-vis-stat1', ev.stat_success !== false);
-
-                    setCheck('adm-vis-nav-home', ev.nav_home !== false);
-                    setCheck('adm-vis-nav-bots', ev.nav_bots !== false);
-                    setCheck('adm-vis-nav-signals', ev.nav_signals !== false);
-                    setCheck('adm-vis-nav-services', ev.nav_services !== false);
-                    setCheck('adm-vis-nav-about', ev.nav_about !== false);
-                    setCheck('adm-vis-nav-contact', ev.nav_contact !== false);
-
-                    setCheck('adm-vis-nav-about', ev.nav_about !== false);
-                    setCheck('adm-vis-nav-contact', ev.nav_contact !== false);
-
-                    // Specific Text Overrides
-                    setVal('adm-txt-hero-suffix', txt.hero_suffix || "Automated.");
-                    setVal('adm-txt-bots-sub', txt.bots_subtitle || "Discover our range of high-precision MT5 Expert Advisors.");
-                    setVal('adm-txt-serv-1', txt.serv_badge_1 || "Custom Trading Bot Development");
-                    setVal('adm-txt-serv-2', txt.serv_badge_2 || "");
-                    setVal('adm-txt-serv-3', txt.serv_badge_3 || "");
-                    setVal('adm-txt-serv-4', txt.serv_badge_4 || "");
-
-                    setVal('adm-txt-sig-brief-title', txt.sig_brief_title || "Today's Audio Briefing");
-                    setVal('adm-txt-sig-brief-desc', txt.sig_brief_desc || "Daily market outlook...");
-
-                    // Links
-                    const lnks = config.links || {};
-                    setVal('adm-link-fb', lnks.facebook || "");
-                    setVal('adm-link-pin', lnks.pinterest || "");
-                    setVal('adm-link-email', lnks.email || "");
-
-                    // Wallets
-                    const wall = config.wallets || {};
-                    setVal('adm-wallet-usdt', wall.usdt || "TR7NHqjeKQxGTCi8q8zy4pL8otSzgjLj6t");
-                    setVal('adm-wallet-ltc', wall.ltc || "LM2nyQpYFp1e8oM7i8E4qN1D4vK5sR1zT9");
-                    setVal('adm-wallet-payeer', wall.payeer || "P1000200030");
-
-                    // SEO & Profile
-                    setVal('adm-app-meta', app.metaDesc || "");
-                    setVal('adm-app-profile-base64', app.profileBase64 || "");
-                    const profPreview = document.getElementById('profile-img-preview');
-                    if (profPreview && app.profileBase64) {
-                        profPreview.style.backgroundImage = `url(${app.profileBase64})`;
-                        profPreview.style.display = 'block';
-                    }
-
-                    // Products - Managed exclusively via Firebase to prevent local storage quota issues.
-                    renderProductList();
-
-                    // Refresh Dynamic Sections UI
-                    if (typeof refreshCustomSectionsList === 'function') refreshCustomSectionsList();
-                } catch (err) {
-                    console.error('CRITICAL: loadSettings failed:', err);
-                }
-            }
-
-            function renderProductList() {
-                const list = document.getElementById('adm-prod-list');
-                list.innerHTML = '';
-
-                // Re-sync with memory to ensure we have latest
-                console.log('Rendering list with', currentProducts.length, 'products');
-
-                if (currentProducts.length === 0) {
-                    list.innerHTML = '<p style="text-align:center; opacity:0.5; padding:1rem; border:1px dashed var(--border-color);">No custom products. Using defaults.</p>';
+                // SEO & Profile
+                setVal('adm-app-meta', app.metaDesc || "");
+                setVal('adm-app-profile-base64', app.profileBase64 || "");
+                const profPreview = document.getElementById('profile-img-preview');
+                if (profPreview && app.profileBase64) {
+                    profPreview.style.backgroundImage = `url(${app.profileBase64})`;
+                    profPreview.style.display = 'block';
                 }
 
-                currentProducts.forEach((p, idx) => {
-                    const imgUrl = (p.image && p.image.length > 50) ? p.image : (p.image || 'images/bot1.png');
-                    const div = document.createElement('div');
-                    div.className = 'admin-product-item';
-                    div.style.cssText = 'background:var(--bg-color); padding:0.8rem; border-radius:8px; display:flex; justify-content:space-between; align-items:center; border:1px solid var(--border-color); margin-bottom:0.5rem;';
-                    div.innerHTML = `
+                // Products - Managed exclusively via Firebase to prevent local storage quota issues.
+                renderProductList();
+
+                // Refresh Dynamic Sections UI
+                if (typeof refreshCustomSectionsList === 'function') refreshCustomSectionsList();
+            } catch (err) {
+                console.error('CRITICAL: loadSettings failed:', err);
+            }
+        }
+
+        function renderProductList() {
+            const list = document.getElementById('adm-prod-list');
+            list.innerHTML = '';
+
+            // Re-sync with memory to ensure we have latest
+            console.log('Rendering list with', currentProducts.length, 'products');
+
+            if (currentProducts.length === 0) {
+                list.innerHTML = '<p style="text-align:center; opacity:0.5; padding:1rem; border:1px dashed var(--border-color);">No custom products. Using defaults.</p>';
+            }
+
+            currentProducts.forEach((p, idx) => {
+                const imgUrl = (p.image && p.image.length > 50) ? p.image : (p.image || 'images/bot1.png');
+                const div = document.createElement('div');
+                div.className = 'admin-product-item';
+                div.style.cssText = 'background:var(--bg-color); padding:0.8rem; border-radius:8px; display:flex; justify-content:space-between; align-items:center; border:1px solid var(--border-color); margin-bottom:0.5rem;';
+                div.innerHTML = `
                     <div style="display:flex; align-items:center; gap:1rem;">
                         <img src="${imgUrl}" style="width:40px; height:40px; object-fit:cover; border-radius:5px; border:1px solid var(--border-color);">
                         <div>
@@ -1632,444 +1643,444 @@
                         <button onclick="removeProduct(${idx})" style="color:#ff4d4d; background:none; border:none; cursor:pointer; padding:0.5rem;"><i class="fas fa-trash"></i></button>
                     </div>
                 `;
-                    list.appendChild(div);
-                });
+                list.appendChild(div);
+            });
 
-                // Update a counter if it exists (good for UX)
-                const saveBtn = document.querySelector('button[onclick*="saveSettings"]');
-                if (saveBtn) saveBtn.innerHTML = `Save All Changes (${currentProducts.length} Products)`;
+            // Update a counter if it exists (good for UX)
+            const saveBtn = document.querySelector('button[onclick*="saveSettings"]');
+            if (saveBtn) saveBtn.innerHTML = `Save All Changes (${currentProducts.length} Products)`;
+        }
+
+        function previewImage(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    const base64 = e.target.result;
+                    document.getElementById('new-prod-img-base64').value = base64;
+                    const preview = document.getElementById('img-preview-box');
+                    preview.style.backgroundImage = `url(${base64})`;
+                    preview.style.display = 'block';
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function previewProfileImg(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    const base64 = e.target.result;
+                    document.getElementById('adm-app-profile-base64').value = base64;
+                    const preview = document.getElementById('profile-img-preview');
+                    preview.style.backgroundImage = `url(${base64})`;
+                    preview.style.display = 'block';
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function handleProductFile(input) {
+            if (input.files && input.files[0]) {
+                const file = input.files[0];
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    document.getElementById('new-prod-file-data').value = e.target.result;
+                    document.getElementById('new-prod-file-name').value = file.name;
+                    document.getElementById('file-name-display').textContent = file.name;
+                    document.getElementById('file-name-display').style.color = 'var(--primary-color)';
+                    document.getElementById('remove-file-btn').style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function removeProductFile() {
+            if (confirm("Are you sure you want to remove this file?")) {
+                document.getElementById('new-prod-file-data').value = '';
+                document.getElementById('new-prod-file-name').value = '';
+                document.getElementById('file-name-display').textContent = 'No file selected';
+                document.getElementById('file-name-display').style.color = 'inherit';
+                document.getElementById('remove-file-btn').style.display = 'none';
+                document.getElementById('new-prod-file-input').value = ''; // Reset file input
+            }
+        }
+
+        function cancelProductEdit() {
+            editingIndex = -1;
+            const titleEl = document.getElementById('adm-prod-form-title');
+            if (titleEl) titleEl.textContent = 'Add New Product';
+
+            const btn = document.getElementById('add-prod-btn');
+            if (btn) {
+                btn.innerHTML = '<i class="fas fa-plus-circle"></i> Add Product to Website';
+                btn.style.background = 'var(--primary-color)';
             }
 
-            function previewImage(input) {
-                if (input.files && input.files[0]) {
-                    const reader = new FileReader();
-                    reader.onload = function (e) {
-                        const base64 = e.target.result;
-                        document.getElementById('new-prod-img-base64').value = base64;
-                        const preview = document.getElementById('img-preview-box');
-                        preview.style.backgroundImage = `url(${base64})`;
-                        preview.style.display = 'block';
-                    };
-                    reader.readAsDataURL(input.files[0]);
-                }
+            document.getElementById('cancel-edit-btn').style.display = 'none';
+
+            // Clear fields
+            document.getElementById('new-prod-title').value = '';
+            document.getElementById('new-prod-price').value = '';
+            document.getElementById('new-prod-desc').value = '';
+            document.getElementById('new-prod-is-free').checked = false;
+            togglePriceField(false);
+            document.getElementById('new-prod-img-base64').value = '';
+            document.getElementById('img-preview-box').style.display = 'none';
+            document.getElementById('new-prod-file-data').value = '';
+            document.getElementById('new-prod-file-name').value = '';
+            document.getElementById('file-name-display').textContent = 'No file selected';
+            document.getElementById('remove-file-btn').style.display = 'none';
+        }
+
+        function editProduct(idx) {
+            editingIndex = idx;
+            const p = currentProducts[idx];
+            if (!p) return;
+
+            const titleEl = document.getElementById('adm-prod-form-title');
+            if (titleEl) titleEl.textContent = 'Editing: ' + p.title;
+
+            const btn = document.getElementById('add-prod-btn');
+            if (btn) {
+                btn.innerHTML = '<i class="fas fa-save"></i> Update Product Details';
+                btn.style.background = '#ffaa00';
             }
 
-            function previewProfileImg(input) {
-                if (input.files && input.files[0]) {
-                    const reader = new FileReader();
-                    reader.onload = function (e) {
-                        const base64 = e.target.result;
-                        document.getElementById('adm-app-profile-base64').value = base64;
-                        const preview = document.getElementById('profile-img-preview');
-                        preview.style.backgroundImage = `url(${base64})`;
-                        preview.style.display = 'block';
-                    };
-                    reader.readAsDataURL(input.files[0]);
-                }
-            }
+            document.getElementById('cancel-edit-btn').style.display = 'inline-block';
 
-            function handleProductFile(input) {
-                if (input.files && input.files[0]) {
-                    const file = input.files[0];
-                    const reader = new FileReader();
-                    reader.onload = function (e) {
-                        document.getElementById('new-prod-file-data').value = e.target.result;
-                        document.getElementById('new-prod-file-name').value = file.name;
-                        document.getElementById('file-name-display').textContent = file.name;
-                        document.getElementById('file-name-display').style.color = 'var(--primary-color)';
-                        document.getElementById('remove-file-btn').style.display = 'block';
-                    };
-                    reader.readAsDataURL(file);
-                }
-            }
+            const isFree = p.isFree || false;
+            document.getElementById('new-prod-is-free').checked = isFree;
+            togglePriceField(isFree);
 
-            function removeProductFile() {
-                if (confirm("Are you sure you want to remove this file?")) {
-                    document.getElementById('new-prod-file-data').value = '';
-                    document.getElementById('new-prod-file-name').value = '';
-                    document.getElementById('file-name-display').textContent = 'No file selected';
-                    document.getElementById('file-name-display').style.color = 'inherit';
-                    document.getElementById('remove-file-btn').style.display = 'none';
-                    document.getElementById('new-prod-file-input').value = ''; // Reset file input
-                }
-            }
+            document.getElementById('new-prod-title').value = p.title;
+            document.getElementById('new-prod-price').value = p.price || '';
+            document.getElementById('new-prod-desc').value = p.desc || '';
 
-            function cancelProductEdit() {
-                editingIndex = -1;
-                const titleEl = document.getElementById('adm-prod-form-title');
-                if (titleEl) titleEl.textContent = 'Add New Product';
-
-                const btn = document.getElementById('add-prod-btn');
-                if (btn) {
-                    btn.innerHTML = '<i class="fas fa-plus-circle"></i> Add Product to Website';
-                    btn.style.background = 'var(--primary-color)';
-                }
-
-                document.getElementById('cancel-edit-btn').style.display = 'none';
-
-                // Clear fields
-                document.getElementById('new-prod-title').value = '';
-                document.getElementById('new-prod-price').value = '';
-                document.getElementById('new-prod-desc').value = '';
-                document.getElementById('new-prod-is-free').checked = false;
-                togglePriceField(false);
-                document.getElementById('new-prod-img-base64').value = '';
-                document.getElementById('img-preview-box').style.display = 'none';
+            if (p.fileData && p.fileName) {
+                document.getElementById('new-prod-file-data').value = p.fileData;
+                document.getElementById('new-prod-file-name').value = p.fileName;
+                document.getElementById('file-name-display').textContent = p.fileName;
+                document.getElementById('remove-file-btn').style.display = 'block';
+            } else {
                 document.getElementById('new-prod-file-data').value = '';
                 document.getElementById('new-prod-file-name').value = '';
                 document.getElementById('file-name-display').textContent = 'No file selected';
                 document.getElementById('remove-file-btn').style.display = 'none';
             }
 
-            function editProduct(idx) {
-                editingIndex = idx;
-                const p = currentProducts[idx];
-                if (!p) return;
+            if (p.image && p.image.startsWith('data:image')) {
+                document.getElementById('new-prod-img-base64').value = p.image;
+                const preview = document.getElementById('img-preview-box');
+                preview.style.backgroundImage = `url(${p.image})`;
+                preview.style.display = 'block';
+            } else {
+                document.getElementById('new-prod-img-base64').value = '';
+                document.getElementById('img-preview-box').style.display = 'none';
+            }
+        }
 
-                const titleEl = document.getElementById('adm-prod-form-title');
-                if (titleEl) titleEl.textContent = 'Editing: ' + p.title;
+        function addNewProduct() {
+            const titleInput = document.getElementById('new-prod-title');
+            const priceInput = document.getElementById('new-prod-price');
+            const imgBase64 = document.getElementById('new-prod-img-base64').value;
+            const descInput = document.getElementById('new-prod-desc');
+            const fileData = document.getElementById('new-prod-file-data').value;
+            const fileName = document.getElementById('new-prod-file-name').value;
+            const isFree = document.getElementById('new-prod-is-free').checked;
 
-                const btn = document.getElementById('add-prod-btn');
-                if (btn) {
-                    btn.innerHTML = '<i class="fas fa-save"></i> Update Product Details';
-                    btn.style.background = '#ffaa00';
-                }
+            const title = titleInput.value.trim();
+            let price = priceInput.value.trim();
 
-                document.getElementById('cancel-edit-btn').style.display = 'inline-block';
-
-                const isFree = p.isFree || false;
-                document.getElementById('new-prod-is-free').checked = isFree;
-                togglePriceField(isFree);
-
-                document.getElementById('new-prod-title').value = p.title;
-                document.getElementById('new-prod-price').value = p.price || '';
-                document.getElementById('new-prod-desc').value = p.desc || '';
-
-                if (p.fileData && p.fileName) {
-                    document.getElementById('new-prod-file-data').value = p.fileData;
-                    document.getElementById('new-prod-file-name').value = p.fileName;
-                    document.getElementById('file-name-display').textContent = p.fileName;
-                    document.getElementById('remove-file-btn').style.display = 'block';
-                } else {
-                    document.getElementById('new-prod-file-data').value = '';
-                    document.getElementById('new-prod-file-name').value = '';
-                    document.getElementById('file-name-display').textContent = 'No file selected';
-                    document.getElementById('remove-file-btn').style.display = 'none';
-                }
-
-                if (p.image && p.image.startsWith('data:image')) {
-                    document.getElementById('new-prod-img-base64').value = p.image;
-                    const preview = document.getElementById('img-preview-box');
-                    preview.style.backgroundImage = `url(${p.image})`;
-                    preview.style.display = 'block';
-                } else {
-                    document.getElementById('new-prod-img-base64').value = '';
-                    document.getElementById('img-preview-box').style.display = 'none';
-                }
+            if (!isFree && (!price || parseFloat(price) <= 0)) {
+                alert("Please enter a valid price (greater than 0) for the premium product.");
+                return;
             }
 
-            function addNewProduct() {
-                const titleInput = document.getElementById('new-prod-title');
-                const priceInput = document.getElementById('new-prod-price');
-                const imgBase64 = document.getElementById('new-prod-img-base64').value;
-                const descInput = document.getElementById('new-prod-desc');
-                const fileData = document.getElementById('new-prod-file-data').value;
-                const fileName = document.getElementById('new-prod-file-name').value;
-                const isFree = document.getElementById('new-prod-is-free').checked;
+            if (!title) {
+                alert("Please enter a product title.");
+                return;
+            }
 
-                const title = titleInput.value.trim();
-                let price = priceInput.value.trim();
+            const btn = document.getElementById('add-prod-btn');
+            const originalBtnHTML = btn ? btn.innerHTML : '+ Add Product';
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Syncing...';
+            }
 
-                if (!isFree && (!price || parseFloat(price) <= 0)) {
-                    alert("Please enter a valid price (greater than 0) for the premium product.");
-                    return;
-                }
+            let list = [...currentProducts];
 
-                if (!title) {
-                    alert("Please enter a product title.");
-                    return;
-                }
+            if (editingIndex > -1) {
+                // Update existing
+                list[editingIndex] = {
+                    ...list[editingIndex],
+                    title: title,
+                    price: isFree ? "0" : price,
+                    image: imgBase64 || list[editingIndex].image,
+                    desc: descInput.value || '',
+                    fileData: fileData || list[editingIndex].fileData,
+                    fileName: fileName || list[editingIndex].fileName,
+                    isFree: isFree
+                };
+            } else {
+                // Add new
+                const newBot = {
+                    id: Date.now(),
+                    title: title,
+                    price: isFree ? "0" : price,
+                    image: imgBase64 || 'images/bot1.png',
+                    desc: descInput.value || '',
+                    fileData: fileData || null,
+                    fileName: fileName || null,
+                    isFree: isFree
+                };
+                list.push(newBot);
+            }
 
-                const btn = document.getElementById('add-prod-btn');
-                const originalBtnHTML = btn ? btn.innerHTML : '+ Add Product';
+            // Sync to Firebase
+            db.ref('products').set(list).then(() => {
+                console.log("✅ Cloud Sync Success! Total:", list.length);
+                alert(editingIndex > -1 ? "Product Updated!" : "New Product Added!");
+                cancelProductEdit(); // This resets editingIndex, button, and fields
+                renderProductList();
+            }).catch(err => {
+                console.error("❌ Cloud Sync Error:", err);
+                alert("Database sync failed. Please try again.");
+            }).finally(() => {
                 if (btn) {
-                    btn.disabled = true;
-                    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Syncing...';
+                    btn.disabled = false;
+                    btn.innerHTML = originalBtnHTML;
                 }
+            });
+        }
 
-                let list = [...currentProducts];
+        async function clearCloudDatabase() {
+            if (!confirm("CRITICAL: This will delete ALL products from your website forever. Are you absolutely sure?")) return;
+            try {
+                await db.ref('products').set(null);
+                currentProducts = [];
+                renderProductList();
+                alert("Cloud database has been wiped clean.");
+            } catch (err) {
+                alert("Failed to wipe cloud. Check console.");
+            }
+        }
 
-                if (editingIndex > -1) {
-                    // Update existing
-                    list[editingIndex] = {
-                        ...list[editingIndex],
-                        title: title,
-                        price: isFree ? "0" : price,
-                        image: imgBase64 || list[editingIndex].image,
-                        desc: descInput.value || '',
-                        fileData: fileData || list[editingIndex].fileData,
-                        fileName: fileName || list[editingIndex].fileName,
-                        isFree: isFree
-                    };
-                } else {
-                    // Add new
-                    const newBot = {
-                        id: Date.now(),
-                        title: title,
-                        price: isFree ? "0" : price,
-                        image: imgBase64 || 'images/bot1.png',
-                        desc: descInput.value || '',
-                        fileData: fileData || null,
-                        fileName: fileName || null,
-                        isFree: isFree
-                    };
-                    list.push(newBot);
-                }
+        async function removeProduct(idx) {
+            if (!confirm("Are you sure you want to PERMANENTLY delete this product?")) return;
 
-                // Sync to Firebase
-                db.ref('products').set(list).then(() => {
-                    console.log("✅ Cloud Sync Success! Total:", list.length);
-                    alert(editingIndex > -1 ? "Product Updated!" : "New Product Added!");
-                    cancelProductEdit(); // This resets editingIndex, button, and fields
-                    renderProductList();
-                }).catch(err => {
-                    console.error("❌ Cloud Sync Error:", err);
-                    alert("Database sync failed. Please try again.");
-                }).finally(() => {
-                    if (btn) {
-                        btn.disabled = false;
-                        btn.innerHTML = originalBtnHTML;
-                    }
+            // 1. Update local memory immediately
+            currentProducts.splice(idx, 1);
+            const newList = [...currentProducts];
+
+            // 2. Sync to Firebase
+            try {
+                await db.ref('products').set(newList);
+                console.log("Deleted from cloud successfully.");
+                alert("Product deleted!");
+                renderProductList();
+            } catch (err) {
+                console.error("Delete failed:", err);
+                alert("Cloud sync failed. Product may return.");
+            }
+        }
+
+        function saveSettings(alertUser = true) {
+            try {
+                // 1. Read latest state from storage to prevent data loss
+                const storageData = JSON.parse(localStorage.getItem(CONFIG_KEY)) || {};
+                const config = { ...storageData }; // Create a mutable copy
+
+                // Update Version Lock
+                config.lastUpdate = Date.now();
+
+                const getValue = (id, defaultVal = '') => {
+                    const el = document.getElementById(id);
+                    return el ? el.value : defaultVal;
+                };
+                const getChecked = (id, defaultVal = true) => {
+                    const el = document.getElementById(id);
+                    return el ? el.checked : defaultVal;
+                };
+
+                // 2. Build new config, merging with existing where applicable
+                config.visibility = {
+                    bots: getChecked('adm-vis-bots'),
+                    signals: getChecked('adm-vis-signals'),
+                    services: getChecked('adm-vis-services'),
+                    about: getChecked('adm-vis-about')
+                };
+                config.appearance = {
+                    siteTitle: getValue('adm-app-title', 'Trading Made Easy'),
+                    primaryColor: getValue('adm-app-color', '#00ff88'),
+                    borderRadius: getValue('adm-app-radius', '10px'),
+                    metaDesc: getValue('adm-app-meta'),
+                    profileBase64: getValue('adm-app-profile-base64')
+                };
+                config.textOverrides = {
+                    hero_title: getValue('adm-txt-hero'),
+                    hero_desc: getValue('adm-txt-hero-desc'),
+                    about_bio: getValue('adm-txt-about'),
+                    ticker_msgs: getValue('adm-txt-ticker'),
+                    // New Section Titles
+                    bots_title: getValue('adm-txt-bots-title'),
+                    signals_title: getValue('adm-txt-signals-title'),
+                    services_title: getValue('adm-txt-services-title'),
+                    stats_title: getValue('adm-txt-stats-title'),
+                    pay_title: getValue('adm-txt-pay-title'),
+                    contact_title: getValue('adm-txt-contact-title'),
+                    // Detailed Overrides
+                    about_role: getValue('adm-txt-about-role'),
+                    nav_home: getValue('adm-nav-home'),
+                    nav_bots: getValue('adm-nav-bots'),
+                    nav_signals: getValue('adm-nav-signals'),
+                    nav_services: getValue('adm-nav-services'),
+                    nav_about: getValue('adm-nav-about'),
+                    nav_contact: getValue('adm-nav-contact'),
+                    // Specifics
+                    hero_suffix: getValue('adm-txt-hero-suffix'),
+                    bots_subtitle: getValue('adm-txt-bots-sub'),
+                    serv_badge_1: getValue('adm-txt-serv-1'),
+                    serv_badge_2: getValue('adm-txt-serv-2'),
+                    serv_badge_3: getValue('adm-txt-serv-3'),
+                    serv_badge_4: getValue('adm-txt-serv-4'),
+
+                    sig_brief_title: getValue('adm-txt-sig-brief-title'),
+                    sig_brief_desc: getValue('adm-txt-sig-brief-desc'),
+
+                    latest_offer_text: getValue('adm-txt-offer-text'),
+                    sig_feat1: getValue('adm-sig-feat1'),
+                    sig_feat2: getValue('adm-sig-feat2'),
+                    sig_feat3: getValue('adm-sig-feat3'),
+                    stat_success: getValue('adm-stat-success')
+                };
+
+                // 2.1 Collect Custom Sections Overrides Automatically
+                const customSecs = storageData.customSections || [];
+                customSecs.forEach(sec => {
+                    const customTitle = getValue(`adm-txt-${sec.id}-title`);
+                    const customContent = getValue(`adm-txt-${sec.id}-content`);
+                    const customPlacement = getValue(`adm-txt-${sec.id}-placement`);
+                    const customAlign = getValue(`adm-txt-${sec.id}-align`);
+                    const customIcon = getValue(`adm-txt-${sec.id}-icon`);
+
+                    if (customTitle) config.textOverrides[sec.id + '_title'] = customTitle;
+                    if (customContent) config.textOverrides[sec.id + '_content'] = customContent;
+                    if (customPlacement) config.textOverrides[sec.id + '_placement'] = customPlacement;
+                    if (customAlign) config.textOverrides[sec.id + '_align'] = customAlign;
+                    if (customIcon) config.textOverrides[sec.id + '_icon'] = customIcon;
                 });
-            }
 
-            async function clearCloudDatabase() {
-                if (!confirm("CRITICAL: This will delete ALL products from your website forever. Are you absolutely sure?")) return;
+                config.elementVisibility = {
+                    hero_offer: getChecked('adm-vis-offer', true),
+                    sig_feat1: getChecked('adm-vis-sig1', true),
+                    sig_feat2: getChecked('adm-vis-sig2', true),
+                    sig_feat3: getChecked('adm-vis-sig3', true),
+                    stat_success: getChecked('adm-vis-stat1', true),
+                    // Nav
+                    nav_home: getChecked('adm-vis-nav-home', true),
+                    nav_bots: getChecked('adm-vis-nav-bots', true),
+                    nav_signals: getChecked('adm-vis-nav-signals', true),
+                    nav_services: getChecked('adm-vis-nav-services', true),
+                    nav_about: getChecked('adm-vis-nav-about', true),
+                    nav_contact: getChecked('adm-vis-nav-contact', true)
+                };
+
+                config.links = {
+                    facebook: getValue('adm-link-fb'),
+                    pinterest: getValue('adm-link-pin'),
+                    email: getValue('adm-link-email')
+                };
+
+                config.wallets = {
+                    usdt: getValue('adm-wallet-usdt'),
+                    ltc: getValue('adm-wallet-ltc'),
+                    payeer: getValue('adm-wallet-payeer')
+                };
+
+                config.sectionsConfig = getSectionsState(); // SAVE NEW SECTIONS STATE
+
+                console.log('FINAL SAVE: Saving following config:', config);
                 try {
-                    await db.ref('products').set(null);
-                    currentProducts = [];
-                    renderProductList();
-                    alert("Cloud database has been wiped clean.");
-                } catch (err) {
-                    alert("Failed to wipe cloud. Check console.");
+                    localStorage.setItem(CONFIG_KEY, JSON.stringify(config));
+                } catch (e) {
+                    console.warn("LocalStorage failed (possibly full), proceeding anyway:", e);
                 }
-            }
 
-            async function removeProduct(idx) {
-                if (!confirm("Are you sure you want to PERMANENTLY delete this product?")) return;
-
-                // 1. Update local memory immediately
-                currentProducts.splice(idx, 1);
-                const newList = [...currentProducts];
-
-                // 2. Sync to Firebase
-                try {
-                    await db.ref('products').set(newList);
-                    console.log("Deleted from cloud successfully.");
-                    alert("Product deleted!");
-                    renderProductList();
-                } catch (err) {
-                    console.error("Delete failed:", err);
-                    alert("Cloud sync failed. Product may return.");
-                }
-            }
-
-            function saveSettings(alertUser = true) {
-                try {
-                    // 1. Read latest state from storage to prevent data loss
-                    const storageData = JSON.parse(localStorage.getItem(CONFIG_KEY)) || {};
-                    const config = { ...storageData }; // Create a mutable copy
-
-                    // Update Version Lock
-                    config.lastUpdate = Date.now();
-
-                    const getValue = (id, defaultVal = '') => {
-                        const el = document.getElementById(id);
-                        return el ? el.value : defaultVal;
-                    };
-                    const getChecked = (id, defaultVal = true) => {
-                        const el = document.getElementById(id);
-                        return el ? el.checked : defaultVal;
-                    };
-
-                    // 2. Build new config, merging with existing where applicable
-                    config.visibility = {
-                        bots: getChecked('adm-vis-bots'),
-                        signals: getChecked('adm-vis-signals'),
-                        services: getChecked('adm-vis-services'),
-                        about: getChecked('adm-vis-about')
-                    };
-                    config.appearance = {
-                        siteTitle: getValue('adm-app-title', 'Trading Made Easy'),
-                        primaryColor: getValue('adm-app-color', '#00ff88'),
-                        borderRadius: getValue('adm-app-radius', '10px'),
-                        metaDesc: getValue('adm-app-meta'),
-                        profileBase64: getValue('adm-app-profile-base64')
-                    };
-                    config.textOverrides = {
-                        hero_title: getValue('adm-txt-hero'),
-                        hero_desc: getValue('adm-txt-hero-desc'),
-                        about_bio: getValue('adm-txt-about'),
-                        ticker_msgs: getValue('adm-txt-ticker'),
-                        // New Section Titles
-                        bots_title: getValue('adm-txt-bots-title'),
-                        signals_title: getValue('adm-txt-signals-title'),
-                        services_title: getValue('adm-txt-services-title'),
-                        stats_title: getValue('adm-txt-stats-title'),
-                        pay_title: getValue('adm-txt-pay-title'),
-                        contact_title: getValue('adm-txt-contact-title'),
-                        // Detailed Overrides
-                        about_role: getValue('adm-txt-about-role'),
-                        nav_home: getValue('adm-nav-home'),
-                        nav_bots: getValue('adm-nav-bots'),
-                        nav_signals: getValue('adm-nav-signals'),
-                        nav_services: getValue('adm-nav-services'),
-                        nav_about: getValue('adm-nav-about'),
-                        nav_contact: getValue('adm-nav-contact'),
-                        // Specifics
-                        hero_suffix: getValue('adm-txt-hero-suffix'),
-                        bots_subtitle: getValue('adm-txt-bots-sub'),
-                        serv_badge_1: getValue('adm-txt-serv-1'),
-                        serv_badge_2: getValue('adm-txt-serv-2'),
-                        serv_badge_3: getValue('adm-txt-serv-3'),
-                        serv_badge_4: getValue('adm-txt-serv-4'),
-
-                        sig_brief_title: getValue('adm-txt-sig-brief-title'),
-                        sig_brief_desc: getValue('adm-txt-sig-brief-desc'),
-
-                        latest_offer_text: getValue('adm-txt-offer-text'),
-                        sig_feat1: getValue('adm-sig-feat1'),
-                        sig_feat2: getValue('adm-sig-feat2'),
-                        sig_feat3: getValue('adm-sig-feat3'),
-                        stat_success: getValue('adm-stat-success')
-                    };
-
-                    // 2.1 Collect Custom Sections Overrides Automatically
-                    const customSecs = storageData.customSections || [];
-                    customSecs.forEach(sec => {
-                        const customTitle = getValue(`adm-txt-${sec.id}-title`);
-                        const customContent = getValue(`adm-txt-${sec.id}-content`);
-                        const customPlacement = getValue(`adm-txt-${sec.id}-placement`);
-                        const customAlign = getValue(`adm-txt-${sec.id}-align`);
-                        const customIcon = getValue(`adm-txt-${sec.id}-icon`);
-
-                        if (customTitle) config.textOverrides[sec.id + '_title'] = customTitle;
-                        if (customContent) config.textOverrides[sec.id + '_content'] = customContent;
-                        if (customPlacement) config.textOverrides[sec.id + '_placement'] = customPlacement;
-                        if (customAlign) config.textOverrides[sec.id + '_align'] = customAlign;
-                        if (customIcon) config.textOverrides[sec.id + '_icon'] = customIcon;
-                    });
-
-                    config.elementVisibility = {
-                        hero_offer: getChecked('adm-vis-offer', true),
-                        sig_feat1: getChecked('adm-vis-sig1', true),
-                        sig_feat2: getChecked('adm-vis-sig2', true),
-                        sig_feat3: getChecked('adm-vis-sig3', true),
-                        stat_success: getChecked('adm-vis-stat1', true),
-                        // Nav
-                        nav_home: getChecked('adm-vis-nav-home', true),
-                        nav_bots: getChecked('adm-vis-nav-bots', true),
-                        nav_signals: getChecked('adm-vis-nav-signals', true),
-                        nav_services: getChecked('adm-vis-nav-services', true),
-                        nav_about: getChecked('adm-vis-nav-about', true),
-                        nav_contact: getChecked('adm-vis-nav-contact', true)
-                    };
-
-                    config.links = {
-                        facebook: getValue('adm-link-fb'),
-                        pinterest: getValue('adm-link-pin'),
-                        email: getValue('adm-link-email')
-                    };
-
-                    config.wallets = {
-                        usdt: getValue('adm-wallet-usdt'),
-                        ltc: getValue('adm-wallet-ltc'),
-                        payeer: getValue('adm-wallet-payeer')
-                    };
-
-                    config.sectionsConfig = getSectionsState(); // SAVE NEW SECTIONS STATE
-
-                    console.log('FINAL SAVE: Saving following config:', config);
-                    try {
-                        localStorage.setItem(CONFIG_KEY, JSON.stringify(config));
-                    } catch (e) {
-                        console.warn("LocalStorage failed (possibly full), proceeding anyway:", e);
-                    }
-
-                    if (alertUser) {
-                        const btn = document.getElementById('final-save-btn');
-                        if (btn) {
-                            btn.disabled = true;
-                            btn.innerHTML = '<i class="fas fa-sync fa-spin"></i> Saving...';
-                        }
-
-                        // Apply locally immediately
-                        applySiteSettings();
-
-                        console.log("Syncing config to cloud...", config);
-
-                        // Use a promise with timeout
-                        const syncWithTimeout = (ref, data, ms) => {
-                            const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error('Sync Timeout')), ms));
-                            const sync = ref.set(data);
-                            return Promise.race([sync, timeout]);
-                        };
-
-                        syncWithTimeout(db.ref('site_config'), config, 5000)
-                            .then(() => {
-                                console.log("Cloud sync success. Reloading page.");
-                                window.location.reload();
-                            })
-                            .catch(err => {
-                                console.warn("Cloud sync failed or timed out:", err);
-                                // Reload anyway so user sees local result at least on next refresh from localstorage
-                                window.location.reload();
-                            });
-                    }
-                } catch (err) {
-                    console.error("saveSettings Error:", err);
-                    alert("An error occurred while saving: " + err.message);
+                if (alertUser) {
                     const btn = document.getElementById('final-save-btn');
                     if (btn) {
-                        btn.disabled = false;
-                        btn.innerHTML = 'Save All Changes';
+                        btn.disabled = true;
+                        btn.innerHTML = '<i class="fas fa-sync fa-spin"></i> Saving...';
                     }
+
+                    // Apply locally immediately
+                    applySiteSettings();
+
+                    console.log("Syncing config to cloud...", config);
+
+                    // Use a promise with timeout
+                    const syncWithTimeout = (ref, data, ms) => {
+                        const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error('Sync Timeout')), ms));
+                        const sync = ref.set(data);
+                        return Promise.race([sync, timeout]);
+                    };
+
+                    syncWithTimeout(db.ref('site_config'), config, 5000)
+                        .then(() => {
+                            console.log("Cloud sync success. Reloading page.");
+                            window.location.reload();
+                        })
+                        .catch(err => {
+                            console.warn("Cloud sync failed or timed out:", err);
+                            // Reload anyway so user sees local result at least on next refresh from localstorage
+                            window.location.reload();
+                        });
+                }
+            } catch (err) {
+                console.error("saveSettings Error:", err);
+                alert("An error occurred while saving: " + err.message);
+                const btn = document.getElementById('final-save-btn');
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = 'Save All Changes';
                 }
             }
+        }
 
-            // --- SECTIONS MANAGER ---
-            function getSectionList() {
-                // Identify all main sections on the page
-                const sections = Array.from(document.querySelectorAll('section[id]')).map(sec => sec.id).filter(id => id !== 'admin-quick-access');
-                return sections;
+        // --- SECTIONS MANAGER ---
+        function getSectionList() {
+            // Identify all main sections on the page
+            const sections = Array.from(document.querySelectorAll('section[id]')).map(sec => sec.id).filter(id => id !== 'admin-quick-access');
+            return sections;
+        }
+
+        function refreshSectionList() {
+            const editorInfo = document.getElementById('sections-list-editor');
+            if (!editorInfo) return;
+
+            // Get current config to check status
+            const storedConfig = JSON.parse(localStorage.getItem(CONFIG_KEY)) || {};
+            const sectionsConfig = storedConfig.sectionsConfig || {};
+            // Determine order: use saved order or default DOM order
+            let allSections = getSectionList();
+
+            // If we have a saved order, try to respect it, appending new sections at the end
+            let displayOrder = [];
+            if (sectionsConfig.order && sectionsConfig.order.length > 0) {
+                displayOrder = sectionsConfig.order.filter(id => allSections.includes(id));
+                // Add any new sections not in saved order
+                allSections.forEach(id => {
+                    if (!displayOrder.includes(id)) displayOrder.push(id);
+                });
+            } else {
+                displayOrder = allSections;
             }
 
-            function refreshSectionList() {
-                const editorInfo = document.getElementById('sections-list-editor');
-                if (!editorInfo) return;
-
-                // Get current config to check status
-                const storedConfig = JSON.parse(localStorage.getItem(CONFIG_KEY)) || {};
-                const sectionsConfig = storedConfig.sectionsConfig || {};
-                // Determine order: use saved order or default DOM order
-                let allSections = getSectionList();
-
-                // If we have a saved order, try to respect it, appending new sections at the end
-                let displayOrder = [];
-                if (sectionsConfig.order && sectionsConfig.order.length > 0) {
-                    displayOrder = sectionsConfig.order.filter(id => allSections.includes(id));
-                    // Add any new sections not in saved order
-                    allSections.forEach(id => {
-                        if (!displayOrder.includes(id)) displayOrder.push(id);
-                    });
-                } else {
-                    displayOrder = allSections;
-                }
-
-                let html = '';
-                displayOrder.forEach(id => {
-                    const isHidden = sectionsConfig.hidden && sectionsConfig.hidden.includes(id);
-                    html += `
+            let html = '';
+            displayOrder.forEach(id => {
+                const isHidden = sectionsConfig.hidden && sectionsConfig.hidden.includes(id);
+                html += `
                     <div class="section-item" data-id="${id}" style="background:var(--bg-color); border:1px solid var(--border-color); padding:1rem; border-radius:5px; display:flex; justify-content:space-between; align-items:center;">
                         <span style="font-weight:600; text-transform:capitalize;">${id.replace('-', ' ')}</span>
                         <div style="display:flex; gap:0.5rem;">
@@ -2081,244 +2092,244 @@
                         </div>
                     </div>
                  `;
+            });
+            editorInfo.innerHTML = html;
+        }
+
+        // Helper to grab current state from UI to save
+        function getSectionsState() {
+            const items = document.querySelectorAll('.section-item');
+            const order = [];
+            const hidden = [];
+            items.forEach(item => {
+                const id = item.getAttribute('data-id');
+                order.push(id);
+                // Check eye icon state
+                const eye = item.querySelector('.fa-eye-slash');
+                if (eye) hidden.push(id);
+            });
+            return { order, hidden };
+        }
+
+        function toggleSectionVisibility(id) {
+            const btn = document.querySelector(`.section-item[data-id="${id}"] .fa-eye, .section-item[data-id="${id}"] .fa-eye-slash`);
+            if (btn) {
+                if (btn.classList.contains('fa-eye')) {
+                    btn.classList.remove('fa-eye');
+                    btn.classList.add('fa-eye-slash');
+                    btn.parentElement.style.opacity = '0.5';
+                    btn.parentElement.style.color = 'inherit';
+                } else {
+                    btn.classList.remove('fa-eye-slash');
+                    btn.classList.add('fa-eye');
+                    btn.parentElement.style.opacity = '1';
+                    btn.parentElement.style.color = 'var(--primary-color)';
+                }
+            }
+        }
+
+        function moveSection(id, direction) {
+            const items = Array.from(document.querySelectorAll('.section-item'));
+            const index = items.findIndex(el => el.getAttribute('data-id') === id);
+            if (index < 0) return;
+
+            const parent = document.getElementById('sections-list-editor');
+            if (direction === -1 && index > 0) {
+                parent.insertBefore(items[index], items[index - 1]);
+            } else if (direction === 1 && index < items.length - 1) {
+                parent.insertBefore(items[index + 1], items[index]); // Insert next before current = swap
+                // Actually insertBefore inserts *before* the reference node. 
+                // To move down: insert current before next's next sibling?
+                // Easier: insert next before current
+                parent.insertBefore(items[index], items[index + 1].nextSibling);
+            }
+        }
+
+        async function addCustomSection(e) {
+            if (e) e.preventDefault();
+            const addBtn = e ? e.currentTarget : document.querySelector('button[onclick="addCustomSection(event)"]');
+            const originalHTML = addBtn ? addBtn.innerHTML : 'Create Section';
+
+            try {
+                const titleInput = document.getElementById('new-sec-title');
+                const contentInput = document.getElementById('new-sec-content');
+                const placementInput = document.getElementById('new-sec-placement');
+                const alignInput = document.getElementById('new-sec-align');
+                const iconInput = document.getElementById('new-sec-icon');
+
+                const title = titleInput.value.trim();
+                const content = contentInput.value.trim();
+                const placement = placementInput ? placementInput.value : 'body';
+                const align = alignInput ? alignInput.value : 'center';
+                const icon = iconInput ? iconInput.value : '';
+
+                if (!title || !content) {
+                    alert("Title and content are required.");
+                    return;
+                }
+
+                if (addBtn) {
+                    addBtn.disabled = true;
+                    addBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Syncing...';
+                }
+
+                // 1. Get current config from LocalStorage (Source of Truth)
+                const config = JSON.parse(localStorage.getItem(CONFIG_KEY)) || {};
+
+                // Update Version Lock
+                config.lastUpdate = Date.now();
+
+                config.customSections = config.customSections || [];
+                config.textOverrides = config.textOverrides || {};
+                config.sectionsConfig = config.sectionsConfig || { order: [], hidden: [] };
+                if (!config.sectionsConfig.order) config.sectionsConfig.order = [];
+
+                // 2. Create New ID and add to Lists
+                const newId = 'custom-sec-' + Date.now();
+
+                // Add to raw list with NEW metadata
+                config.customSections.push({
+                    id: newId,
+                    title,
+                    content,
+                    placement,
+                    align,
+                    icon
                 });
-                editorInfo.innerHTML = html;
-            }
 
-            // Helper to grab current state from UI to save
-            function getSectionsState() {
-                const items = document.querySelectorAll('.section-item');
-                const order = [];
-                const hidden = [];
-                items.forEach(item => {
-                    const id = item.getAttribute('data-id');
-                    order.push(id);
-                    // Check eye icon state
-                    const eye = item.querySelector('.fa-eye-slash');
-                    if (eye) hidden.push(id);
-                });
-                return { order, hidden };
-            }
+                // Add to overrides to ensure consistency
+                config.textOverrides[newId + '_title'] = title;
+                config.textOverrides[newId + '_content'] = content;
+                config.textOverrides[newId + '_placement'] = placement;
+                config.textOverrides[newId + '_align'] = align;
+                config.textOverrides[newId + '_icon'] = icon;
 
-            function toggleSectionVisibility(id) {
-                const btn = document.querySelector(`.section-item[data-id="${id}"] .fa-eye, .section-item[data-id="${id}"] .fa-eye-slash`);
-                if (btn) {
-                    if (btn.classList.contains('fa-eye')) {
-                        btn.classList.remove('fa-eye');
-                        btn.classList.add('fa-eye-slash');
-                        btn.parentElement.style.opacity = '0.5';
-                        btn.parentElement.style.color = 'inherit';
-                    } else {
-                        btn.classList.remove('fa-eye-slash');
-                        btn.classList.add('fa-eye');
-                        btn.parentElement.style.opacity = '1';
-                        btn.parentElement.style.color = 'var(--primary-color)';
-                    }
-                }
-            }
-
-            function moveSection(id, direction) {
-                const items = Array.from(document.querySelectorAll('.section-item'));
-                const index = items.findIndex(el => el.getAttribute('data-id') === id);
-                if (index < 0) return;
-
-                const parent = document.getElementById('sections-list-editor');
-                if (direction === -1 && index > 0) {
-                    parent.insertBefore(items[index], items[index - 1]);
-                } else if (direction === 1 && index < items.length - 1) {
-                    parent.insertBefore(items[index + 1], items[index]); // Insert next before current = swap
-                    // Actually insertBefore inserts *before* the reference node. 
-                    // To move down: insert current before next's next sibling?
-                    // Easier: insert next before current
-                    parent.insertBefore(items[index], items[index + 1].nextSibling);
-                }
-            }
-
-            async function addCustomSection(e) {
-                if (e) e.preventDefault();
-                const addBtn = e ? e.currentTarget : document.querySelector('button[onclick="addCustomSection(event)"]');
-                const originalHTML = addBtn ? addBtn.innerHTML : 'Create Section';
-
-                try {
-                    const titleInput = document.getElementById('new-sec-title');
-                    const contentInput = document.getElementById('new-sec-content');
-                    const placementInput = document.getElementById('new-sec-placement');
-                    const alignInput = document.getElementById('new-sec-align');
-                    const iconInput = document.getElementById('new-sec-icon');
-
-                    const title = titleInput.value.trim();
-                    const content = contentInput.value.trim();
-                    const placement = placementInput ? placementInput.value : 'body';
-                    const align = alignInput ? alignInput.value : 'center';
-                    const icon = iconInput ? iconInput.value : '';
-
-                    if (!title || !content) {
-                        alert("Title and content are required.");
-                        return;
-                    }
-
-                    if (addBtn) {
-                        addBtn.disabled = true;
-                        addBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Syncing...';
-                    }
-
-                    // 1. Get current config from LocalStorage (Source of Truth)
-                    const config = JSON.parse(localStorage.getItem(CONFIG_KEY)) || {};
-
-                    // Update Version Lock
-                    config.lastUpdate = Date.now();
-
-                    config.customSections = config.customSections || [];
-                    config.textOverrides = config.textOverrides || {};
-                    config.sectionsConfig = config.sectionsConfig || { order: [], hidden: [] };
-                    if (!config.sectionsConfig.order) config.sectionsConfig.order = [];
-
-                    // 2. Create New ID and add to Lists
-                    const newId = 'custom-sec-' + Date.now();
-
-                    // Add to raw list with NEW metadata
-                    config.customSections.push({
-                        id: newId,
-                        title,
-                        content,
-                        placement,
-                        align,
-                        icon
-                    });
-
-                    // Add to overrides to ensure consistency
-                    config.textOverrides[newId + '_title'] = title;
-                    config.textOverrides[newId + '_content'] = content;
-                    config.textOverrides[newId + '_placement'] = placement;
-                    config.textOverrides[newId + '_align'] = align;
-                    config.textOverrides[newId + '_icon'] = icon;
-
-                    // Add to layout order (at the bottom)
-                    if (!config.sectionsConfig.order.includes(newId)) {
-                        config.sectionsConfig.order.push(newId);
-                    }
-
-                    console.log("Saving new section to cloud:", newId);
-
-                    // Update everything locally first
-                    localStorage.setItem(CONFIG_KEY, JSON.stringify(config));
-
-                    // INSTANT UI UPDATE
-                    applySiteSettings();
-                    refreshCustomSectionsList();
-                    if (typeof refreshSectionList === 'function') refreshSectionList();
-
-                    // SILENT SYNC TO CLOUD
-                    try {
-                        isPerformingCloudAction = true;
-                        await db.ref('site_config').set(config);
-                        addBtn.innerHTML = originalHTML;
-                        addBtn.disabled = false;
-                        // Reset fields
-                        document.getElementById('new-sec-title').value = '';
-                        document.getElementById('new-sec-content').value = '';
-                    } catch (err) {
-                        alert("Cloud sync failed, but saved locally.");
-                        addBtn.innerHTML = originalHTML;
-                        addBtn.disabled = false;
-                    } finally {
-                        isPerformingCloudAction = false;
-                    }
-
-                } catch (err) {
-                    console.error("addCustomSection error:", err);
-                    alert("Error: " + err.message);
-                    if (addBtn) {
-                        addBtn.disabled = false;
-                        addBtn.innerHTML = originalHTML;
-                    }
-                }
-            }
-
-            // FLAG to prevent listener loops while saving
-            let isPerformingCloudAction = false;
-
-            async function removeCustomSection(id) {
-                if (!confirm("Delete this element?")) return;
-
-                // 1. INSTANT LOCAL UPDATE
-                const localCfg = JSON.parse(localStorage.getItem(CONFIG_KEY)) || {};
-
-                // FORCE VERSION UPDATE
-                const newVer = Date.now();
-                localCfg.lastUpdate = newVer;
-
-                // 1a. Clean Custom Sections List
-                if (localCfg.customSections) {
-                    localCfg.customSections = localCfg.customSections.filter(s => s.id !== id);
+                // Add to layout order (at the bottom)
+                if (!config.sectionsConfig.order.includes(newId)) {
+                    config.sectionsConfig.order.push(newId);
                 }
 
-                // 1b. Clean Order & Hidden Lists (Nuclear Clean)
-                if (localCfg.sectionsConfig) {
-                    if (localCfg.sectionsConfig.order) {
-                        localCfg.sectionsConfig.order = localCfg.sectionsConfig.order.filter(oid => oid !== id);
-                    }
-                    if (localCfg.sectionsConfig.hidden) {
-                        localCfg.sectionsConfig.hidden = localCfg.sectionsConfig.hidden.filter(hid => hid !== id);
-                    }
-                }
+                console.log("Saving new section to cloud:", newId);
 
-                // 1c. Clean ALL overrides for this ID specifically
-                if (localCfg.textOverrides) {
-                    const keys = Object.keys(localCfg.textOverrides);
-                    keys.forEach(key => {
-                        // Check if key is exactly ID_property
-                        if (key.startsWith(id)) {
-                            delete localCfg.textOverrides[key];
-                        }
-                    });
-                }
+                // Update everything locally first
+                localStorage.setItem(CONFIG_KEY, JSON.stringify(config));
 
-                // Apply locally immediately to prevent saveSettings from picking it up
-                localStorage.setItem(CONFIG_KEY, JSON.stringify(localCfg));
-
-                // Update UI instantly
+                // INSTANT UI UPDATE
                 applySiteSettings();
                 refreshCustomSectionsList();
                 if (typeof refreshSectionList === 'function') refreshSectionList();
 
-                // 2. SILENT CLOUD SYNC (With Version Guard)
+                // SILENT SYNC TO CLOUD
                 try {
                     isPerformingCloudAction = true;
-                    // Directly set with the new version
-                    await db.ref('site_config').set(localCfg);
-                    console.log("Section", id, "erased from cloud with version", newVer);
+                    await db.ref('site_config').set(config);
+                    addBtn.innerHTML = originalHTML;
+                    addBtn.disabled = false;
+                    // Reset fields
+                    document.getElementById('new-sec-title').value = '';
+                    document.getElementById('new-sec-content').value = '';
                 } catch (err) {
-                    console.error("Cloud erase failed:", err);
+                    alert("Cloud sync failed, but saved locally.");
+                    addBtn.innerHTML = originalHTML;
+                    addBtn.disabled = false;
                 } finally {
-                    // Stay 'Locked' for 3 seconds to let all echoes clear
-                    setTimeout(() => { isPerformingCloudAction = false; }, 3000);
+                    isPerformingCloudAction = false;
+                }
+
+            } catch (err) {
+                console.error("addCustomSection error:", err);
+                alert("Error: " + err.message);
+                if (addBtn) {
+                    addBtn.disabled = false;
+                    addBtn.innerHTML = originalHTML;
+                }
+            }
+        }
+
+        // FLAG to prevent listener loops while saving
+        let isPerformingCloudAction = false;
+
+        async function removeCustomSection(id) {
+            if (!confirm("Delete this element?")) return;
+
+            // 1. INSTANT LOCAL UPDATE
+            const localCfg = JSON.parse(localStorage.getItem(CONFIG_KEY)) || {};
+
+            // FORCE VERSION UPDATE
+            const newVer = Date.now();
+            localCfg.lastUpdate = newVer;
+
+            // 1a. Clean Custom Sections List
+            if (localCfg.customSections) {
+                localCfg.customSections = localCfg.customSections.filter(s => s.id !== id);
+            }
+
+            // 1b. Clean Order & Hidden Lists (Nuclear Clean)
+            if (localCfg.sectionsConfig) {
+                if (localCfg.sectionsConfig.order) {
+                    localCfg.sectionsConfig.order = localCfg.sectionsConfig.order.filter(oid => oid !== id);
+                }
+                if (localCfg.sectionsConfig.hidden) {
+                    localCfg.sectionsConfig.hidden = localCfg.sectionsConfig.hidden.filter(hid => hid !== id);
                 }
             }
 
-            function refreshCustomSectionsList() {
-                const textEdits = document.getElementById('custom-sections-text-edits');
-                if (!textEdits) return;
+            // 1c. Clean ALL overrides for this ID specifically
+            if (localCfg.textOverrides) {
+                const keys = Object.keys(localCfg.textOverrides);
+                keys.forEach(key => {
+                    // Check if key is exactly ID_property
+                    if (key.startsWith(id)) {
+                        delete localCfg.textOverrides[key];
+                    }
+                });
+            }
 
-                const config = JSON.parse(localStorage.getItem(CONFIG_KEY)) || {};
-                const customSecs = config.customSections || [];
+            // Apply locally immediately to prevent saveSettings from picking it up
+            localStorage.setItem(CONFIG_KEY, JSON.stringify(localCfg));
 
-                if (customSecs.length === 0) {
-                    textEdits.innerHTML = '<p style="font-size:0.75rem; opacity:0.5; text-align:center; padding:1rem;">Add dynamic elements to see them here.</p>';
-                    return;
-                }
+            // Update UI instantly
+            applySiteSettings();
+            refreshCustomSectionsList();
+            if (typeof refreshSectionList === 'function') refreshSectionList();
 
-                let editHtml = '<h4 style="margin-bottom:1.5rem; opacity:0.8; font-weight:bold;"><i class="fas fa-edit"></i> Manage Custom Elements</h4>';
+            // 2. SILENT CLOUD SYNC (With Version Guard)
+            try {
+                isPerformingCloudAction = true;
+                // Directly set with the new version
+                await db.ref('site_config').set(localCfg);
+                console.log("Section", id, "erased from cloud with version", newVer);
+            } catch (err) {
+                console.error("Cloud erase failed:", err);
+            } finally {
+                // Stay 'Locked' for 3 seconds to let all echoes clear
+                setTimeout(() => { isPerformingCloudAction = false; }, 3000);
+            }
+        }
 
-                customSecs.forEach(sec => {
-                    // Text Edits
-                    const titleVal = String((config.textOverrides && config.textOverrides[sec.id + '_title']) || sec.title || "");
-                    const contentVal = String((config.textOverrides && config.textOverrides[sec.id + '_content']) || sec.content || "");
-                    const placementVal = String((config.textOverrides && config.textOverrides[sec.id + '_placement']) || sec.placement || "body");
-                    const alignVal = String((config.textOverrides && config.textOverrides[sec.id + '_align']) || sec.align || "center");
-                    const iconVal = String((config.textOverrides && config.textOverrides[sec.id + '_icon']) || sec.icon || "");
+        function refreshCustomSectionsList() {
+            const textEdits = document.getElementById('custom-sections-text-edits');
+            if (!textEdits) return;
 
-                    editHtml += `
+            const config = JSON.parse(localStorage.getItem(CONFIG_KEY)) || {};
+            const customSecs = config.customSections || [];
+
+            if (customSecs.length === 0) {
+                textEdits.innerHTML = '<p style="font-size:0.75rem; opacity:0.5; text-align:center; padding:1rem;">Add dynamic elements to see them here.</p>';
+                return;
+            }
+
+            let editHtml = '<h4 style="margin-bottom:1.5rem; opacity:0.8; font-weight:bold;"><i class="fas fa-edit"></i> Manage Custom Elements</h4>';
+
+            customSecs.forEach(sec => {
+                // Text Edits
+                const titleVal = String((config.textOverrides && config.textOverrides[sec.id + '_title']) || sec.title || "");
+                const contentVal = String((config.textOverrides && config.textOverrides[sec.id + '_content']) || sec.content || "");
+                const placementVal = String((config.textOverrides && config.textOverrides[sec.id + '_placement']) || sec.placement || "body");
+                const alignVal = String((config.textOverrides && config.textOverrides[sec.id + '_align']) || sec.align || "center");
+                const iconVal = String((config.textOverrides && config.textOverrides[sec.id + '_icon']) || sec.icon || "");
+
+                editHtml += `
                         <div style="margin-bottom:2rem; padding:1rem; border:1px solid var(--border-color); border-radius:8px; background:rgba(255,255,255,0.02); position:relative;">
                             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; border-bottom:1px dashed var(--border-color); padding-bottom:0.5rem;">
                                 <label style="font-size:0.85rem; font-weight:bold; color:var(--primary-color);">Edit: ${sec.title || "New Element"}</label>
@@ -2369,24 +2380,24 @@
                             </div>
                         </div>
                     `;
-                });
+            });
 
-                textEdits.innerHTML = editHtml;
+            textEdits.innerHTML = editHtml;
+        }
+
+        function togglePriceField(isFree) {
+            const priceWrapper = document.getElementById('price-field-wrapper');
+            const priceInput = document.getElementById('new-prod-price');
+            if (priceWrapper && priceInput) {
+                priceWrapper.style.opacity = isFree ? '0.3' : '1';
+                priceWrapper.style.pointerEvents = isFree ? 'none' : 'auto';
+                if (isFree) priceInput.value = '0';
             }
+        }
 
-            function togglePriceField(isFree) {
-                const priceWrapper = document.getElementById('price-field-wrapper');
-                const priceInput = document.getElementById('new-prod-price');
-                if (priceWrapper && priceInput) {
-                    priceWrapper.style.opacity = isFree ? '0.3' : '1';
-                    priceWrapper.style.pointerEvents = isFree ? 'none' : 'auto';
-                    if (isFree) priceInput.value = '0';
-                }
-            }
-
-            // INITIALIZE ON LOAD
-            loadSettings();
-        </script>
+        // INITIALIZE ON LOAD
+        loadSettings();
+    </script>
 </body>
 
 ```
