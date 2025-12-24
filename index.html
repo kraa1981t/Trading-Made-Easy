@@ -371,22 +371,28 @@
 
             // NEW: Sync Global Settings from Firebase (Cloud Config)
             db.ref('site_config').on('value', (snapshot) => {
-                // If we are currently writing to the cloud, ignore the echo to prevent data rollback
+                const cloudCfg = snapshot.val();
+                if (!cloudCfg) return;
+
+                // VERSION LOCK: Prevent old cloud data from overwriting newer local changes
+                const localCfg = JSON.parse(localStorage.getItem(CONFIG_KEY)) || {};
+                const localVer = localCfg.lastUpdate || 0;
+                const cloudVer = cloudCfg.lastUpdate || 0;
+
+                if (cloudVer <= localVer && localVer !== 0) {
+                    console.log("Cloud data is older or same as local. Ignoring sync to prevent ghosting.");
+                    return;
+                }
+
                 if (typeof isPerformingCloudAction !== 'undefined' && isPerformingCloudAction) return;
 
-                const cloudCfg = snapshot.val();
-                if (cloudCfg) {
-                    console.log("Cloud Settings Received (Syncing Local):", cloudCfg);
-                    localStorage.setItem(CONFIG_KEY, JSON.stringify(cloudCfg));
+                console.log("Cloud Settings Received (Syncing Local):", cloudCfg);
+                localStorage.setItem(CONFIG_KEY, JSON.stringify(cloudCfg));
+                applySiteSettings();
 
-                    // Call the global apply function for real-time update
-                    applySiteSettings();
-
-                    // If we are in the admin panel, refresh inputs to match cloud
-                    const overlay = document.getElementById('admin-overlay');
-                    if (overlay && overlay.style.display === 'block') {
-                        loadSettings();
-                    }
+                const overlay = document.getElementById('admin-overlay');
+                if (overlay && overlay.style.display === 'block') {
+                    loadSettings();
                 }
             });
 
@@ -2230,8 +2236,12 @@
             async function removeCustomSection(id) {
                 if (!confirm("Delete this element?")) return;
 
-                // 1. INSTANT LOCAL UPDATE (Optimistic UI)
+                // 1. INSTANT LOCAL UPDATE
                 const localCfg = JSON.parse(localStorage.getItem(CONFIG_KEY)) || {};
+
+                // Set Version Timestamp to LOCK the cloud
+                localCfg.lastUpdate = Date.now();
+
                 if (localCfg.customSections) {
                     localCfg.customSections = localCfg.customSections.filter(s => s.id !== id);
                 }
@@ -2240,8 +2250,10 @@
                     if (localCfg.sectionsConfig.hidden) localCfg.sectionsConfig.hidden = localCfg.sectionsConfig.hidden.filter(h => h !== id);
                 }
                 if (localCfg.textOverrides) {
-                    Object.keys(localCfg.textOverrides).forEach(key => {
-                        if (key.startsWith(id)) delete localCfg.textOverrides[key];
+                    // Precise Cleanup: only delete keys belonging EXACTLY to this ID
+                    const suffixes = ['_title', '_content', '_placement', '_align', '_icon'];
+                    suffixes.forEach(sfx => {
+                        delete localCfg.textOverrides[id + sfx];
                     });
                 }
 
@@ -2255,11 +2267,10 @@
                 try {
                     isPerformingCloudAction = true;
                     await db.ref('site_config').set(localCfg);
-                    console.log("Cloud sync successful (Silent)");
                 } catch (err) {
-                    console.error("Cloud sync failed in background:", err);
+                    console.error("Delete Sync Failed:", err);
                 } finally {
-                    isPerformingCloudAction = false;
+                    setTimeout(() => { isPerformingCloudAction = false; }, 2000);
                 }
             }
 
