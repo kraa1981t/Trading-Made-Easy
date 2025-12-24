@@ -664,7 +664,26 @@
                             ${htmlContent}
                         </div>
                     </section>
+                    </section>
                 `;
+
+                // FINAL SAFETY: Re-apply visual overrides on the newly rendered HTML
+                setTimeout(() => {
+                    const cfg = JSON.parse(localStorage.getItem('tme_config_v2'));
+                    if (cfg && cfg.textOverrides) {
+                        // Dynamically update headings based on current section
+                        if (section === 'bots') {
+                            const h1 = document.querySelector('h1');
+                            if (h1 && translations[lang].bots_title) h1.textContent = translations[lang].bots_title;
+
+                            const p = document.querySelector('.details-hero p');
+                            if (p && translations[lang].bots_desc) p.textContent = translations[lang].bots_desc;
+                        }
+
+                        // Force update any shared classes
+                        if (typeof applySiteSettings === 'function') applySiteSettings();
+                    }
+                }, 50);
             }
 
             if (langSelect) {
