@@ -2189,14 +2189,30 @@
 
                     console.log("Saving new section to cloud:", newId);
 
-                    // 3. Save to LocalStorage
+                    // Update everything locally first
                     localStorage.setItem(CONFIG_KEY, JSON.stringify(config));
 
-                    // 4. Sync to Cloud and Reload (Same Logic as Variables)
-                    await db.ref('site_config').set(config);
+                    // INSTANT UI UPDATE
+                    applySiteSettings();
+                    refreshCustomSectionsList();
+                    if (typeof refreshSectionList === 'function') refreshSectionList();
 
-                    console.log("Cloud sync complete. Reloading...");
-                    window.location.reload();
+                    // SILENT SYNC TO CLOUD
+                    try {
+                        isPerformingCloudAction = true;
+                        await db.ref('site_config').set(config);
+                        addBtn.innerHTML = originalHTML;
+                        addBtn.disabled = false;
+                        // Reset fields
+                        document.getElementById('new-sec-title').value = '';
+                        document.getElementById('new-sec-content').value = '';
+                    } catch (err) {
+                        alert("Cloud sync failed, but saved locally.");
+                        addBtn.innerHTML = originalHTML;
+                        addBtn.disabled = false;
+                    } finally {
+                        isPerformingCloudAction = false;
+                    }
 
                 } catch (err) {
                     console.error("addCustomSection error:", err);
@@ -2212,53 +2228,36 @@
             let isPerformingCloudAction = false;
 
             async function removeCustomSection(id) {
-                if (!confirm("Are you sure you want to delete this element permanently?")) return;
+                if (!confirm("Delete this element?")) return;
 
-                if (isPerformingCloudAction) return;
-                isPerformingCloudAction = true;
+                // 1. INSTANT LOCAL UPDATE (Optimistic UI)
+                const localCfg = JSON.parse(localStorage.getItem(CONFIG_KEY)) || {};
+                if (localCfg.customSections) {
+                    localCfg.customSections = localCfg.customSections.filter(s => s.id !== id);
+                }
+                if (localCfg.sectionsConfig) {
+                    if (localCfg.sectionsConfig.order) localCfg.sectionsConfig.order = localCfg.sectionsConfig.order.filter(o => o !== id);
+                    if (localCfg.sectionsConfig.hidden) localCfg.sectionsConfig.hidden = localCfg.sectionsConfig.hidden.filter(h => h !== id);
+                }
+                if (localCfg.textOverrides) {
+                    Object.keys(localCfg.textOverrides).forEach(key => {
+                        if (key.startsWith(id)) delete localCfg.textOverrides[key];
+                    });
+                }
 
+                // Apply locally immediately
+                localStorage.setItem(CONFIG_KEY, JSON.stringify(localCfg));
+                applySiteSettings();
+                refreshCustomSectionsList();
+                if (typeof refreshSectionList === 'function') refreshSectionList();
+
+                // 2. SILENT CLOUD SYNC
                 try {
-                    console.log("Starting Hard Delete for:", id);
-
-                    // 1. Fetch FRESH data from Cloud to be 100% sure we have the latest
-                    const snapshot = await db.ref('site_config').once('value');
-                    let config = snapshot.val() || { customSections: [], textOverrides: {}, sectionsConfig: { order: [] } };
-
-                    // 2. Perform Filtering on the FRESH data
-                    if (config.customSections) {
-                        config.customSections = config.customSections.filter(s => s.id !== id);
-                    }
-
-                    // 3. Clean up order list
-                    if (config.sectionsConfig && config.sectionsConfig.order) {
-                        config.sectionsConfig.order = config.sectionsConfig.order.filter(oid => oid !== id);
-                    }
-                    if (config.sectionsConfig && config.sectionsConfig.hidden) {
-                        config.sectionsConfig.hidden = config.sectionsConfig.hidden.filter(hid => hid !== id);
-                    }
-
-                    // 4. Clean up all associated overrides
-                    if (config.textOverrides) {
-                        const keysToDelete = Object.keys(config.textOverrides).filter(key => key.startsWith(id));
-                        keysToDelete.forEach(key => delete config.textOverrides[key]);
-                    }
-
-                    // 5. Hard Write back to Firebase (This overrides EVERYTHING in the cloud)
-                    await db.ref('site_config').set(config);
-
-                    // 6. Update LocalStorage only AFTER successful cloud write
-                    localStorage.setItem(CONFIG_KEY, JSON.stringify(config));
-
-                    console.log("Delete finalized in cloud. LIVE UPDATE.");
-
-                    // 7. Updates UI instantly without reload
-                    applySiteSettings();
-                    refreshCustomSectionsList();
-                    if (typeof refreshSectionList === 'function') refreshSectionList();
-
+                    isPerformingCloudAction = true;
+                    await db.ref('site_config').set(localCfg);
+                    console.log("Cloud sync successful (Silent)");
                 } catch (err) {
-                    console.error("Hard Delete Failed:", err);
-                    alert("Sync Error: " + err.message);
+                    console.error("Cloud sync failed in background:", err);
                 } finally {
                     isPerformingCloudAction = false;
                 }
