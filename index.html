@@ -1874,10 +1874,14 @@
                 }
             }
 
-            function saveSettings(alertUser = false) {
+            function saveSettings(alertUser = true) {
                 try {
                     // 1. Read latest state from storage to prevent data loss
                     const storageData = JSON.parse(localStorage.getItem(CONFIG_KEY)) || {};
+                    const config = { ...storageData }; // Create a mutable copy
+
+                    // Update Version Lock
+                    config.lastUpdate = Date.now();
 
                     const getValue = (id, defaultVal = '') => {
                         const el = document.getElementById(id);
@@ -1889,58 +1893,55 @@
                     };
 
                     // 2. Build new config, merging with existing where applicable
-                    const config = {
-                        ...storageData,
-                        visibility: {
-                            bots: getChecked('adm-vis-bots'),
-                            signals: getChecked('adm-vis-signals'),
-                            services: getChecked('adm-vis-services'),
-                            about: getChecked('adm-vis-about')
-                        },
-                        appearance: {
-                            siteTitle: getValue('adm-app-title', 'Trading Made Easy'),
-                            primaryColor: getValue('adm-app-color', '#00ff88'),
-                            borderRadius: getValue('adm-app-radius', '10px'),
-                            metaDesc: getValue('adm-app-meta'),
-                            profileBase64: getValue('adm-app-profile-base64')
-                        },
-                        textOverrides: {
-                            hero_title: getValue('adm-txt-hero'),
-                            hero_desc: getValue('adm-txt-hero-desc'),
-                            about_bio: getValue('adm-txt-about'),
-                            ticker_msgs: getValue('adm-txt-ticker'),
-                            // New Section Titles
-                            bots_title: getValue('adm-txt-bots-title'),
-                            signals_title: getValue('adm-txt-signals-title'),
-                            services_title: getValue('adm-txt-services-title'),
-                            stats_title: getValue('adm-txt-stats-title'),
-                            pay_title: getValue('adm-txt-pay-title'),
-                            contact_title: getValue('adm-txt-contact-title'),
-                            // Detailed Overrides
-                            about_role: getValue('adm-txt-about-role'),
-                            nav_home: getValue('adm-nav-home'),
-                            nav_bots: getValue('adm-nav-bots'),
-                            nav_signals: getValue('adm-nav-signals'),
-                            nav_services: getValue('adm-nav-services'),
-                            nav_about: getValue('adm-nav-about'),
-                            nav_contact: getValue('adm-nav-contact'),
-                            // Specifics
-                            hero_suffix: getValue('adm-txt-hero-suffix'),
-                            bots_subtitle: getValue('adm-txt-bots-sub'),
-                            serv_badge_1: getValue('adm-txt-serv-1'),
-                            serv_badge_2: getValue('adm-txt-serv-2'),
-                            serv_badge_3: getValue('adm-txt-serv-3'),
-                            serv_badge_4: getValue('adm-txt-serv-4'),
+                    config.visibility = {
+                        bots: getChecked('adm-vis-bots'),
+                        signals: getChecked('adm-vis-signals'),
+                        services: getChecked('adm-vis-services'),
+                        about: getChecked('adm-vis-about')
+                    };
+                    config.appearance = {
+                        siteTitle: getValue('adm-app-title', 'Trading Made Easy'),
+                        primaryColor: getValue('adm-app-color', '#00ff88'),
+                        borderRadius: getValue('adm-app-radius', '10px'),
+                        metaDesc: getValue('adm-app-meta'),
+                        profileBase64: getValue('adm-app-profile-base64')
+                    };
+                    config.textOverrides = {
+                        hero_title: getValue('adm-txt-hero'),
+                        hero_desc: getValue('adm-txt-hero-desc'),
+                        about_bio: getValue('adm-txt-about'),
+                        ticker_msgs: getValue('adm-txt-ticker'),
+                        // New Section Titles
+                        bots_title: getValue('adm-txt-bots-title'),
+                        signals_title: getValue('adm-txt-signals-title'),
+                        services_title: getValue('adm-txt-services-title'),
+                        stats_title: getValue('adm-txt-stats-title'),
+                        pay_title: getValue('adm-txt-pay-title'),
+                        contact_title: getValue('adm-txt-contact-title'),
+                        // Detailed Overrides
+                        about_role: getValue('adm-txt-about-role'),
+                        nav_home: getValue('adm-nav-home'),
+                        nav_bots: getValue('adm-nav-bots'),
+                        nav_signals: getValue('adm-nav-signals'),
+                        nav_services: getValue('adm-nav-services'),
+                        nav_about: getValue('adm-nav-about'),
+                        nav_contact: getValue('adm-nav-contact'),
+                        // Specifics
+                        hero_suffix: getValue('adm-txt-hero-suffix'),
+                        bots_subtitle: getValue('adm-txt-bots-sub'),
+                        serv_badge_1: getValue('adm-txt-serv-1'),
+                        serv_badge_2: getValue('adm-txt-serv-2'),
+                        serv_badge_3: getValue('adm-txt-serv-3'),
+                        serv_badge_4: getValue('adm-txt-serv-4'),
 
-                            sig_brief_title: getValue('adm-txt-sig-brief-title'),
-                            sig_brief_desc: getValue('adm-txt-sig-brief-desc'),
+                        sig_brief_title: getValue('adm-txt-sig-brief-title'),
+                        sig_brief_desc: getValue('adm-txt-sig-brief-desc'),
 
-                            latest_offer_text: getValue('adm-txt-offer-text'),
-                            sig_feat1: getValue('adm-sig-feat1'),
-                            sig_feat2: getValue('adm-sig-feat2'),
-                            sig_feat3: getValue('adm-sig-feat3'),
-                            stat_success: getValue('adm-stat-success')
-                        }
+                        latest_offer_text: getValue('adm-txt-offer-text'),
+                        sig_feat1: getValue('adm-sig-feat1'),
+                        sig_feat2: getValue('adm-sig-feat2'),
+                        sig_feat3: getValue('adm-sig-feat3'),
+                        stat_success: getValue('adm-stat-success')
                     };
 
                     // 2.1 Collect Custom Sections Overrides Automatically
@@ -2163,6 +2164,10 @@
 
                     // 1. Get current config from LocalStorage (Source of Truth)
                     const config = JSON.parse(localStorage.getItem(CONFIG_KEY)) || {};
+
+                    // Update Version Lock
+                    config.lastUpdate = Date.now();
+
                     config.customSections = config.customSections || [];
                     config.textOverrides = config.textOverrides || {};
                     config.sectionsConfig = config.sectionsConfig || { order: [], hidden: [] };
@@ -2239,38 +2244,55 @@
                 // 1. INSTANT LOCAL UPDATE
                 const localCfg = JSON.parse(localStorage.getItem(CONFIG_KEY)) || {};
 
-                // Set Version Timestamp to LOCK the cloud
-                localCfg.lastUpdate = Date.now();
+                // FORCE VERSION UPDATE
+                const newVer = Date.now();
+                localCfg.lastUpdate = newVer;
 
+                // 1a. Clean Custom Sections List
                 if (localCfg.customSections) {
                     localCfg.customSections = localCfg.customSections.filter(s => s.id !== id);
                 }
+
+                // 1b. Clean Order & Hidden Lists (Nuclear Clean)
                 if (localCfg.sectionsConfig) {
-                    if (localCfg.sectionsConfig.order) localCfg.sectionsConfig.order = localCfg.sectionsConfig.order.filter(o => o !== id);
-                    if (localCfg.sectionsConfig.hidden) localCfg.sectionsConfig.hidden = localCfg.sectionsConfig.hidden.filter(h => h !== id);
+                    if (localCfg.sectionsConfig.order) {
+                        localCfg.sectionsConfig.order = localCfg.sectionsConfig.order.filter(oid => oid !== id);
+                    }
+                    if (localCfg.sectionsConfig.hidden) {
+                        localCfg.sectionsConfig.hidden = localCfg.sectionsConfig.hidden.filter(hid => hid !== id);
+                    }
                 }
+
+                // 1c. Clean ALL overrides for this ID specifically
                 if (localCfg.textOverrides) {
-                    // Precise Cleanup: only delete keys belonging EXACTLY to this ID
-                    const suffixes = ['_title', '_content', '_placement', '_align', '_icon'];
-                    suffixes.forEach(sfx => {
-                        delete localCfg.textOverrides[id + sfx];
+                    const keys = Object.keys(localCfg.textOverrides);
+                    keys.forEach(key => {
+                        // Check if key is exactly ID_property
+                        if (key.startsWith(id)) {
+                            delete localCfg.textOverrides[key];
+                        }
                     });
                 }
 
-                // Apply locally immediately
+                // Apply locally immediately to prevent saveSettings from picking it up
                 localStorage.setItem(CONFIG_KEY, JSON.stringify(localCfg));
+
+                // Update UI instantly
                 applySiteSettings();
                 refreshCustomSectionsList();
                 if (typeof refreshSectionList === 'function') refreshSectionList();
 
-                // 2. SILENT CLOUD SYNC
+                // 2. SILENT CLOUD SYNC (With Version Guard)
                 try {
                     isPerformingCloudAction = true;
+                    // Directly set with the new version
                     await db.ref('site_config').set(localCfg);
+                    console.log("Section", id, "erased from cloud with version", newVer);
                 } catch (err) {
-                    console.error("Delete Sync Failed:", err);
+                    console.error("Cloud erase failed:", err);
                 } finally {
-                    setTimeout(() => { isPerformingCloudAction = false; }, 2000);
+                    // Stay 'Locked' for 3 seconds to let all echoes clear
+                    setTimeout(() => { isPerformingCloudAction = false; }, 3000);
                 }
             }
 
