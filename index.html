@@ -843,7 +843,7 @@
                                         placeholder="Type your section content here..."
                                         style="width:100%; padding:0.6rem; background:var(--bg-color); border:1px solid var(--border-color); color:var(--text-color); border-radius:5px;"></textarea>
                                 </div>
-                                <button onclick="addCustomSection()" class="btn-primary" style="width:100%;">
+                                <button onclick="addCustomSection(event)" class="btn-primary" style="width:100%;">
                                     <i class="fas fa-plus-circle"></i> Create Section
                                 </button>
                             </div>
@@ -1892,37 +1892,40 @@
                         const btn = document.getElementById('final-save-btn');
                         if (btn) {
                             btn.disabled = true;
-                            btn.innerHTML = '<i class="fas fa-sync fa-spin"></i> Finalizing...';
+                            btn.innerHTML = '<i class="fas fa-sync fa-spin"></i> Saving...';
                         }
 
-                        // APPLY LOCALLY FIRST for instant feedback
+                        // Apply locally immediately
                         applySiteSettings();
 
-                        // SYNC ONLY CONFIG TO CLOUD
-                        console.log("Starting cloud sync (Config Only)...", config);
+                        console.log("Syncing config to cloud...", config);
 
-                        // Use a timeout to ensure we don't hang the UI
-                        let syncDone = false;
-                        const handleFinish = () => {
-                            if (syncDone) return;
-                            syncDone = true;
-                            console.log("Sync process finished - Reloading...");
-                            window.location.reload();
+                        // Use a promise with timeout
+                        const syncWithTimeout = (ref, data, ms) => {
+                            const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error('Sync Timeout')), ms));
+                            const sync = ref.set(data);
+                            return Promise.race([sync, timeout]);
                         };
 
-                        db.ref('site_config').set(config)
-                            .then(handleFinish)
+                        syncWithTimeout(db.ref('site_config'), config, 5000)
+                            .then(() => {
+                                console.log("Cloud sync success. Reloading page.");
+                                window.location.reload();
+                            })
                             .catch(err => {
-                                console.error("Cloud sync errored:", err);
-                                handleFinish();
+                                console.warn("Cloud sync failed or timed out:", err);
+                                // Reload anyway so user sees local result at least on next refresh from localstorage
+                                window.location.reload();
                             });
-
-                        // Safety timeout 4 seconds
-                        setTimeout(handleFinish, 4000);
                     }
                 } catch (err) {
                     console.error("saveSettings Error:", err);
-                    alert("Save failed! " + err.message);
+                    alert("An error occurred while saving: " + err.message);
+                    const btn = document.getElementById('final-save-btn');
+                    if (btn) {
+                        btn.disabled = false;
+                        btn.innerHTML = 'Save All Changes';
+                    }
                 }
             }
 
@@ -2023,7 +2026,10 @@
                 }
             }
 
-            function addCustomSection() {
+            function addCustomSection(e) {
+                const addBtn = e ? e.currentTarget : event.currentTarget;
+                const originalHTML = addBtn.innerHTML;
+
                 try {
                     const titleInput = document.getElementById('new-sec-title');
                     const contentInput = document.getElementById('new-sec-content');
@@ -2031,46 +2037,36 @@
                     const content = contentInput.value.trim();
 
                     if (!title || !content) {
-                        alert("Please provide both a title and content for the new section.");
+                        alert("Title and content are required.");
                         return;
                     }
 
-                    // 1. Get latest config
-                    const config = JSON.parse(localStorage.getItem(CONFIG_KEY)) || {};
-                    config.customSections = config.customSections || [];
+                    addBtn.disabled = true;
+                    addBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating...';
 
-                    // 2. Create new section
+                    // 1. Load latest from local
+                    const config = JSON.parse(localStorage.getItem(CONFIG_KEY)) || { customSections: [] };
+                    if (!config.customSections) config.customSections = [];
+
+                    // 2. Add New Sec
                     const newId = 'custom-sec-' + Date.now();
-                    const newSec = { id: newId, title, content };
-                    config.customSections.push(newSec);
+                    config.customSections.push({ id: newId, title, content });
 
-                    // 3. Ensure it's in the order list immediately
+                    // 3. Inject into order
                     if (!config.sectionsConfig) config.sectionsConfig = { order: [], hidden: [] };
                     if (!config.sectionsConfig.order) config.sectionsConfig.order = [];
-                    // Add to the end of order if not there
-                    if (!config.sectionsConfig.order.includes(newId)) {
-                        config.sectionsConfig.order.push(newId);
-                    }
+                    if (!config.sectionsConfig.order.includes(newId)) config.sectionsConfig.order.push(newId);
 
-                    // 4. Save to localStorage first
+                    // 4. Save to Local
                     localStorage.setItem(CONFIG_KEY, JSON.stringify(config));
 
-                    // Clear fields
-                    titleInput.value = '';
-                    contentInput.value = '';
-
-                    console.log("Section created locally, triggering final save and sync...");
-
-                    // 5. Apply and Sync
-                    applySiteSettings();
-                    refreshSectionList();
-                    refreshCustomSectionsList();
-
-                    // Call saveSettings(true) to handle cloud sync and reload
+                    // 5. Trigger final save (which will sync and reload)
                     saveSettings(true);
                 } catch (err) {
-                    console.error("addCustomSection Error:", err);
-                    alert("Failed to create section. Check console.");
+                    console.error("addCustomSection error:", err);
+                    alert("Error creating section: " + err.message);
+                    addBtn.disabled = false;
+                    addBtn.innerHTML = originalHTML;
                 }
             }
 
@@ -2110,18 +2106,18 @@
                     // Management
                     html += `
                         <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(0,0,0,0.1); padding:0.5rem; border-radius:4px; margin-bottom:0.3rem;">
-                            <span style="font-size:0.8rem;">${sec.title}</span>
+                            <span style="font-size:0.8rem;">${(sec.title || "Untitled").substring(0, 30)}</span>
                             <button onclick="removeCustomSection('${sec.id}')" style="background:none; border:none; color:#ff4d4d; cursor:pointer;"><i class="fas fa-trash"></i></button>
                         </div>
                     `;
 
                     // Text Edits
-                    const titleVal = (config.textOverrides && config.textOverrides[sec.id + '_title']) || sec.title;
-                    const contentVal = (config.textOverrides && config.textOverrides[sec.id + '_content']) || sec.content;
+                    const titleVal = String((config.textOverrides && config.textOverrides[sec.id + '_title']) || sec.title || "");
+                    const contentVal = String((config.textOverrides && config.textOverrides[sec.id + '_content']) || sec.content || "");
 
                     editHtml += `
                         <div style="margin-bottom:1.5rem; padding-bottom:1rem; border-bottom:1px dashed var(--border-color);">
-                            <label style="display:block; font-size:0.8rem; font-weight:bold; margin-bottom:0.5rem;">Section: ${sec.title}</label>
+                            <label style="display:block; font-size:0.8rem; font-weight:bold; margin-bottom:0.5rem;">Section: ${sec.title || "New Section"}</label>
                             <div style="display:grid; gap:0.5rem;">
                                 <input type="text" id="adm-txt-${sec.id}-title" value="${titleVal.replace(/"/g, '&quot;')}" placeholder="Custom Title"
                                     style="width:100%; padding:0.5rem; background:var(--bg-color); border:1px solid var(--border-color); color:var(--text-color); border-radius:4px;">
