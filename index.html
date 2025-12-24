@@ -2042,10 +2042,11 @@
                 titleInput.value = '';
                 contentInput.value = '';
 
-                alert("Custom Section Created! Click 'Save All Changes' to publish.");
+                // NEW: Use the same logic as other settings (Apply -> Save -> Sync -> Reload)
                 applySiteSettings();
                 refreshSectionList();
                 refreshCustomSectionsList();
+                saveSettings(true);
             }
 
             function removeCustomSection(id) {
@@ -2054,9 +2055,11 @@
                 if (config.customSections) {
                     config.customSections = config.customSections.filter(s => s.id !== id);
                     localStorage.setItem(CONFIG_KEY, JSON.stringify(config));
+
                     applySiteSettings();
                     refreshSectionList();
                     refreshCustomSectionsList();
+                    saveSettings(true); // Force sync and reload
                 }
             }
 
