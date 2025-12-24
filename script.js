@@ -389,11 +389,38 @@ document.addEventListener('DOMContentLoaded', () => {
     const langSelect = document.querySelector('.lang-select');
 
     // --- Apply Overrides to ALL Languages ---
+    // --- Apply Overrides to ALL Languages ---
     if (siteConfig && siteConfig.textOverrides) {
         Object.keys(translations).forEach(lang => {
-            if (siteConfig.textOverrides.hero_title) translations[lang].hero_title = siteConfig.textOverrides.hero_title;
-            if (siteConfig.textOverrides.hero_desc) translations[lang].hero_subtitle = siteConfig.textOverrides.hero_desc;
-            if (siteConfig.textOverrides.about_bio) translations[lang].about_bio_text = siteConfig.textOverrides.about_bio;
+            const txt = siteConfig.textOverrides;
+            if (txt.hero_title) translations[lang].hero_title = txt.hero_title;
+            if (txt.hero_desc) translations[lang].hero_subtitle = txt.hero_desc;
+            if (txt.about_bio) translations[lang].about_bio_text = txt.about_bio;
+
+            // New Section Overrides
+            if (txt.bots_title) translations[lang].bots_section_title = txt.bots_title;
+            if (txt.signals_title) translations[lang].signals_title = txt.signals_title;
+            if (txt.services_title) translations[lang].services_section_title = txt.services_title;
+            if (txt.stats_title) translations[lang].stats_section_title = txt.stats_title;
+            if (txt.pay_title) translations[lang].pay_title = txt.pay_title;
+            if (txt.contact_title) translations[lang].contact_title = txt.contact_title;
+
+            // Deep Detail Overrides
+            if (txt.nav_home) translations[lang].nav_home = txt.nav_home;
+            if (txt.nav_bots) translations[lang].nav_bots = txt.nav_bots;
+            if (txt.nav_signals) translations[lang].nav_signals = txt.nav_signals;
+            if (txt.nav_services) translations[lang].nav_services = txt.nav_services;
+            if (txt.nav_about) translations[lang].nav_about = txt.nav_about;
+            if (txt.nav_contact) translations[lang].nav_contact = txt.nav_contact;
+
+            if (txt.latest_offer_text) translations[lang].latest_offer_text = txt.latest_offer_text;
+            if (txt.about_role) translations[lang].about_role = txt.about_role;
+            if (txt.serv_badge_1) translations[lang].serv_custom = txt.serv_badge_1;
+
+            if (txt.sig_feat1) translations[lang].sig_feat1 = txt.sig_feat1;
+            if (txt.sig_feat2) translations[lang].sig_feat2 = txt.sig_feat2;
+            if (txt.sig_feat3) translations[lang].sig_feat3 = txt.sig_feat3;
+            if (txt.stat_success) translations[lang].stat_success = txt.stat_success;
         });
     }
 

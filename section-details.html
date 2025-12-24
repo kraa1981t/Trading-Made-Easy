@@ -243,6 +243,10 @@
                 });
             }
 
+            const siteConfig = JSON.parse(localStorage.getItem('tme_config_v2'));
+            // Apply overrides immediately after DOM load
+            if (typeof applySiteSettings === 'function') applySiteSettings();
+
             const translations = {
                 en: {
                     nav_home: "Home", nav_bots: "MT5 Bots", nav_signals: "Signals", nav_services: "Services", nav_about: "About", nav_contact: "Contact", text_back: "Back",
@@ -609,6 +613,9 @@
 
             const savedLang = localStorage.getItem('language') || 'en';
             updateLanguage(savedLang);
+
+            // Re-apply site settings to ensure they override any defaults
+            if (typeof applySiteSettings === 'function') applySiteSettings();
         });
     </script>
 </body>
