@@ -431,6 +431,11 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
+        // RE-APPLY ADMIN OVERRIDES (COLORS & TEXTS)
+        if (typeof applySiteSettings === 'function') {
+            applySiteSettings();
+        }
+
         // Trigger product re-render
         const productContainer = document.getElementById('bots-grid-container');
         if (productContainer) {
