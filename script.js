@@ -43,40 +43,175 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // --- Admin Config Loader (Upgraded to V3 for Priority & Cleanup) ---
-    const CONFIG_KEY = 'tme_config_v3';
+    // --- Universal Site Settings (Radical Fix: Shared across all pages) ---
+    window.CONFIG_KEY = 'tme_config_v3';
     const OLD_CONFIG_KEY = 'tme_config_v2';
 
-    // Cleanup legacy config to prevent "ghost" reverts
+    // Migration logic (Shared)
     if (localStorage.getItem(OLD_CONFIG_KEY)) {
-        console.log("Migrating/Cleaning old V2 config...");
-        const oldData = localStorage.getItem(OLD_CONFIG_KEY);
-        if (!localStorage.getItem(CONFIG_KEY)) {
-            localStorage.setItem(CONFIG_KEY, oldData);
-        }
+        const data = localStorage.getItem(OLD_CONFIG_KEY);
+        if (!localStorage.getItem(CONFIG_KEY)) localStorage.setItem(CONFIG_KEY, data);
         localStorage.removeItem(OLD_CONFIG_KEY);
     }
 
-    function getLatestConfig() {
+    window.getLatestConfig = function () {
         try {
             return JSON.parse(localStorage.getItem(CONFIG_KEY)) || {};
         } catch (e) { return {}; }
+    };
+
+    window.applySiteSettings = function () {
+        try {
+            const cfg = getLatestConfig();
+            if (!cfg) return;
+            console.log('[Universal] Applying Site Settings...');
+
+            // 1. Appearance (Colors, Title, Radius)
+            if (cfg.appearance) {
+                if (cfg.appearance.siteTitle) {
+                    document.title = cfg.appearance.siteTitle;
+                    document.querySelectorAll('.site-title, .site-title-rendered, .site-title a').forEach(el => {
+                        el.textContent = cfg.appearance.siteTitle;
+                    });
+                }
+                if (cfg.appearance.primaryColor) {
+                    document.documentElement.style.setProperty('--primary-color', cfg.appearance.primaryColor);
+                    document.documentElement.style.setProperty('--accent-color', cfg.appearance.primaryColor);
+                }
+                if (cfg.appearance.borderRadius) {
+                    const style = document.getElementById('dynamic-radius-style') || document.createElement('style');
+                    style.id = 'dynamic-radius-style';
+                    style.textContent = `.btn, .btn-primary, .card, .bot-card, .service-card, input, textarea, select, .payment-option { border-radius: ${cfg.appearance.borderRadius} !important; }`;
+                    if (!style.parentNode) document.head.appendChild(style);
+                }
+                if (cfg.appearance.profileBase64) {
+                    document.querySelectorAll('.profile-img').forEach(img => { img.src = cfg.appearance.profileBase64; });
+                }
+                if (cfg.appearance.metaDesc) {
+                    let meta = document.querySelector('meta[name="description"]');
+                    if (meta) meta.content = cfg.appearance.metaDesc;
+                }
+            }
+
+            // 2. Links
+            if (cfg.links) {
+                const fb = document.querySelector('a[href*="facebook.com"]');
+                if (fb && cfg.links.facebook) fb.href = cfg.links.facebook;
+                const pin = document.querySelector('a[href*="pinterest.com"]');
+                if (pin && cfg.links.pinterest) pin.href = cfg.links.pinterest;
+                const email = document.querySelector('a[href^="mailto:"]');
+                if (email && cfg.links.email) email.href = "mailto:" + cfg.links.email;
+            }
+
+            // 3. Visibility
+            if (cfg.elementVisibility) {
+                const ev = cfg.elementVisibility;
+                const toggle = (id, show) => {
+                    const el = document.getElementById(id);
+                    if (el) el.style.setProperty('display', (show === false) ? 'none' : '', 'important');
+                };
+                toggle('hero-offer-container', ev.hero_offer);
+                toggle('sig-feat-1', ev.sig_feat1);
+                toggle('sig-feat-2', ev.sig_feat2);
+                toggle('sig-feat-3', ev.sig_feat3);
+                toggle('stat-item-1', ev.stat_success);
+                toggle('nav-link-home', ev.nav_home);
+                toggle('nav-link-bots', ev.nav_bots);
+                toggle('nav-link-signals', ev.nav_signals);
+                toggle('nav-link-services', ev.nav_services);
+                toggle('nav-link-about', ev.nav_about);
+                toggle('nav-link-contact', ev.nav_contact);
+            }
+
+            // 4. Manual Text Overrides (Immediate DOM)
+            if (cfg.textOverrides) {
+                const txt = cfg.textOverrides;
+                const setHTML = (sel, val) => { const el = document.querySelector(sel); if (el && val !== undefined) el.innerHTML = val; };
+                const setTxt = (sel, val) => {
+                    const el = (sel.startsWith('#')) ? document.getElementById(sel.substring(1)) : document.querySelector(sel);
+                    if (el && val !== undefined) el.textContent = val;
+                };
+
+                setHTML('.hero-content h1', txt.hero_title);
+                setTxt('.hero-content p', txt.hero_desc);
+                setTxt('#hero-title-suffix', txt.hero_suffix);
+                setTxt('#bots-subtitle', txt.bots_subtitle);
+                setTxt('#hero-desc-text', txt.hero_desc); // Alternate selector fix
+
+                const servBadges = document.querySelectorAll('.services-list .service-badge');
+                if (servBadges[0] && txt.serv_badge_1 !== undefined) servBadges[0].textContent = txt.serv_badge_1;
+                if (servBadges[1] && txt.serv_badge_2 !== undefined) servBadges[1].textContent = txt.serv_badge_2;
+                if (servBadges[2] && txt.serv_badge_3 !== undefined) servBadges[2].textContent = txt.serv_badge_3;
+                if (servBadges[3] && txt.serv_badge_4 !== undefined) servBadges[3].textContent = txt.serv_badge_4;
+
+                setTxt('.about-text p', txt.about_bio);
+                setTxt('h4[data-i18n="sig_brief"]', txt.sig_brief_title);
+                setTxt('p[data-i18n="sig_brief_desc"]', txt.sig_brief_desc);
+
+                // Section Title overrides
+                setTxt('[data-i18n="bots_section_title"]', txt.bots_title);
+                setTxt('[data-i18n="signals_title"]', txt.signals_title);
+                setTxt('[data-i18n="services_section_title"]', txt.services_title);
+                setTxt('[data-i18n="stats_section_title"]', txt.stats_title);
+                setTxt('[data-i18n="pay_title"]', txt.pay_title);
+                setTxt('[data-i18n="contact_title"]', txt.contact_title);
+            }
+
+            // 5. Build Dynamic Sections if index.html context
+            const wrapper = document.getElementById('page-sections-wrapper');
+            if (wrapper && cfg.customSections) {
+                // (Note: Page builder logic stays in index.html or remains here if generic enough)
+                // For now, let's keep the specialized builder in script.js but scoped
+                renderCustomSections(cfg);
+            }
+
+        } catch (e) { console.error('Universal applySiteSettings Error:', e); }
+    };
+
+    function renderCustomSections(cfg) {
+        const wrapper = document.getElementById('page-sections-wrapper');
+        const navMenu = document.querySelector('.nav-menu');
+        const footer = document.querySelector('footer .container');
+        if (!wrapper || !cfg.customSections) return;
+
+        document.querySelectorAll('.dynamic-element').forEach(el => el.remove());
+        cfg.customSections.forEach(sec => {
+            const placement = (cfg.textOverrides && cfg.textOverrides[sec.id + '_placement']) || sec.placement || 'body';
+            const title = (cfg.textOverrides && cfg.textOverrides[sec.id + '_title']) || sec.title;
+            const content = (cfg.textOverrides && cfg.textOverrides[sec.id + '_content']) || sec.content;
+            const align = (cfg.textOverrides && cfg.textOverrides[sec.id + '_align']) || sec.align || 'center';
+            const icon = (cfg.textOverrides && cfg.textOverrides[sec.id + '_icon']) || sec.icon || '';
+
+            if (placement === 'navbar' && navMenu) {
+                const link = document.createElement('a');
+                link.href = content; link.className = 'nav-link dynamic-element';
+                link.innerHTML = `${icon ? `<i class="${icon}"></i> ` : ''}${title}`;
+                navMenu.appendChild(link);
+            } else if (placement === 'footer' && footer) {
+                const span = document.createElement('span');
+                span.className = 'dynamic-element'; span.style.cssText = 'margin:0 10px;opacity:0.8;';
+                span.innerHTML = `${icon ? `<i class="${icon}"></i> ` : ''}<a href="${content.startsWith('http') ? '#' : content}" style="color:inherit;">${title}</a>`;
+                footer.appendChild(span);
+            } else if (placement.includes('sidebar')) {
+                // Sidebar logic...
+            } else {
+                const secEl = document.createElement('section');
+                secEl.id = sec.id; secEl.className = 'section-padding dynamic-section dynamic-element';
+                secEl.style.cssText = `padding:5rem 0;background:var(--bg-color);border-top:1px solid var(--border-color);text-align:${align};`;
+                secEl.innerHTML = `<div class="container"><h2 class="section-title" style="color:var(--primary-color);justify-content:${align === 'center' ? 'center' : (align === 'right' ? 'flex-end' : 'flex-start')};">${icon ? `<i class="${icon}"></i> ` : ''}${title}</h2><div style="max-width:800px;margin:0 auto;">${content}</div></div>`;
+                wrapper.appendChild(secEl);
+            }
+        });
     }
 
     // --- Notifications Ticker ---
     const ticker = document.getElementById('notification-ticker');
-    let notifications = [
-        "Welcome to Trading Made Easy - Transforming market analysis into profit.",
-        "New algorithm update available for MT5 Bots.",
-        "System latency reduced by 15% this week."
-    ];
-
+    let notifications = ["Welcome to Trading Made Easy", "New algorithm update available", "System latency reduced by 15%"];
     const siteConfig = getLatestConfig();
-    if (siteConfig && siteConfig.textOverrides && siteConfig.textOverrides.ticker_msgs) {
+    if (siteConfig?.textOverrides?.ticker_msgs) {
         const customMsgs = siteConfig.textOverrides.ticker_msgs.split('\n').filter(m => m.trim() !== '');
         if (customMsgs.length > 0) notifications = customMsgs;
     }
-
     let msgIndex = 0;
     if (ticker) {
         ticker.textContent = notifications[0];
@@ -90,20 +225,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 5000);
     }
 
-    // --- Apply Admin Settings (MODIFIED: Moved to index.html for Page Builder) ---
-    // Note: Most site settings are now handled dynamically in index.html's applySiteSettings()
-    // to support the real-time cloud sync and Page Builder placements.
+    // Run Universal Settings on Load
+    applySiteSettings();
 
-    // Social Links & Theme Persistence
-    const liveCfg = getLatestConfig();
-    if (liveCfg && liveCfg.links) {
-        const fb = document.querySelector('a[href*="facebook.com"]');
-        if (fb && liveCfg.links.facebook) fb.href = liveCfg.links.facebook;
-        const pin = document.querySelector('a[href*="pinterest.com"]');
-        if (pin && liveCfg.links.pinterest) pin.href = liveCfg.links.pinterest;
-        const email = document.querySelector('a[href^="mailto:"]');
-        if (email && liveCfg.links.email) email.href = "mailto:" + liveCfg.links.email;
-    }
+    window.addEventListener('load', () => {
+        applySiteSettings(); // Double-check after all assets loaded
+    });
 
     // --- Language & Translations ---
     const translations = {
@@ -155,7 +282,18 @@ document.addEventListener('DOMContentLoaded', () => {
             adm_prod_type_free: "Free Product?",
             download_free_btn: "Download Free",
             adm_prod_free_label: "FREE",
-            buy_btn: "Buy Now"
+            buy_btn: "Buy Now",
+            text_back: "Back",
+            checkout_title: "Complete Purchase", order_summary: "Order Summary", total: "Total",
+            select_payment: "Payment Method", pay_usdt_inst: "Send exact amount to address below (TRC20):",
+            pay_ltc_inst: "Send exact LTC amount to address below:",
+            next_steps: "Next Steps", next_steps_desc: "Send the exact amount shown. After sending, click verify and wait for blockchain confirmation.",
+            btn_verify: "Verify Payment on Blockchain",
+            pay_complete_msg: "Payment Confirmed! Package unlocked. Click green 'Download' button.",
+            product_package: "Product Package", status_locked: "Status: Locked",
+            status_unlocked: "Status: Unlocked", download: "Download",
+            verifying: "Verifying transaction...", not_found: "Not found yet.",
+            deposit_amount: "Deposit Amount"
         },
         ar: {
             nav_home: "الرئيسية", nav_bots: "روبوتات MT5", nav_signals: "الإشارات", nav_services: "الخدمات", nav_about: "من نحن", nav_contact: "اتصل بنا",
@@ -205,7 +343,18 @@ document.addEventListener('DOMContentLoaded', () => {
             adm_prod_type_free: "منتج مجاني؟",
             download_free_btn: "تحميل مجاني",
             adm_prod_free_label: "مجاني",
-            buy_btn: "شراء الآن"
+            buy_btn: "شراء الآن",
+            text_back: "رجوع",
+            checkout_title: "إتمام عملية الشراء", order_summary: "ملخص الطلب", total: "الإجمالي",
+            select_payment: "اختر طريقة الدفع", pay_usdt_inst: "أرسل المبلغ المحدد إلى العنوان أدناه (TRC20):",
+            pay_ltc_inst: "أرسل مبلغ LTC المحدد إلى العنوان أدناه:",
+            next_steps: "الخطوات التالية", next_steps_desc: "أرسل المبلغ المحدد للعنوان أعلاه، ثم اضغط على زر التحقق وانتظر تأكيد البلوكشين.",
+            btn_verify: "التحقق من الدفع عبر البلوكشين",
+            pay_complete_msg: "تم تأكيد الدفع! تم فتح حزمة المنتج. انقر فوق زر 'تحميل' الأخضر.",
+            product_package: "حزمة المنتج", status_locked: "الحالة: مقفول",
+            status_unlocked: "الحالة: جاهز للتحميل", download: "تحميل",
+            verifying: "نبحث داخل البلوكشين...", not_found: "لم نجدها بعد.",
+            deposit_amount: "قيمة الإيداع"
         },
         es: {
             nav_home: "Inicio", nav_bots: "Bots MT5", nav_signals: "Señales", nav_services: "Servicios", nav_about: "Sobre Mí", nav_contact: "Contacto",

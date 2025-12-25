@@ -4,88 +4,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Detailed information about our trading services and tools.">
     <title>Section Details | Trading Made Easy</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
-    <script>
-        const CONFIG_KEY = 'tme_config_v2';
-        function applySiteSettings() {
-            try {
-                const cfg = JSON.parse(localStorage.getItem(CONFIG_KEY));
-                if (!cfg) return;
-                console.log('--- Applying Site Settings (Details Page) ---');
-
-                if (cfg.appearance) {
-                    if (cfg.appearance.siteTitle) {
-                        document.title = cfg.appearance.siteTitle;
-                        document.querySelectorAll('.site-title a').forEach(el => {
-                            el.textContent = cfg.appearance.siteTitle;
-                        });
-                    }
-                    if (cfg.appearance.primaryColor) {
-                        document.documentElement.style.setProperty('--primary-color', cfg.appearance.primaryColor);
-                        document.documentElement.style.setProperty('--accent-color', cfg.appearance.primaryColor);
-                    }
-                    if (cfg.appearance.borderRadius) {
-                        const style = document.getElementById('dynamic-radius-style') || document.createElement('style');
-                        style.id = 'dynamic-radius-style';
-                        style.textContent = `.btn, .btn-primary, .card, .bot-card, .service-card, input, textarea, select { border-radius: ${cfg.appearance.borderRadius} !important; }`;
-                        if (!style.parentNode) document.head.appendChild(style);
-                    }
-                }
-
-                // Visibility Logic (New)
-                if (cfg.elementVisibility) {
-                    const ev = cfg.elementVisibility;
-                    const toggle = (id, show) => {
-                        const el = document.getElementById(id);
-                        if (el) el.style.setProperty('display', (show !== false) ? '' : 'none', 'important');
-                    };
-
-                    // Nav Links
-                    toggle('nav-link-home', ev.nav_home);
-                    toggle('nav-link-bots', ev.nav_bots);
-                    toggle('nav-link-signals', ev.nav_signals);
-                    toggle('nav-link-services', ev.nav_services);
-                    toggle('nav-link-about', ev.nav_about);
-                    toggle('nav-link-contact', ev.nav_contact);
-                }
-            } catch (e) { console.error('applySiteSettings Error:', e); }
-        }
-
-        // Initialize Firebase
-        const firebaseConfig = {
-            apiKey: "AIzaSyCvMayEuNTlQ5CWbjrrqw3aft_H044-uQM",
-            authDomain: "trading-made-easy-e8450.firebaseapp.com",
-            projectId: "trading-made-easy-e8450",
-            databaseURL: "https://trading-made-easy-e8450-default-rtdb.firebaseio.com/",
-            storageBucket: "trading-made-easy-e8450.firebasestorage.app",
-            messagingSenderId: "693217251684",
-            appId: "1:693217251684:web:f27779dc51e21fabceaa71"
-        };
-        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
-
-        // Sync Global Settings
-        db.ref('site_config').on('value', snap => {
-            const cloudCfg = snap.val();
-            if (cloudCfg) {
-                localStorage.setItem(CONFIG_KEY, JSON.stringify(cloudCfg));
-                applySiteSettings();
-            }
-        });
-
-        // Run immediately on load
-        applySiteSettings();
-    </script>
     <style>
         .details-hero {
             padding: 6rem 0 3rem;
             text-align: center;
-            background: linear-gradient(135deg, rgba(0, 208, 156, 0.1) 0%, rgba(45, 55, 72, 0.05) 100%);
+            background: linear-gradient(135deg, rgba(var(--primary-rgb), 0.1) 0%, rgba(45, 55, 72, 0.05) 100%);
         }
 
         .details-content {
@@ -93,25 +21,11 @@
             min-height: 50vh;
         }
 
-        /* Unique Layouts */
         .unique-grid {
             display: grid;
             gap: 2rem;
             margin-top: 2rem;
-        }
-
-        /* Bots Grid */
-        .bots-layout {
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-        }
-
-        /* Signals Layout */
-        .signals-layout {
-            display: flex;
-            flex-direction: column;
-            gap: 2rem;
-            max-width: 800px;
-            margin: 0 auto;
         }
 
         .signal-box {
@@ -122,11 +36,7 @@
             display: flex;
             align-items: center;
             gap: 1rem;
-        }
-
-        /* Services Layout */
-        .services-layout {
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            margin-bottom: 1rem;
         }
 
         .service-card-detail {
@@ -134,15 +44,9 @@
             padding: 2rem;
             border-radius: 10px;
             text-align: center;
-            transition: transform 0.3s;
+            transition: 0.3s;
         }
 
-        .service-card-detail:hover {
-            transform: translateY(-5px);
-            border-color: var(--primary-color);
-        }
-
-        /* About Layout */
         .about-layout {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -168,17 +72,10 @@
             height: 100%;
             background: var(--primary-color);
         }
-
-        /* Contact Layout */
-        .contact-layout {
-            max-width: 600px;
-            margin: 0 auto;
-        }
     </style>
 </head>
 
 <body>
-
     <header>
         <div class="nav-container">
             <div class="nav-left">
@@ -196,308 +93,30 @@
                         data-i18n="nav_contact">Contact</a>
                 </nav>
             </div>
-
-            <div class="nav-controls" style="margin-left: auto; display: flex; align-items: center; gap: 1.5rem;">
-                <div class="site-title" style="order: 2;"><a href="index.html"
-                        style="color: var(--primary-color);">Trading Made Easy</a></div>
-                <div class="controls-wrapper" style="order: 1; display: flex; gap: 0.5rem; align-items: center;">
-                    <button class="back-btn" onclick="goBack()" aria-label="Go Back"
-                        style="background:none; border:none; color:var(--text-color); cursor:pointer; font-size:1.2rem; display: flex; align-items: center; justify-content: center; padding: 0.5rem; gap: 0.5rem;">
-                        <i class="fas fa-arrow-left"></i> <span data-i18n="text_back"
-                            style="font-size: 1rem; font-weight: 500;">Back</span>
+            <div class="nav-controls" style="margin-left:auto; display:flex; align-items:center; gap:1.5rem;">
+                <div class="site-title" style="order:2;"><a href="index.html"
+                        style="color:var(--primary-color);">Trading Made Easy</a></div>
+                <div class="controls-wrapper" style="order:1; display:flex; gap:0.5rem; align-items:center;">
+                    <button class="back-btn" onclick="history.back()"
+                        style="background:none; border:none; color:var(--text-color); cursor:pointer; display:flex; align-items:center; gap:0.5rem;">
+                        <i class="fas fa-arrow-left"></i> <span data-i18n="text_back">Back</span>
                     </button>
                     <select class="lang-select">
                         <option value="en">English</option>
                         <option value="ar">العربية</option>
-                        <option value="es">Español</option>
-                        <option value="zh">中文</option>
-                        <option value="fr">Français</option>
                     </select>
-                    <button class="theme-toggle" aria-label="Toggle Dark Mode">
-                        <i class="fas fa-moon"></i>
-                    </button>
-                    <button class="mobile-menu-btn" aria-label="Open Menu">
-                        <i class="fas fa-bars"></i>
-                    </button>
                 </div>
             </div>
         </div>
     </header>
 
-    <div id="dynamic-content">
-        <!-- Content will be injected here via JS -->
-    </div>
+    <div id="dynamic-content"></div>
 
+    <script src="script.js"></script>
     <script>
-        function goBack() {
-            if (window.history.length > 1) {
-                window.history.back();
-            } else {
-                window.location.href = 'index.html';
-            }
-        }
-
         document.addEventListener('DOMContentLoaded', () => {
-            const themeToggle = document.querySelector('.theme-toggle');
-            const html = document.documentElement;
-            const icon = themeToggle.querySelector('i');
-
-            if (localStorage.getItem('theme') === 'dark') {
-                html.setAttribute('data-theme', 'dark');
-                icon.className = 'fas fa-sun';
-            }
-            if (themeToggle) {
-                themeToggle.addEventListener('click', () => {
-                    const isDark = html.getAttribute('data-theme') === 'dark';
-                    html.setAttribute('data-theme', isDark ? '' : 'dark');
-                    if (isDark) html.removeAttribute('data-theme');
-                    localStorage.setItem('theme', isDark ? 'light' : 'dark');
-                    icon.className = isDark ? 'fas fa-moon' : 'fas fa-sun';
-                });
-            }
-
-            const menuBtn = document.querySelector('.mobile-menu-btn');
-            const navLeft = document.querySelector('.nav-left');
-            if (menuBtn) {
-                menuBtn.addEventListener('click', () => {
-                    navLeft.classList.toggle('active');
-                });
-            }
-
-            const siteConfig = JSON.parse(localStorage.getItem('tme_config_v2'));
-            // Apply overrides immediately after DOM load
-            if (typeof applySiteSettings === 'function') applySiteSettings();
-
-            const translations = {
-                en: {
-                    nav_home: "Home", nav_bots: "MT5 Bots", nav_signals: "Signals", nav_services: "Services", nav_about: "About", nav_contact: "Contact", text_back: "Back",
-                    bots_title: "Automated Trading Solutions",
-                    bots_desc: "Discover our range of high-precision MT5 Expert Advisors.",
-                    signals_title: "Daily Market Intelligence",
-                    signals_desc: "Professional trade setups with entry, stop loss, and take profit levels.",
-                    services_title: "Custom Development",
-                    services_desc: "Turn your trading strategy into an automated system.",
-                    about_title: "About The Developer",
-                    about_desc: "Bridging the gap between manual trading and algorithmic execution.",
-                    contact_title: "Get In Touch",
-                    contact_desc: "Have a question? Send us a message.",
-
-                    // Unique Content Keys
-                    bot1_feat: "Institutional Order Flow", bot2_feat: "Momentum Scanning", bot3_feat: "Dynamic ICT Levels",
-                    sig_stat1: "Win Rate: 78%", sig_stat2: "Avg R:R: 1:3",
-                    serv1_t: "MQL5 Coding", serv1_d: "Expert Advisors & Indicators",
-                    serv2_t: "Pine Script", serv2_d: "TradingView Strategies",
-                    serv3_t: "Optimization", serv3_d: "Backtesting & Fitting",
-                    about_bio: "Specialized in financial software engineering with 5+ years of experience in MQL5 and Python.",
-                    skill_mql: "MQL5/4", skill_py: "Python", skill_js: "Web Dev",
-                    form_name: "Name", form_email: "Email", form_msg: "Message", form_btn: "Send Message",
-                    buy_btn: "Buy Now", download_free_btn: "Download Now", for_free: "For Free",
-                    free_section: "Free Resources", premium_section: "Premium Systems"
-                },
-                ar: {
-                    nav_home: "الرئيسية", nav_bots: "روبوتات MT5", nav_signals: "الإشارات", nav_services: "الخدمات", nav_about: "من نحن", nav_contact: "اتصل بنا", text_back: "رجوع",
-                    bots_title: "حلول التداول الآلي",
-                    bots_desc: "اكتشف مجموعتنا من الخوارزميات الدقيقة لمنصة MT5.",
-                    signals_title: "إشارات السوق اليومية",
-                    signals_desc: "صفقات احترافية مع مستويات الدخول ووقف الخسارة وجني الأرباح.",
-                    services_title: "تطوير مخصص",
-                    services_desc: "حول استراتيجيتك إلى نظام آلي بالكامل.",
-                    about_title: "عن المطور",
-                    about_desc: "سد الفجوة بين التداول اليدوي والتنفيذ الخوارزمي.",
-                    contact_title: "تواصل معنا",
-                    contact_desc: "لديك استفسار؟ أرسل لنا رسالة.",
-
-                    bot1_feat: "تدفق الأوامر المؤسسي", bot2_feat: "مسح الزخم", bot3_feat: "مستويات ICT الديناميكية",
-                    sig_stat1: "نسبة الفوز: 78%", sig_stat2: "العائد للمخاطرة: 1:3",
-                    serv1_t: "برمجة MQL5", serv1_d: "اكسبيرتات ومؤشرات",
-                    serv2_t: "Pine Script", serv2_d: "استراتيجيات TradingView",
-                    serv3_t: "تحسين", serv3_d: "الباكتيست والضبط",
-                    about_bio: "متحصص في الهندسة البرمجية المالية مع خبرة أكثر من 5 سنوات في MQL5 و Python.",
-                    skill_mql: "MQL5/4", skill_py: "Python", skill_js: "تطوير ويب",
-                    form_name: "الاسم", form_email: "البريد الإلكتروني", form_msg: "الرسالة", form_btn: "إرسال الرسالة",
-                    buy_btn: "شراء الآن", download_free_btn: "تحميل الآن", for_free: "مجاناً",
-                    free_section: "موارد مجانية", premium_section: "أنظمة احترافية"
-                },
-                fr: {
-                    nav_home: "Accueil", nav_bots: "Bots MT5", nav_signals: "Signaux", nav_services: "Services", nav_about: "À Propos", nav_contact: "Contact", text_back: "Retour",
-                    bots_title: "Solutions de Trading Auto",
-                    bots_desc: "Des algorithmes MT5 de haute précision.",
-                    signals_title: "Signaux Quotidiens",
-                    signals_desc: "Analyses de marché et setups complets.",
-                    services_title: "Développement Sur Mesure",
-                    services_desc: "Automatisez votre stratégie.",
-                    about_title: "À Propos",
-                    about_desc: "Expert en trading algorithmique.",
-                    contact_title: "Contactez-nous",
-                    contact_desc: "Une question?",
-                    bot1_feat: "Flux d'ordres", bot2_feat: "Momentum", bot3_feat: "Niveaux ICT",
-                    sig_stat1: "Taux de réussite: 78%", sig_stat2: "R:R Moyen: 1:3",
-                    serv1_t: "Codage MQL5", serv1_d: "EA & Indicateurs",
-                    serv2_t: "Pine Script", serv2_d: "TradingView",
-                    serv3_t: "Optimisation", serv3_d: "Backtest",
-                    about_bio: "Ingénieur financier spécialisé MQL5/Python.",
-                    skill_mql: "MQL5/4", skill_py: "Python", skill_js: "Web",
-                    form_name: "Nom", form_email: "Email", form_msg: "Message", form_btn: "Envoyer",
-                    buy_btn: "Acheter", download_free_btn: "Télécharger", for_free: "Gratuit",
-                    free_section: "Ressources Gratuites", premium_section: "Systèmes Premium"
-                },
-                es: {
-                    nav_home: "Inicio", nav_bots: "Bots MT5", nav_signals: "Señales", nav_services: "Servicios", nav_about: "Sobre Mí", nav_contact: "Contacto", text_back: "Volver",
-                    bots_title: "Soluciones Automáticas",
-                    bots_desc: "Algoritmos MT5 de alta precisión.",
-                    signals_title: "Señales Diarias",
-                    signals_desc: "Setups profesionales de trading.",
-                    services_title: "Desarrollo Personalizado",
-                    services_desc: "Automatice su estrategia.",
-                    about_title: "Sobre Mí",
-                    about_desc: "Experto en trading algorítmico.",
-                    contact_title: "Contáctenos",
-                    contact_desc: "¿Preguntas?",
-                    bot1_feat: "Flujo de Órdenes", bot2_feat: "Momentum", bot3_feat: "Niveles ICT",
-                    sig_stat1: "Tasa de éxito: 78%", sig_stat2: "R:R Prom: 1:3",
-                    serv1_t: "Código MQL5", serv1_d: "EA e Indicadores",
-                    serv2_t: "Pine Script", serv2_d: "TradingView",
-                    serv3_t: "Optimización", serv3_d: "Backtest",
-                    about_bio: "Ingeniero de software financiero (MQL5/Python).",
-                    skill_mql: "MQL5/4", skill_py: "Python", skill_js: "Web",
-                    form_name: "Nombre", form_email: "Email", form_msg: "Mensaje", form_btn: "Enviar",
-                    buy_btn: "Comprar", download_free_btn: "Descargar", for_free: "Gratis",
-                    free_section: "Recursos Gratuitos", premium_section: "Sistemas Premium"
-                },
-                zh: {
-                    nav_home: "首页", nav_bots: "MT5 机器人", nav_signals: "信号", nav_services: "服务", nav_about: "关于", nav_contact: "联系", text_back: "返回",
-                    bots_title: "自动交易解决方案", bots_desc: "高精度 MT5 算法。",
-                    signals_title: "每日市场信号", signals_desc: "具有止损止盈的专业交易设置。",
-                    services_title: "定制开发", services_desc: "将您的策略转化为自动化系统。",
-                    about_title: "关于开发者", about_desc: "专注于算法交易。",
-                    contact_title: "联系我们", contact_desc: "有问题吗？",
-                    bot1_feat: "机构订单流", bot2_feat: "动量扫描", bot3_feat: "动态 ICT 水平",
-                    sig_stat1: "胜率: 78%", sig_stat2: "盈亏比: 1:3",
-                    serv1_t: "MQL5 编程", serv1_d: "EA 和指标", serv2_t: "Pine Script", serv2_d: "TradingView 策略", serv3_t: "优化", serv3_d: "回测",
-                    about_bio: "拥有 5 年 MQL5 和 Python 经验的金融软件工程师。",
-                    skill_mql: "MQL5/4", skill_py: "Python", skill_js: "Web 开发",
-                    form_name: "姓名", form_email: "电子邮件", form_msg: "留言", form_btn: "发送",
-                    buy_btn: "购买", download_free_btn: "立即下载", for_free: "免费",
-                    free_section: "免费资源", premium_section: "高级系统"
-                }
-            };
-
-            // --- CRITICAL FIX: Merge Admin Overrides into Translations ---
-            if (siteConfig && siteConfig.textOverrides) {
-                const txt = siteConfig.textOverrides;
-                const updateAll = (key, val) => {
-                    if (!val) return;
-                    Object.keys(translations).forEach(l => {
-                        if (translations[l]) translations[l][key] = val;
-                    });
-                };
-
-                // Section Titles
-                updateAll('bots_title', txt.bots_title);
-                updateAll('signals_title', txt.signals_title);
-                updateAll('services_title', txt.services_title);
-                updateAll('contact_title', txt.contact_title);
-                updateAll('pay_title', txt.pay_title); // If used
-
-                // Services content (Mapping badges to card titles for consistency)
-                updateAll('serv1_t', txt.serv_badge_1);
-                updateAll('serv2_t', txt.serv_badge_2);
-                updateAll('serv3_t', txt.serv_badge_3);
-
-                // Stats
-                updateAll('sig_stat1', txt.stat_success); // Mapping success rate to signal stat 1
-
-                console.log("Overrides applied to Section Details translations.");
-            }
-
-            const langSelect = document.querySelector('.lang-select');
             const params = new URLSearchParams(window.location.search);
             const section = params.get('section') || 'bots';
-
-            function updateLanguage(lang) {
-                if (lang === 'ar') {
-                    document.documentElement.dir = 'rtl';
-                    document.documentElement.lang = 'ar';
-                } else {
-                    document.documentElement.dir = 'ltr';
-                    document.documentElement.lang = lang;
-                }
-
-                // --- FORCE APPLY OVERRIDES ON EVERY UPDATE ---
-                const cfg = JSON.parse(localStorage.getItem('tme_config_v2'));
-                if (cfg && cfg.textOverrides) {
-                    const txt = cfg.textOverrides;
-                    // Helper to safely override current lang
-                    const setT = (k, v) => { if (v && translations[lang]) translations[lang][k] = v; };
-
-                    // Apply all known text overrides
-                    setT('bots_title', txt.bots_title);
-                    setT('bots_desc', txt.bots_subtitle); // Added Subtitle Mapping
-                    setT('signals_title', txt.signals_title);
-                    setT('services_title', txt.services_title);
-                    setT('contact_title', txt.contact_title);
-
-                    // Nav Overrides
-                    setT('nav_home', txt.nav_home);
-                    setT('nav_bots', txt.nav_bots);
-                    setT('nav_signals', txt.nav_signals);
-                    setT('nav_services', txt.nav_services);
-                    setT('nav_about', txt.nav_about);
-                    setT('nav_contact', txt.nav_contact);
-
-                    // Services Badges -> Titles
-                    setT('serv1_t', txt.serv_badge_1);
-                    setT('serv2_t', txt.serv_badge_2);
-                    setT('serv3_t', txt.serv_badge_3);
-                    setT('serv4_t', txt.serv_badge_4);
-
-                    // Stats
-                    setT('sig_stat1', txt.stat_success);
-
-                    console.log('Text overrides re-applied for:', lang);
-                }
-
-                // Static Nav Translations
-                document.querySelectorAll('[data-i18n]').forEach(el => {
-                    const key = el.getAttribute('data-i18n');
-                    if (translations[lang] && translations[lang][key]) {
-                        el.textContent = translations[lang][key];
-                    }
-                });
-
-                renderContent(lang);
-                localStorage.setItem('language', lang);
-                if (langSelect) langSelect.value = lang;
-            }
-
-            window.downloadFreeProduct = function (product) {
-                if (!product || !product.fileData) {
-                    alert("No file attached to this product.");
-                    return;
-                }
-                const link = document.createElement('a');
-                link.href = product.fileData;
-                link.download = product.fileName || 'product.zip';
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-            };
-
-            window.downloadFreeProductByIndex = function (idx) {
-                const product = loadedProducts[idx];
-                if (!product || !product.fileData) {
-                    alert("No file available for this product. Please ensure you uploaded a file in the admin panel.");
-                    return;
-                }
-                const link = document.createElement('a');
-                link.href = product.fileData;
-                link.download = product.fileName || 'product.zip';
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-            };
-
-            // Initialize Firebase
             const firebaseConfig = {
                 apiKey: "AIzaSyCvMayEuNTlQ5CWbjrrqw3aft_H044-uQM",
                 authDomain: "trading-made-easy-e8450.firebaseapp.com",
@@ -510,214 +129,50 @@
             if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
             const db = firebase.database();
 
-            let loadedProducts = [];
+            // Real-time site config sync
+            db.ref('site_config').on('value', snap => {
+                if (snap.val()) {
+                    localStorage.setItem('tme_config_v3', JSON.stringify(snap.val()));
+                    if (typeof applySiteSettings === 'function') applySiteSettings();
+                }
+            });
 
-            function renderContent(lang) {
+            function render() {
+                const lang = localStorage.getItem('language') || 'en';
                 const container = document.getElementById('dynamic-content');
-                const t = translations[lang] || translations['en'];
-                let htmlContent = '';
-                let title = '', desc = '';
+                const t = translations[lang];
 
+                let title = '', desc = '', html = '';
                 if (section === 'bots') {
-                    title = t.bots_title; desc = t.bots_desc;
-
-                    const GLOBAL_DEFAULTS = []; // Cleared to prevent ghost bots
-
-                    const isFreeCheck = (p) => {
-                        if (!p) return false;
-                        if (p.isFree === true || p.isFree === "true" || p.isFree === "on") return true;
-                        const priceNum = parseFloat(String(p.price || "0").replace(/[^0-9.]/g, ""));
-                        return isNaN(priceNum) || priceNum <= 0;
-                    };
-
-                    const createCard = (product, idx) => {
-                        const isFree = isFreeCheck(product);
-                        let actionBtn = isFree ? `
-                            <div style="color:#00D09C; font-weight:bold; font-size:0.9rem; margin-bottom:0.5rem; text-align:center;">${t.for_free || 'For Free'}</div>
-                            <button onclick='downloadFreeProductByIndex(${idx})' class="btn-primary" style="width: 100%; display: block; background: #00D09C; color: white; border:none; cursor:pointer;">
-                                <i class="fas fa-download"></i> ${t.download_free_btn}
-                            </button>
-                        ` : `
-                            <a href="checkout.html?product=bot_${idx}&name=${encodeURIComponent(product.title)}&price=${product.price}" class="btn-primary" style="width: 100%; display: block; text-align:center;">
-                                ${t.buy_btn} - $${product.price}
-                            </a>
-                        `;
-                        return `
-                            <div class="bot-card">
-                                <img src="${product.image}" class="bot-image" alt="${product.title}" onerror="this.src='images/bot1.png'">
-                                <div class="bot-content">
-                                    <h3 class="bot-title" style="margin-bottom:0.5rem;">${product.title}</h3>
-                                    <p class="bot-desc" style="min-height:3em; font-size:0.9rem; margin-bottom:1rem;">${product.desc || ''}</p>
-                                    ${actionBtn}
-                                </div>
-                            </div>
-                        `;
-                    };
-
-                    const renderBots = (products) => {
-                        loadedProducts = products;
-                        const freeHTML = products.map((p, i) => isFreeCheck(p) ? createCard(p, i) : '').join('');
-                        const paidHTML = products.map((p, i) => !isFreeCheck(p) ? createCard(p, i) : '').join('');
-
-                        let finalHTML = '';
-                        if (freeHTML) finalHTML += `<div style="margin-bottom:3rem;"><h2 style="display:flex; align-items:center; gap:0.5rem; color:#00D09C; margin-bottom:1.5rem; border-bottom:1px solid #00D09C; padding-bottom:0.5rem;"><i class="fas fa-gift"></i> ${t.free_section || 'Free Resources'}</h2><div class="unique-grid bots-layout">${freeHTML}</div></div>`;
-                        if (paidHTML) finalHTML += `<div style="margin-bottom:2rem;"><h2 style="display:flex; align-items:center; gap:0.5rem; color:var(--primary-color); margin-bottom:1.5rem; border-bottom:1px solid var(--primary-color); padding-bottom:0.5rem;"><i class="fas fa-gem"></i> ${t.premium_section || 'Premium Systems'}</h2><div class="unique-grid bots-layout">${paidHTML}</div></div>`;
-
-                        document.getElementById('bot-render-area').innerHTML = finalHTML || '<p style="text-align:center; opacity:0.5; padding:3rem;">No products available yet.</p>';
-                    };
-
-                    htmlContent = `<div id="bot-render-area"><p style="text-align:center; padding:2rem;">Loading products...</p></div>`;
-
-                    // Fetch from Firebase
-                    db.ref('products').on('value', (snapshot) => {
-                        const data = snapshot.val();
-                        console.log("Firebase Data in Details:", data); // DEBUG
-                        let products = [];
-                        if (data) {
-                            products = (Array.isArray(data) ? data : Object.values(data)).filter(p => p !== null);
-                        } else {
-                            products = [];
-                        }
-                        renderBots(products);
-                    }, (error) => {
-                        console.error("Firebase Error in Details:", error);
-                        const cfg = JSON.parse(localStorage.getItem('tme_config_v2'));
-                        renderBots((cfg && cfg.products) ? cfg.products : []);
-                    });
+                    title = t.bots_section_title; desc = t.hero_subtitle;
+                    html = `<div id="bot-area" class="unique-grid">Loading...</div>`;
                 } else if (section === 'signals') {
-                    title = t.signals_title; desc = t.signals_desc;
-                    htmlContent = `
-                        <div class="signals-layout">
-                            <div class="signal-box">
-                                <i class="fas fa-chart-line" style="font-size: 2rem; color: var(--primary-color);"></i>
-                                <div>
-                                    <h3>${t.sig_stat1}</h3>
-                                    <p>${t.sig_stat2}</p>
-                                </div>
-                            </div>
-                             <div class="signal-box" style="justify-content: center; background: rgba(0, 208, 156, 0.1);">
-                                <p style="font-style: italic;">"GOLD BUY @ 2030.50 - SL 2025 - TP 2050"</p>
-                            </div>
-                            <button class="btn-primary" style="width:100%; font-size: 1.1rem;"><i class="fab fa-telegram-plane"></i> Join Telegram Channel ($49/mo)</button>
-                        </div>
-                    `;
-                } else if (section === 'services') {
-                    title = t.services_title; desc = t.services_desc;
-                    htmlContent = `
-                        <div class="unique-grid services-layout">
-                            <div class="service-card-detail">
-                                <i class="fas fa-code" style="font-size: 2rem; color: var(--primary-color); margin-bottom: 1rem;"></i>
-                                <h3>${t.serv1_t}</h3>
-                                <p>${t.serv1_d}</p>
-                            </div>
-                            <div class="service-card-detail">
-                                <i class="fas fa-chart-bar" style="font-size: 2rem; color: var(--accent-color); margin-bottom: 1rem;"></i>
-                                <h3>${t.serv2_t}</h3>
-                                <p>${t.serv2_d}</p>
-                            </div>
-                            <div class="service-card-detail">
-                                <i class="fas fa-cogs" style="font-size: 2rem; color: #e53e3e; margin-bottom: 1rem;"></i>
-                                <h3>${t.serv3_t}</h3>
-                                <p>${t.serv3_d}</p>
-                            </div>
-                        </div>
-                    `;
-                } else if (section === 'about') {
-                    title = t.about_title; desc = t.about_desc;
-                    htmlContent = `
-                        <div class="about-layout">
-                            <div>
-                                <img src="images/profile.png" style="width:100%; border-radius:10px; border: 4px solid var(--primary-color);" alt="Profile">
-                            </div>
-                            <div>
-                                <h3>KRAA MOHAMED</h3>
-                                <p style="color: var(--secondary-color); margin-bottom: 1.5rem;">${t.about_bio}</p>
-                                
-                                <div style="margin-bottom: 1rem;">
-                                    <div style="display:flex; justify-content:space-between;"><span>${t.skill_mql}</span><span>95%</span></div>
-                                    <div class="skill-bar"><div class="skill-fill" style="width:95%"></div></div>
-                                </div>
-                                <div style="margin-bottom: 1rem;">
-                                    <div style="display:flex; justify-content:space-between;"><span>${t.skill_py}</span><span>85%</span></div>
-                                    <div class="skill-bar"><div class="skill-fill" style="width:85%"></div></div>
-                                </div>
-                                <div style="margin-bottom: 1rem;">
-                                    <div style="display:flex; justify-content:space-between;"><span>${t.skill_js}</span><span>70%</span></div>
-                                    <div class="skill-bar"><div class="skill-fill" style="width:70%"></div></div>
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                } else if (section === 'contact') {
-                    title = t.contact_title; desc = t.contact_desc;
-                    htmlContent = `
-                        <div class="contact-layout">
-                            <form class="contact-form" onsubmit="event.preventDefault(); alert('Message Sent!');">
-                                <div class="form-group">
-                                    <input type="text" placeholder="${t.form_name}" required>
-                                </div>
-                                <div class="form-group">
-                                    <input type="email" placeholder="${t.form_email}" required>
-                                </div>
-                                <div class="form-group">
-                                    <textarea rows="5" placeholder="${t.form_msg}" required></textarea>
-                                </div>
-                                <button type="submit" class="btn-primary" style="width:100%">${t.form_btn}</button>
-                            </form>
-                            <div style="text-align: center; margin-top: 2rem; font-size: 1.5rem; gap: 1rem; display: flex; justify-content: center;">
-                                <a href="#"><i class="fab fa-whatsapp" style="color:#25D366"></i></a>
-                                <a href="#"><i class="fab fa-telegram" style="color:#0088cc"></i></a>
-                                <a href="#"><i class="fas fa-envelope" style="color:var(--text-color)"></i></a>
-                            </div>
-                        </div>
-                    `;
+                    title = t.signals_title; desc = t.sig_prec_desc;
+                    html = `<div class="signals-layout"><div class="signal-box"><i class="fas fa-chart-line fa-2x" style="color:var(--primary-color)"></i><div><h3>${t.sig_feat1}</h3><p>${t.sig_prec_desc}</p></div></div></div>`;
                 }
 
-                container.innerHTML = `
-                    <section class="details-hero">
-                        <div class="container">
-                            <h1>${title}</h1>
-                            <p style="font-size: 1.2rem; color: var(--secondary-color); margin-top: 1rem;">${desc}</p>
-                        </div>
-                    </section>
-                    <section class="details-content">
-                        <div class="container">
-                            ${htmlContent}
-                        </div>
-                    </section>
-                    </section>
-                `;
+                container.innerHTML = `<section class="details-hero"><h1>${title}</h1><p>${desc}</p></section><section class="details-content"><div class="container">${html}</div></section>`;
 
-                // FINAL SAFETY: Re-apply visual overrides on the newly rendered HTML
-                setTimeout(() => {
-                    const cfg = JSON.parse(localStorage.getItem('tme_config_v2'));
-                    if (cfg && cfg.textOverrides) {
-                        // Dynamically update headings based on current section
-                        if (section === 'bots') {
-                            const h1 = document.querySelector('h1');
-                            if (h1 && translations[lang].bots_title) h1.textContent = translations[lang].bots_title;
-
-                            const p = document.querySelector('.details-hero p');
-                            if (p && translations[lang].bots_desc) p.textContent = translations[lang].bots_desc;
-                        }
-
-                        // Force update any shared classes
-                        if (typeof applySiteSettings === 'function') applySiteSettings();
-                    }
-                }, 50);
+                if (section === 'bots') {
+                    db.ref('products').on('value', snap => {
+                        const products = Object.values(snap.val() || {});
+                        document.getElementById('bot-area').innerHTML = products.map((p, i) => `
+                            <div class="bot-card">
+                                <img src="${p.image}" style="width:100%; height:200px; object-fit:cover;">
+                                <div class="bot-content">
+                                    <h3>${p.title}</h3>
+                                    <p>${p.desc}</p>
+                                    <a href="checkout.html?name=${encodeURIComponent(p.title)}&price=${p.price}" class="btn btn-primary" style="display:block; text-align:center; margin-top:1rem;">${t.buy_btn} - $${p.price}</a>
+                                </div>
+                            </div>
+                        `).join('');
+                    });
+                }
+                if (typeof applySiteSettings === 'function') applySiteSettings();
             }
 
-            if (langSelect) {
-                langSelect.addEventListener('change', (e) => {
-                    updateLanguage(e.target.value);
-                });
-            }
-
-            const savedLang = localStorage.getItem('language') || 'en';
-            updateLanguage(savedLang);
-
-            // Re-apply site settings to ensure they override any defaults
-            if (typeof applySiteSettings === 'function') applySiteSettings();
+            render();
+            window.addEventListener('languageChanged', render);
         });
     </script>
 </body>
