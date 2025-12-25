@@ -24,8 +24,18 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
 
     <script>
-        // Global Products State & Utils
-        const CONFIG_KEY = 'tme_config_v2';
+        // Global Products State & Utils (Upgraded to V3 for Priority & Cleanup)
+        const CONFIG_KEY = 'tme_config_v3';
+        const OLD_CONFIG_KEY = 'tme_config_v2';
+
+        // Initial Migration & Legacy Cleanup
+        if (localStorage.getItem(OLD_CONFIG_KEY)) {
+            console.log("Migrating V2 -> V3 to lock priorities...");
+            const data = localStorage.getItem(OLD_CONFIG_KEY);
+            if (!localStorage.getItem(CONFIG_KEY)) localStorage.setItem(CONFIG_KEY, data);
+            localStorage.removeItem(OLD_CONFIG_KEY);
+        }
+
         let currentProducts = [];
 
         function applySiteSettings() {
@@ -218,35 +228,35 @@
 
                 // 4. Texts (Immediate DOM Update)
                 if (cfg.textOverrides) {
+                    const txt = cfg.textOverrides;
                     const heroTitle = document.querySelector('.hero-content h1');
-                    if (heroTitle && cfg.textOverrides.hero_title) heroTitle.innerHTML = cfg.textOverrides.hero_title;
+                    if (heroTitle && txt.hero_title !== undefined) heroTitle.innerHTML = txt.hero_title;
 
                     const heroDesc = document.querySelector('.hero-content p');
-                    if (heroDesc && cfg.textOverrides.hero_desc) heroDesc.textContent = cfg.textOverrides.hero_desc;
+                    if (heroDesc && txt.hero_desc !== undefined) heroDesc.textContent = txt.hero_desc;
 
                     const heroSuffix = document.getElementById('hero-title-suffix');
-                    if (heroSuffix && cfg.textOverrides.hero_suffix) heroSuffix.textContent = cfg.textOverrides.hero_suffix;
+                    if (heroSuffix && txt.hero_suffix !== undefined) heroSuffix.textContent = txt.hero_suffix;
 
                     const botsSub = document.getElementById('bots-subtitle');
-                    if (botsSub && cfg.textOverrides.bots_subtitle) botsSub.textContent = cfg.textOverrides.bots_subtitle;
+                    if (botsSub && txt.bots_subtitle !== undefined) botsSub.textContent = txt.bots_subtitle;
 
-                    // Services Badge 1 (First one)
                     // Services Badge 1 (First one)
                     const servBadges = document.querySelectorAll('.services-list .service-badge');
-                    if (servBadges[0] && cfg.textOverrides.serv_badge_1) servBadges[0].textContent = cfg.textOverrides.serv_badge_1;
-                    if (servBadges[1] && cfg.textOverrides.serv_badge_2) servBadges[1].textContent = cfg.textOverrides.serv_badge_2;
-                    if (servBadges[2] && cfg.textOverrides.serv_badge_3) servBadges[2].textContent = cfg.textOverrides.serv_badge_3;
-                    if (servBadges[3] && cfg.textOverrides.serv_badge_4) servBadges[3].textContent = cfg.textOverrides.serv_badge_4;
+                    if (servBadges[0] && txt.serv_badge_1 !== undefined) servBadges[0].textContent = txt.serv_badge_1;
+                    if (servBadges[1] && txt.serv_badge_2 !== undefined) servBadges[1].textContent = txt.serv_badge_2;
+                    if (servBadges[2] && txt.serv_badge_3 !== undefined) servBadges[2].textContent = txt.serv_badge_3;
+                    if (servBadges[3] && txt.serv_badge_4 !== undefined) servBadges[3].textContent = txt.serv_badge_4;
 
                     const aboutBio = document.querySelector('.about-text p');
-                    if (aboutBio && cfg.textOverrides.about_bio) aboutBio.textContent = cfg.textOverrides.about_bio;
+                    if (aboutBio && txt.about_bio !== undefined) aboutBio.textContent = txt.about_bio;
 
                     // News Briefing
                     const sigBrief = document.querySelector('h4[data-i18n="sig_brief"]');
-                    if (sigBrief && cfg.textOverrides.sig_brief_title) sigBrief.textContent = cfg.textOverrides.sig_brief_title;
+                    if (sigBrief && txt.sig_brief_title !== undefined) sigBrief.textContent = txt.sig_brief_title;
 
                     const sigDesc = document.querySelector('p[data-i18n="sig_brief_desc"]');
-                    if (sigDesc && cfg.textOverrides.sig_brief_desc) sigDesc.textContent = cfg.textOverrides.sig_brief_desc;
+                    if (sigDesc && txt.sig_brief_desc !== undefined) sigDesc.textContent = txt.sig_brief_desc;
                 }
             } catch (e) { console.error('applySiteSettings Error:', e); }
         }
@@ -888,6 +898,19 @@
                             style="width:100%; margin-top:2rem; font-weight:bold;">
                             <i class="fas fa-save"></i> Save & Apply General Settings
                         </button>
+
+                        <div
+                            style="margin-top:2.5rem; border-top:2px solid var(--border-color); padding-top:1.5rem; background:rgba(255,77,77,0.05); padding:1rem; border-radius:10px;">
+                            <h4 style="color:#ff4d4d; margin-bottom:0.5rem;"><i class="fas fa-microchip"></i> Database
+                                Stabilization & Health</h4>
+                            <p style="font-size:0.75rem; opacity:0.8; margin-bottom:1rem;">If you experience settings
+                                reverting to old values, use this tool to wipe legacy variables and set your current
+                                view as the NEW absolute truth.</p>
+                            <button onclick="stabilizeDatabase()" class="btn"
+                                style="width:100%; background:none; border:1px solid #ff4d4d; color:#ff4d4d; font-size:0.8rem; font-weight:bold;">
+                                <i class="fas fa-hammer"></i> Stabilize & Fix All Variables
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -1552,32 +1575,34 @@
 
                     // Texts
                     const txt = config.textOverrides || {};
-                    setVal('adm-txt-hero', txt.hero_title || "Precision Trading. Automated.");
-                    setVal('adm-txt-hero-desc', txt.hero_desc || "A platform dedicated to...");
-                    setVal('adm-txt-about', txt.about_bio || "");
-                    setVal('adm-txt-ticker', txt.ticker_msgs || "");
+                    const getT = (key, def) => (txt[key] !== undefined) ? txt[key] : def;
+
+                    setVal('adm-txt-hero', getT('hero_title', "Precision Trading. Automated."));
+                    setVal('adm-txt-hero-desc', getT('hero_desc', "A platform dedicated to..."));
+                    setVal('adm-txt-about', getT('about_bio', ""));
+                    setVal('adm-txt-ticker', getT('ticker_msgs', ""));
 
                     // New Section Titles
-                    setVal('adm-txt-bots-title', txt.bots_title || "Premium MT5 Bots");
-                    setVal('adm-txt-signals-title', txt.signals_title || "Daily Trading Signals");
-                    setVal('adm-txt-services-title', txt.services_title || "Services Offered");
-                    setVal('adm-txt-stats-title', txt.stats_title || "Platform Activity");
-                    setVal('adm-txt-pay-title', txt.pay_title || "Secure Payments");
-                    setVal('adm-txt-contact-title', txt.contact_title || "Get In Touch");
+                    setVal('adm-txt-bots-title', getT('bots_title', "Premium MT5 Bots"));
+                    setVal('adm-txt-signals-title', getT('signals_title', "Daily Trading Signals"));
+                    setVal('adm-txt-services-title', getT('services_title', "Services Offered"));
+                    setVal('adm-txt-stats-title', getT('stats_title', "Platform Activity"));
+                    setVal('adm-txt-pay-title', getT('pay_title', "Secure Payments"));
+                    setVal('adm-txt-contact-title', getT('contact_title', "Get In Touch"));
 
                     // Detailed Overrides Load
-                    setVal('adm-txt-about-role', txt.about_role || "");
-                    setVal('adm-nav-home', txt.nav_home || "Home");
-                    setVal('adm-nav-bots', txt.nav_bots || "MT5 Bots");
-                    setVal('adm-nav-signals', txt.nav_signals || "Signals");
-                    setVal('adm-nav-services', txt.nav_services || "Services");
-                    setVal('adm-nav-about', txt.nav_about || "About");
-                    setVal('adm-nav-contact', txt.nav_contact || "Contact");
-                    setVal('adm-txt-offer-text', txt.latest_offer_text || "");
-                    setVal('adm-sig-feat1', txt.sig_feat1 || "");
-                    setVal('adm-sig-feat2', txt.sig_feat2 || "");
-                    setVal('adm-sig-feat3', txt.sig_feat3 || "");
-                    setVal('adm-stat-success', txt.stat_success || "");
+                    setVal('adm-txt-about-role', getT('about_role', ""));
+                    setVal('adm-nav-home', getT('nav_home', "Home"));
+                    setVal('adm-nav-bots', getT('nav_bots', "MT5 Bots"));
+                    setVal('adm-nav-signals', getT('nav_signals', "Signals"));
+                    setVal('adm-nav-services', getT('nav_services', "Services"));
+                    setVal('adm-nav-about', getT('nav_about', "About"));
+                    setVal('adm-nav-contact', getT('nav_contact', "Contact"));
+                    setVal('adm-txt-offer-text', getT('latest_offer_text', ""));
+                    setVal('adm-sig-feat1', getT('sig_feat1', ""));
+                    setVal('adm-sig-feat2', getT('sig_feat2', ""));
+                    setVal('adm-sig-feat3', getT('sig_feat3', ""));
+                    setVal('adm-stat-success', getT('stat_success', ""));
 
                     // Element Visibility
                     const ev = config.elementVisibility || {};
@@ -2073,6 +2098,31 @@
                         btn.disabled = false;
                         btn.innerHTML = 'Save All Changes';
                     }
+                }
+            }
+
+            async function stabilizeDatabase() {
+                if (!confirm("This will overwrite CLOUD data with your current UI variables and erase all old version history. Proceed?")) return;
+
+                try {
+                    // 1. Force a "Clean Save" object (No legacy leakage)
+                    localStorage.removeItem('tme_config_v1');
+                    localStorage.removeItem('tme_config_v2');
+
+                    // 2. Build absolute current record
+                    saveSettings(false); // Silent save to local
+                    const cleanConfig = JSON.parse(localStorage.getItem(CONFIG_KEY));
+                    cleanConfig.lastUpdate = Date.now() + 10000; // Force future timestamp to win any races
+
+                    // 3. Force Push to Cloud
+                    console.log("STABILIZING: Pushing Master Record to Cloud...");
+                    await db.ref('site_config').set(cleanConfig);
+
+                    localStorage.setItem(CONFIG_KEY, JSON.stringify(cleanConfig));
+                    alert("Database Stabilized! New variables are now the absolute master priority.");
+                    location.reload();
+                } catch (err) {
+                    alert("Stabilization failed: " + err.message);
                 }
             }
 

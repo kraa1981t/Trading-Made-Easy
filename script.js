@@ -43,8 +43,25 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // --- Admin Config Loader ---
-    const siteConfig = JSON.parse(localStorage.getItem('tme_config_v2'));
+    // --- Admin Config Loader (Upgraded to V3 for Priority & Cleanup) ---
+    const CONFIG_KEY = 'tme_config_v3';
+    const OLD_CONFIG_KEY = 'tme_config_v2';
+
+    // Cleanup legacy config to prevent "ghost" reverts
+    if (localStorage.getItem(OLD_CONFIG_KEY)) {
+        console.log("Migrating/Cleaning old V2 config...");
+        const oldData = localStorage.getItem(OLD_CONFIG_KEY);
+        if (!localStorage.getItem(CONFIG_KEY)) {
+            localStorage.setItem(CONFIG_KEY, oldData);
+        }
+        localStorage.removeItem(OLD_CONFIG_KEY);
+    }
+
+    function getLatestConfig() {
+        try {
+            return JSON.parse(localStorage.getItem(CONFIG_KEY)) || {};
+        } catch (e) { return {}; }
+    }
 
     // --- Notifications Ticker ---
     const ticker = document.getElementById('notification-ticker');
@@ -54,6 +71,7 @@ document.addEventListener('DOMContentLoaded', () => {
         "System latency reduced by 15% this week."
     ];
 
+    const siteConfig = getLatestConfig();
     if (siteConfig && siteConfig.textOverrides && siteConfig.textOverrides.ticker_msgs) {
         const customMsgs = siteConfig.textOverrides.ticker_msgs.split('\n').filter(m => m.trim() !== '');
         if (customMsgs.length > 0) notifications = customMsgs;
@@ -77,22 +95,23 @@ document.addEventListener('DOMContentLoaded', () => {
     // to support the real-time cloud sync and Page Builder placements.
 
     // Social Links & Theme Persistence
-    if (siteConfig && siteConfig.links) {
+    const liveCfg = getLatestConfig();
+    if (liveCfg && liveCfg.links) {
         const fb = document.querySelector('a[href*="facebook.com"]');
-        if (fb && siteConfig.links.facebook) fb.href = siteConfig.links.facebook;
+        if (fb && liveCfg.links.facebook) fb.href = liveCfg.links.facebook;
         const pin = document.querySelector('a[href*="pinterest.com"]');
-        if (pin && siteConfig.links.pinterest) pin.href = siteConfig.links.pinterest;
+        if (pin && liveCfg.links.pinterest) pin.href = liveCfg.links.pinterest;
         const email = document.querySelector('a[href^="mailto:"]');
-        if (email && siteConfig.links.email) email.href = "mailto:" + siteConfig.links.email;
+        if (email && liveCfg.links.email) email.href = "mailto:" + liveCfg.links.email;
     }
 
     // --- Language & Translations ---
     const translations = {
         en: {
             nav_home: "Home", nav_bots: "MT5 Bots", nav_signals: "Signals", nav_services: "Services", nav_about: "About", nav_contact: "Contact",
-            site_title: (siteConfig && siteConfig.appearance && siteConfig.appearance.siteTitle) || "Trading Made Easy",
-            hero_title: (siteConfig && siteConfig.textOverrides && siteConfig.textOverrides.hero_title) || "Precision Trading. <span style='color: var(--primary-color);'>Automated.</span>",
-            hero_subtitle: (siteConfig && siteConfig.textOverrides && siteConfig.textOverrides.hero_desc) || "\"A platform dedicated to automated trading solutions that transform complex market analysis into precise and profitable algorithms.\"",
+            site_title: "Trading Made Easy",
+            hero_title: "Precision Trading. <span style='color: var(--primary-color);'>Automated.</span>",
+            hero_subtitle: "\"A platform dedicated to automated trading solutions that transform complex market analysis into precise and profitable algorithms.\"",
             hero_btn_view: "View Bots", hero_btn_consult: "Get Consultation",
             stat_success: "Success Rate", stat_traders: "Active Traders", stat_algos: "Proprietary Algos",
             latest_offer_title: "Latest Offer:", latest_offer_text: "Get 20% off on the Momentum Hunter 2.0 this week!",
@@ -108,7 +127,7 @@ document.addEventListener('DOMContentLoaded', () => {
             serv_other_label: "Other Specialized Services", serv_select: "Select a Service...",
             pay_title: "Secure Payments",
             about_title: "About the Developer", about_role: "Senior Algorithmic Trading Developer",
-            about_bio_title: "Bio", about_bio_text: (siteConfig && siteConfig.textOverrides && siteConfig.textOverrides.about_bio) || "I am KRAA MOHAMED, a specialized algorithmic trader and MQL5 developer. My passion lies in transforming complex trading concepts into efficient, automated code.",
+            about_bio_title: "Bio", about_bio_text: "I am KRAA MOHAMED, a specialized algorithmic trader and MQL5 developer. My passion lies in transforming complex trading concepts into efficient, automated code.",
             about_arsenal_title: "Technical Arsenal", about_exp_title: "Professional Experience",
             exp_role1: "Algorithmic Trading Consultant", exp_desc1a: "Deployed 15+ proprietary algorithms (78% success rate).", exp_desc1b: "Reduced latency by 40% via architecture optimization.",
             exp_role2: "Senior MQL5 Developer", exp_desc2a: "Led migration from MQL4 to MQL5 for 200+ clients.", exp_desc2b: "Implemented efficient backtesting frameworks.",
@@ -140,9 +159,9 @@ document.addEventListener('DOMContentLoaded', () => {
         },
         ar: {
             nav_home: "الرئيسية", nav_bots: "روبوتات MT5", nav_signals: "الإشارات", nav_services: "الخدمات", nav_about: "من نحن", nav_contact: "اتصل بنا",
-            site_title: (siteConfig && siteConfig.appearance && siteConfig.appearance.siteTitle) || "التداول السهل",
-            hero_title: (siteConfig && siteConfig.textOverrides && siteConfig.textOverrides.hero_title) || "تداول دقيق. <span style='color: var(--primary-color);'>مؤتمت.</span>",
-            hero_subtitle: (siteConfig && siteConfig.textOverrides && siteConfig.textOverrides.hero_desc) || "\"منصة مخصصة لحلول التداول الآلي، تحول تحليل السوق المعقد إلى خوارزميات دقيقة ومربحة.\"",
+            site_title: "التداول السهل",
+            hero_title: "تداول دقيق. <span style='color: var(--primary-color);'>مؤتمت.</span>",
+            hero_subtitle: "\"منصة مخصصة لحلول التداول الآلي، تحول تحليل السوق المعقد إلى خوارزميات دقيقة ومربحة.\"",
             hero_btn_view: "شاهد الروبوتات", hero_btn_consult: "احصل على استشارة",
             stat_success: "نسبة النجاح", stat_traders: "متداول نشط", stat_algos: "خوارزميات خاصة",
             latest_offer_title: "أحدث العروض:", latest_offer_text: "احصل على خصم 20% على Momentum Hunter 2.0 هذا الأسبوع!",
@@ -158,7 +177,7 @@ document.addEventListener('DOMContentLoaded', () => {
             serv_other_label: "خدمات متخصصة أخرى", serv_select: "اختر خدمة...",
             pay_title: "دفع آمن",
             about_title: "عن المطور", about_role: "مطور خوارزميات تداول أول",
-            about_bio_title: "السيرة الذاتية", about_bio_text: (siteConfig && siteConfig.textOverrides && siteConfig.textOverrides.about_bio) || "\"ريادة الجيل القادم من أنظمة التداول الخوارزمية التي تتيح أدوات التداول المؤسسية للجميع، مما يجعل تحليل السوق المتقدم متاحًا وقابلًا للتنفيذ للمتداولين في جميع أنحاء العالم.\"",
+            about_bio_title: "السيرة الذاتية", about_bio_text: "\"ريادة الجيل القادم من أنظمة التداول الخوارزمية التي تتيح أدوات التداول المؤسسية للجميع، مما يجعل تحليل السوق المتقدم متاحًا وقابلًا للتنفيذ للمتداولين في جميع أنحاء العالم.\"",
             about_arsenal_title: "الترسانة التقنية", about_exp_title: "الخبرة المهنية",
             exp_role1: "مستشار تداول خوارزمي", exp_desc1a: "نشر أكثر من 15 خوارزمية خاصة (نسبة نجاح 78%).", exp_desc1b: "تقليل زمن الانتقال بنسبة 40% من خلال تحسين البنية.",
             exp_role2: "مطور MQL5 أول", exp_desc2a: "قاد عملية الانتقال من MQL4 إلى MQL5 لأكثر من 200 عميل.", exp_desc2b: "تنفيذ أطر عمل فعالة للاختبار الخلفي (Backtesting).",
@@ -342,44 +361,54 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const langSelect = document.querySelector('.lang-select');
 
-    // --- Apply Overrides to ALL Languages ---
-    // --- Apply Overrides to ALL Languages ---
-    if (siteConfig && siteConfig.textOverrides) {
-        Object.keys(translations).forEach(lang => {
-            const txt = siteConfig.textOverrides;
-            if (txt.hero_title) translations[lang].hero_title = txt.hero_title;
-            if (txt.hero_desc) translations[lang].hero_subtitle = txt.hero_desc;
-            if (txt.about_bio) translations[lang].about_bio_text = txt.about_bio;
+    // Function to apply overrides to all languages
+    function applyOverrides() {
+        const currentCfg = getLatestConfig();
+        if (currentCfg && currentCfg.textOverrides) {
+            Object.keys(translations).forEach(lang => {
+                const txt = currentCfg.textOverrides;
+                if (txt.hero_title) translations[lang].hero_title = txt.hero_title;
+                if (txt.hero_desc) translations[lang].hero_subtitle = txt.hero_desc;
+                if (txt.about_bio) translations[lang].about_bio_text = txt.about_bio;
 
-            // New Section Overrides
-            if (txt.bots_title) translations[lang].bots_section_title = txt.bots_title;
-            if (txt.signals_title) translations[lang].signals_title = txt.signals_title;
-            if (txt.services_title) translations[lang].services_section_title = txt.services_title;
-            if (txt.stats_title) translations[lang].stats_section_title = txt.stats_title;
-            if (txt.pay_title) translations[lang].pay_title = txt.pay_title;
-            if (txt.contact_title) translations[lang].contact_title = txt.contact_title;
+                // New Section Overrides
+                if (txt.bots_title) translations[lang].bots_section_title = txt.bots_title;
+                if (txt.signals_title) translations[lang].signals_title = txt.signals_title;
+                if (txt.services_title) translations[lang].services_section_title = txt.services_title;
+                if (txt.stats_title) translations[lang].stats_section_title = txt.stats_title;
+                if (txt.pay_title) translations[lang].pay_title = txt.pay_title;
+                if (txt.contact_title) translations[lang].contact_title = txt.contact_title;
 
-            // Deep Detail Overrides
-            if (txt.nav_home) translations[lang].nav_home = txt.nav_home;
-            if (txt.nav_bots) translations[lang].nav_bots = txt.nav_bots;
-            if (txt.nav_signals) translations[lang].nav_signals = txt.nav_signals;
-            if (txt.nav_services) translations[lang].nav_services = txt.nav_services;
-            if (txt.nav_about) translations[lang].nav_about = txt.nav_about;
-            if (txt.nav_contact) translations[lang].nav_contact = txt.nav_contact;
+                // Deep Detail Overrides
+                if (txt.nav_home) translations[lang].nav_home = txt.nav_home;
+                if (txt.nav_bots) translations[lang].nav_bots = txt.nav_bots;
+                if (txt.nav_signals) translations[lang].nav_signals = txt.nav_signals;
+                if (txt.nav_services) translations[lang].nav_services = txt.nav_services;
+                if (txt.nav_about) translations[lang].nav_about = txt.nav_about;
+                if (txt.nav_contact) translations[lang].nav_contact = txt.nav_contact;
 
-            if (txt.latest_offer_text) translations[lang].latest_offer_text = txt.latest_offer_text;
-            if (txt.about_role) translations[lang].about_role = txt.about_role;
-            if (txt.serv_badge_1) translations[lang].serv_custom = txt.serv_badge_1;
+                if (txt.latest_offer_text) translations[lang].latest_offer_text = txt.latest_offer_text;
+                if (txt.about_role) translations[lang].about_role = txt.about_role;
+                if (txt.serv_badge_1) translations[lang].serv_custom = txt.serv_badge_1;
 
-            if (txt.sig_feat1) translations[lang].sig_feat1 = txt.sig_feat1;
-            if (txt.sig_feat2) translations[lang].sig_feat2 = txt.sig_feat2;
-            if (txt.sig_feat3) translations[lang].sig_feat3 = txt.sig_feat3;
-            if (txt.stat_success) translations[lang].stat_success = txt.stat_success;
-        });
+                if (txt.sig_feat1) translations[lang].sig_feat1 = txt.sig_feat1;
+                if (txt.sig_feat2) translations[lang].sig_feat2 = txt.sig_feat2;
+                if (txt.sig_feat3) translations[lang].sig_feat3 = txt.sig_feat3;
+                if (txt.stat_success) translations[lang].stat_success = txt.stat_success;
+            });
+        }
+
+        // Appearance overrides (Title especially)
+        if (currentCfg && currentCfg.appearance && currentCfg.appearance.siteTitle) {
+            Object.keys(translations).forEach(lang => {
+                translations[lang].site_title = currentCfg.appearance.siteTitle;
+            });
+        }
     }
 
     // Function to update content
     function updateLanguage(lang) {
+        applyOverrides(); // Always refresh overrides before switching
         if (!translations[lang]) return;
 
         // Direction & Lang Attribute
